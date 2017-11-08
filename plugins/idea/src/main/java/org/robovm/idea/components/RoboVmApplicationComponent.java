@@ -56,7 +56,9 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
         // inform the user that they
         // won't be able to compile for
         // iOS
-        if (System.getProperty("os.name").contains("Mac")) {
+        // dkimitsa: skip debug case when considering macos as linux
+        if (System.getProperty("os.name").contains("Mac") && System.getenv("ROBOVM_FORCE_MACOSXLINUX") == null &&
+                System.getProperty("ROBOVM_FORCE_MACOSXLINUX") == null) {
             try {
                 ToolchainUtil.findXcodePath();
             } catch (Throwable e) {

@@ -1,24 +1,16 @@
 package org.robovm.compiler.util.platforms;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.exec.ExecuteException;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.OS;
-import org.robovm.compiler.config.tools.TextureAtlas;
-import org.robovm.compiler.log.ConsoleLogger;
-import org.robovm.compiler.log.Logger;
-import org.robovm.compiler.target.ios.IOSTarget;
-import org.robovm.compiler.target.ios.SDK;
 import org.robovm.compiler.target.ios.SigningIdentity;
-import org.robovm.compiler.util.Executor;
 import org.robovm.compiler.util.platforms.darwin.DarwinToolchain;
+import org.robovm.compiler.util.platforms.external.ExternalCommonToolchain;
+import org.robovm.libimobiledevice.NativeLibrary.LibMobDevicePlatformLibraryProvider;
+import org.robovm.llvm.NativeLibrary.LLVMPlatformLibraryProvider;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * proxy wrapper to particular platform implementaiton
@@ -27,11 +19,21 @@ import org.robovm.compiler.util.platforms.darwin.DarwinToolchain;
 public class ToolchainUtil {
     private final static Contract impl;
     static {
-        OS os = OS.getDefaultOS();
-        if (os == OS.macosx)
+        SystemInfo systemInfo = getSystemInfo();
+        if (systemInfo.os == SystemInfo.OSInfo.macosx)
             impl = new DarwinToolchain();
+        else if (systemInfo.os == SystemInfo.OSInfo.macosxlinux)
+            impl = ExternalCommonToolchain.DarwinLinux();
+        else if (systemInfo.os == SystemInfo.OSInfo.windows)
+            impl = ExternalCommonToolchain.Linux();
+        else if (systemInfo.os == SystemInfo.OSInfo.linux)
+            impl = ExternalCommonToolchain.Windows();
         else
-            impl = new Contract("Unsupported OS - " + os);
+            impl = new Contract("Unsupported OS - " + systemInfo.osName);
+    }
+
+    public static SystemInfo getSystemInfo() {
+        return SystemInfo.getSystemInfo();
     }
 
     public static String findXcodePath() throws IOException {
@@ -104,10 +106,23 @@ public class ToolchainUtil {
     /**
      * defines api for each platform
      */
-    public static class Contract {
+    public static class Contract implements LLVMPlatformLibraryProvider, LibMobDevicePlatformLibraryProvider {
         protected final String platform;
+
         protected Contract(String platform) {
             this.platform = platform;
+            registerLLVMProvider();
+            registerLibMobDeviceProvider();
+        }
+
+        @Override
+        public File getLlvmLibrary() {
+            throw new RuntimeException("getLlvmLibrary not implemented for " + platform);
+        }
+
+        @Override
+        public File getLibMobDeviceLibrary() {
+            throw new RuntimeException("getLibMobDeviceLibrary not implemented for " + platform);
         }
 
         protected String findXcodePath() throws IOException {

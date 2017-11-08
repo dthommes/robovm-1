@@ -20,6 +20,15 @@ public class DarwinToolchain extends ToolchainUtil.Contract {
     }
 
     @Override
+    public File getLlvmLibrary() {
+        throw new Error("INTERNAL ERROR: LLVM library shall be embeded for MacOSX. @" + platform);
+    }
+
+    @Override
+    public File getLibMobDeviceLibrary() {
+        throw new Error("INTERNAL ERROR: iLibMobDevice library shall be embeded for MacOSX. @" + platform);
+    }
+    @Override
     public String findXcodePath() throws IOException {
         return DarwinToolchainUtil.findXcodePath();
     }
