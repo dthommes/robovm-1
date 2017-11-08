@@ -34,6 +34,14 @@ public class NativeLibrary {
     private static final String arch;
     private static final String libName;
 
+    private static LibMobDevicePlatformLibraryProvider platformLibraryProvider;
+    public interface LibMobDevicePlatformLibraryProvider {
+        File getLibMobDeviceLibrary();
+        default void registerLibMobDeviceProvider() {
+            platformLibraryProvider = this;
+        }
+    }
+
     static {
         String osProp = System.getProperty("os.name").toLowerCase();
         String archProp = System.getProperty("os.arch").toLowerCase();
@@ -62,32 +70,55 @@ public class NativeLibrary {
         if (loaded) {
             return;
         }
-        if (!supportedPlatform) {
-            return;
+        loaded = true;
+
+        String os = System.getProperty("os.name").toLowerCase();
+        String arch = System.getProperty("os.arch").toLowerCase();
+        if (os.startsWith("mac") || os.startsWith("darwin")) {
+            if (System.getenv("ROBOVM_FORCE_MACOSXLINUX") != null || System.getProperty("ROBOVM_FORCE_MACOSXLINUX") != null) {
+                // has to be loaded via provider
+                os = "macosxlinux";
+            } else {
+                os = "macosx";
+            }
+        } else {
+            os = null;
         }
-        
-        String prefix = libName.substring(0, libName.lastIndexOf('.'));
-        String ext = libName.substring(libName.lastIndexOf('.'));
-        
-        InputStream in = NativeLibrary.class.getResourceAsStream("binding/" + os + "/" + arch + "/" + libName);
-        if (in == null) {
-            throw new UnsatisfiedLinkError("Native library for " + os + "-" + arch + " not found");
+
+        if (arch.matches("amd64|x86[-_]64")) {
+            arch = "x86_64";
+        } else {
+            arch = null;
         }
-        OutputStream out = null;
-        File tmpLibFile = null;
-        try {
-            tmpLibFile = File.createTempFile(prefix, ext);
-            tmpLibFile.deleteOnExit();
-            out = new BufferedOutputStream(new FileOutputStream(tmpLibFile));
-            copy(in, out);
-        } catch (IOException e) {
-            throw (Error) new UnsatisfiedLinkError(e.getMessage()).initCause(e);
-        } finally {
-            closeQuietly(in);
-            closeQuietly(out);
+
+        File libFile = null;
+        if (os != null && arch != null) {
+            // MacOS case, use embedded library
+            InputStream in = NativeLibrary.class.getResourceAsStream("binding/macosx/x86_64/librobovm-libimobiledevice.dylib");
+            if (in == null) {
+                throw new UnsatisfiedLinkError("Native library for " + os + "-" + arch + " not found");
+            }
+            OutputStream out = null;
+            try {
+                libFile = File.createTempFile("librobovm-llvm-x86_64", "dylib");
+                libFile.deleteOnExit();
+                out = new BufferedOutputStream(new FileOutputStream(libFile));
+                copy(in, out);
+            } catch (IOException e) {
+                throw (Error) new UnsatisfiedLinkError(e.getMessage()).initCause(e);
+            } finally {
+                closeQuietly(in);
+                closeQuietly(out);
+            }
+        } else if (platformLibraryProvider != null) {
+            libFile = platformLibraryProvider.getLibMobDeviceLibrary();
         }
-        
-        Runtime.getRuntime().load(tmpLibFile.getAbsolutePath());
+
+        if (libFile == null) {
+            throw new Error("Unsupported os " + System.getProperty("os.name") + "[" + System.getProperty("os.arch") + "]");
+        }
+
+        Runtime.getRuntime().load(libFile.getAbsolutePath());
     }
     
     private static void copy(InputStream in, OutputStream out) throws IOException {

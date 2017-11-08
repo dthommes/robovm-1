@@ -16,6 +16,8 @@
  */
 package org.robovm.llvm;
 
+import org.robovm.llvm.binding.LLVM;
+
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -24,71 +26,73 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.robovm.llvm.binding.LLVM;
-
 /**
  * 
  */
 public class NativeLibrary {
     private static boolean loaded = false;
-    private static final String os;
-    private static final String arch;
-    private static final String libName;
 
-    static {
-        String osProp = System.getProperty("os.name").toLowerCase();
-        String archProp = System.getProperty("os.arch").toLowerCase();
-        String ext = null;
-        if (osProp.startsWith("mac") || osProp.startsWith("darwin")) {
-            os = "macosx";
-            ext = "dylib";
-        } else if (osProp.startsWith("linux")) {
-            os = "linux";
-            ext = "so";
-        } else if (osProp.startsWith("windows")) {
-            os = "windows";
-            ext = "dll";
-        } else {
-            throw new Error("Unsupported OS: " + System.getProperty("os.name"));
+    private static LLVMPlatformLibraryProvider platformLibraryProvider;
+    public interface LLVMPlatformLibraryProvider {
+        File getLlvmLibrary();
+        default void registerLLVMProvider() {
+            platformLibraryProvider = this;
         }
-        if (archProp.matches("amd64|x86[-_]64")) {
-            arch = "x86_64";
-        } else if (archProp.matches("i386|x86")) {
-            arch = "x86";
-        } else {
-            throw new Error("Unsupported arch: " + System.getProperty("os.arch"));
-        }
-        
-        libName = "librobovm-llvm." + ext;
     }
-    
+
     public static synchronized void load() {
         if (loaded) {
             return;
         }
-        
-        String prefix = libName.substring(0, libName.lastIndexOf('.'));
-        String ext = libName.substring(libName.lastIndexOf('.'));
-        
-        InputStream in = NativeLibrary.class.getResourceAsStream("binding/" + os + "/" + arch + "/" + libName);
-        if (in == null) {
-            throw new UnsatisfiedLinkError("Native library for " + os + "-" + arch + " not found");
+        loaded = true;
+
+        String os = System.getProperty("os.name").toLowerCase();
+        String arch = System.getProperty("os.arch").toLowerCase();
+        if (os.startsWith("mac") || os.startsWith("darwin")) {
+            if (System.getenv("ROBOVM_FORCE_MACOSXLINUX") != null || System.getProperty("ROBOVM_FORCE_MACOSXLINUX") != null) {
+                // has to be loaded via provider
+                os = "macosxlinux";
+            } else {
+                os = "macosx";
+            }
+        } else {
+            os = null;
         }
-        OutputStream out = null;
-        File tmpLibFile = null;
-        try {
-            tmpLibFile = File.createTempFile(prefix, ext);
-            tmpLibFile.deleteOnExit();
-            out = new BufferedOutputStream(new FileOutputStream(tmpLibFile));
-            copy(in, out);
-        } catch (IOException e) {
-            throw (Error) new UnsatisfiedLinkError(e.getMessage()).initCause(e);
-        } finally {
-            closeQuietly(in);
-            closeQuietly(out);
+
+        if (arch.matches("amd64|x86[-_]64")) {
+            arch = "x86_64";
+        } else {
+            arch = null;
         }
-        
-        Runtime.getRuntime().load(tmpLibFile.getAbsolutePath());
+
+        File libFile = null;
+        if (os != null && arch != null) {
+            // MacOS case, use embedded library
+            InputStream in = NativeLibrary.class.getResourceAsStream("binding/macosx/x86_64/librobovm-llvm.dylib");
+            if (in == null) {
+                throw new UnsatisfiedLinkError("Native library for " + os + "-" + arch + " not found");
+            }
+            OutputStream out = null;
+            try {
+                libFile = File.createTempFile("librobovm-llvm-x86_64", "dylib");
+                libFile.deleteOnExit();
+                out = new BufferedOutputStream(new FileOutputStream(libFile));
+                copy(in, out);
+            } catch (IOException e) {
+                throw (Error) new UnsatisfiedLinkError(e.getMessage()).initCause(e);
+            } finally {
+                closeQuietly(in);
+                closeQuietly(out);
+            }
+        } else if (platformLibraryProvider != null) {
+            libFile = platformLibraryProvider.getLlvmLibrary();
+        }
+
+        if (libFile == null) {
+            throw new Error("Unsupported os " + System.getProperty("os.name") + "[" + System.getProperty("os.arch") + "]");
+        }
+
+        Runtime.getRuntime().load(libFile.getAbsolutePath());
         if (!LLVM.StartMultithreaded()) {
             throw new UnsatisfiedLinkError("LLVMStartMultithreaded failed");
         }
