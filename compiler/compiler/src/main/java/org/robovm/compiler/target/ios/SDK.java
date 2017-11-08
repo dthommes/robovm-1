@@ -31,7 +31,7 @@ import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
 import org.apache.commons.exec.util.StringUtils;
 import org.apache.commons.lang3.Validate;
-import org.robovm.compiler.util.ToolchainUtil;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
 
 /**
  * Contains info on an SDK installed on the system.

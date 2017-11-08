@@ -14,12 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
  */
-package org.robovm.compiler.util;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+package org.robovm.compiler.util.platforms.darwin;
 
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.io.FileUtils;
@@ -31,12 +26,19 @@ import org.robovm.compiler.config.tools.TextureAtlas;
 import org.robovm.compiler.log.ConsoleLogger;
 import org.robovm.compiler.log.Logger;
 import org.robovm.compiler.target.ios.IOSTarget;
+import org.robovm.compiler.target.ios.SigningIdentity;
+import org.robovm.compiler.util.Executor;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author niklas
  *
  */
-public class ToolchainUtil {
+class DarwinToolchainUtil {
     private static String IOS_DEV_CLANG;
     private static String IOS_SIM_CLANG;
     private static String PNGCRUSH;
@@ -397,5 +399,30 @@ public class ToolchainUtil {
             }
         }
         return ccPath;
+    }
+
+    public static void codesign(Config config, SigningIdentity identity, File entitlementsPList, boolean preserveMetadata, boolean verbose,
+                                boolean allocate, File target) throws IOException {
+        List<Object> args = new ArrayList<Object>();
+        args.add("-f");
+        args.add("-s");
+        args.add(identity.getFingerprint());
+        if (entitlementsPList != null) {
+            args.add("--entitlements");
+            args.add(entitlementsPList);
+        }
+        if (preserveMetadata) {
+            args.add("--preserve-metadata=identifier,entitlements");
+        }
+        if (verbose) {
+            args.add("--verbose");
+        }
+        args.add(target);
+        Executor executor = new Executor(config.getLogger(), "codesign");
+        if (allocate) {
+            executor.addEnv("CODESIGN_ALLOCATE", findXcodeCommand("codesign_allocate", "iphoneos"));
+        }
+        executor.args(args);
+        executor.exec();
     }
 }

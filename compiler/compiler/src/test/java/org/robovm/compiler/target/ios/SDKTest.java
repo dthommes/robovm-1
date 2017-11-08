@@ -2,7 +2,7 @@ package org.robovm.compiler.target.ios;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.robovm.compiler.util.ToolchainUtil.isXcodeInstalled;
+import static org.robovm.compiler.util.platforms.ToolchainUtil.isXcodeInstalled;
 
 import java.io.File;
 

@@ -49,7 +49,7 @@ import org.robovm.compiler.config.OS;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.config.Resource.Walker;
 import org.robovm.compiler.config.StripArchivesConfig;
-import org.robovm.compiler.util.ToolchainUtil;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
 import org.simpleframework.xml.Transient;
 
 /**

@@ -16,22 +16,12 @@
  */
 package org.robovm.compiler.target.ios;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NoSuchElementException;
-
+import com.dd.plist.NSArray;
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSNumber;
+import com.dd.plist.NSObject;
+import com.dd.plist.NSString;
+import com.dd.plist.PropertyListParser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -51,20 +41,29 @@ import org.robovm.compiler.target.LaunchParameters;
 import org.robovm.compiler.target.Launcher;
 import org.robovm.compiler.target.ios.ProvisioningProfile.Type;
 import org.robovm.compiler.util.Executor;
-import org.robovm.compiler.util.ToolchainUtil;
 import org.robovm.compiler.util.io.OpenOnWriteFileOutputStream;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
 import org.robovm.libimobiledevice.AfcClient.UploadProgressCallback;
 import org.robovm.libimobiledevice.IDevice;
 import org.robovm.libimobiledevice.InstallationProxyClient.StatusCallback;
 import org.robovm.libimobiledevice.util.AppLauncher;
 import org.robovm.libimobiledevice.util.AppLauncherCallback;
 
-import com.dd.plist.NSArray;
-import com.dd.plist.NSDictionary;
-import com.dd.plist.NSNumber;
-import com.dd.plist.NSObject;
-import com.dd.plist.NSString;
-import com.dd.plist.PropertyListParser;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 
 /**
  * @author niklas
@@ -419,43 +418,19 @@ public class IOSTarget extends AbstractTarget {
     private void codesignApp(SigningIdentity identity, File entitlementsPList, File appDir) throws IOException {
         config.getLogger().info("Code signing app using identity '%s' with fingerprint %s", identity.getName(),
                 identity.getFingerprint());
-        codesign(identity, entitlementsPList, false, false, true, appDir);
+        ToolchainUtil.codesign(config, identity, entitlementsPList, false, false, true, appDir);
     }
 
     private void codesignSwiftLib(SigningIdentity identity, File swiftLib) throws IOException {
         config.getLogger().info("Code signing swift dylib '%s' using identity '%s' with fingerprint %s", swiftLib.getName(), identity.getName(),
                 identity.getFingerprint());
-        codesign(identity, null, false, true, false, swiftLib);
+        ToolchainUtil.codesign(config, identity, null, false, true, false, swiftLib);
     }
 
     private void codesignCustomFramework(SigningIdentity identity, File frameworkDir) throws IOException {
         config.getLogger().info("Code signing framework '%s' using identity '%s' with fingerprint %s", frameworkDir.getName(), identity.getName(),
                 identity.getFingerprint());
-        codesign(identity, null, true, false, true, frameworkDir);
-    }
-
-    private void codesign(SigningIdentity identity, File entitlementsPList, boolean preserveMetadata, boolean verbose, boolean allocate, File target) throws IOException {
-        List<Object> args = new ArrayList<Object>();
-        args.add("-f");
-        args.add("-s");
-        args.add(identity.getFingerprint());
-        if (entitlementsPList != null) {
-            args.add("--entitlements");
-            args.add(entitlementsPList);
-        }
-        if (preserveMetadata) {
-            args.add("--preserve-metadata=identifier,entitlements");
-        }
-        if (verbose) {
-            args.add("--verbose");
-        }
-        args.add(target);
-        Executor executor = new Executor(config.getLogger(), "codesign");
-        if (allocate) {
-            executor.addEnv("CODESIGN_ALLOCATE", ToolchainUtil.findXcodeCommand("codesign_allocate", "iphoneos"));
-        }
-        executor.args(args);
-        executor.exec();
+        ToolchainUtil.codesign(config, identity, null, true, false, true, frameworkDir);
     }
 
     private void ldid(File entitlementsPList, File appDir) throws IOException {

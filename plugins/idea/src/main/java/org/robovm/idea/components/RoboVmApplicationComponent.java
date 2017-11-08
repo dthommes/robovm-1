@@ -17,26 +17,15 @@
 package org.robovm.idea.components;
 
 import com.intellij.ide.util.PropertiesComponent;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ex.ApplicationManagerEx;
 import com.intellij.openapi.components.ApplicationComponent;
-import com.intellij.openapi.components.StoragePathMacros;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileAdapter;
-import com.intellij.openapi.vfs.VirtualFileEvent;
-import com.intellij.openapi.vfs.VirtualFileManager;
 import org.jetbrains.annotations.NotNull;
-import org.robovm.compiler.config.OS;
-import org.robovm.compiler.util.ToolchainUtil;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
 import org.robovm.idea.RoboVmPlugin;
-import org.robovm.idea.components.setupwizard.*;
+import org.robovm.idea.components.setupwizard.JdkSetupDialog;
+import org.robovm.idea.components.setupwizard.NoXcodeSetupDialog;
+import org.robovm.idea.components.setupwizard.XcodeSetupDialog;
 import org.robovm.idea.sdk.RoboVmSdkType;
-
-import java.io.IOException;
 
 /**
  * Call on app startup, responsible for extracting/updating the RoboVM SDK and

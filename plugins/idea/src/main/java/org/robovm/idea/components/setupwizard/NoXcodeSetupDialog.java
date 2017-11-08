@@ -1,18 +1,9 @@
 package org.robovm.idea.components.setupwizard;
 
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import javax.swing.*;
-
-import org.robovm.compiler.util.ToolchainUtil;
-
-import com.intellij.ui.components.labels.LinkLabel;
-import com.intellij.ui.components.labels.LinkListener;
 
 public class NoXcodeSetupDialog extends JDialog {
     private JPanel panel;
