@@ -18,6 +18,10 @@ package org.robovm.idea;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.security.Provider;
+import java.security.Security;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
@@ -25,6 +29,7 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
@@ -80,6 +85,28 @@ public class RoboVmPlugin {
         } else if(System.getProperty("os.name").contains("Linux")) {
             os = OS.Linux;
         }
+
+        // dkimitsa: this is a dirty workaround to load BC provider under idea,
+        // details: https://dkimitsa.github.io/2017/10/22/intellij-idea-bouncy-castle/
+        // bug report: https://youtrack.jetbrains.com/oauth?state=%2Fissue%2FIDEA-181010
+        Provider bcp = null;
+        try {
+            ClassLoader cl = RoboVmPlugin.class.getClassLoader();
+            URL url =  cl.getResource("org/bouncycastle/jce/provider/BouncyCastleProvider.class");
+            if ("jar".equals(url.getProtocol())) {
+                url = new URL(url.getPath().substring(0, url.getPath().indexOf('!')));
+                cl = new URLClassLoader(new URL[]{url}, null);
+                Class cls = cl.loadClass("org.bouncycastle.jce.provider.BouncyCastleProvider");
+                bcp = (Provider) cls.newInstance();
+            }
+        } catch (Exception ignored) {
+            // do nothing, bcp will be zero here, probably error message will work
+        }
+        if (bcp == null) {
+            // fallback to normal way, may not work
+            bcp = new BouncyCastleProvider();
+        }
+        Security.addProvider(bcp);
     }
 
     private static final String ROBOVM_TOOLWINDOW_ID = "RoboVM";

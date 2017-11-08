@@ -70,7 +70,9 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
         config.setSigningIdentity(signingIdentity.getSelectedItem().toString());
         config.setProvisioningProfile(provisioningProfile.getSelectedItem().toString());
         config.setSimArch((Arch) simArch.getSelectedItem());
-        config.setSimulatorName(((SimTypeWrapper) simType.getSelectedItem()).getType().getDeviceName());
+        // there is no simulator on linux/windows
+        if (simType.getSelectedItem() != null)
+            config.setSimulatorName(((SimTypeWrapper) simType.getSelectedItem()).getType().getDeviceName());
         config.setArguments(args.getText());
     }
 
@@ -86,7 +88,8 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
         updateDeviceConfig(config);
         updateSimulatorConfig(config);
 
-        attachedDeviceRadioButton.setSelected(config.getTargetType() == RoboVmRunConfiguration.TargetType.Device);
+        attachedDeviceRadioButton.setSelected(config.getTargetType() == RoboVmRunConfiguration.TargetType.Device ||
+                !simulatorRadioButton.isEnabled());
         args.setText(config.getArguments());
     }
 
@@ -113,8 +116,15 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
         simType.removeAllItems();
         simArch.removeAllItems();
 
+        List<DeviceType> deviceTypes = DeviceType.listDeviceTypes();
+        simType.setEnabled(!deviceTypes.isEmpty());
+        simArch.setEnabled(!deviceTypes.isEmpty());
+        simulatorRadioButton.setEnabled(!deviceTypes.isEmpty());
+        if (deviceTypes.isEmpty())
+            return;
+
         // set simulator types
-        for (DeviceType type : DeviceType.listDeviceTypes()) {
+        for (DeviceType type : deviceTypes) {
             simType.addItem(new SimTypeWrapper(type));
             if (type.getDeviceName().equals(config.getSimulatorName())) {
                 simType.setSelectedIndex(simType.getItemCount() - 1);
@@ -125,14 +135,16 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
 
         // set default arch for selected simulator
         SimTypeWrapper wrapper = (SimTypeWrapper) simType.getSelectedItem();
-        for (Arch arch : SIMULATOR_ARCHS) {
-            for (Arch otherArch : wrapper.getType().getArchs()) {
-                if (arch == otherArch) {
-                    simArch.addItem(otherArch);
-                    if (otherArch == config.getSimArch()) {
-                        simArch.setSelectedItem(otherArch);
-                    } else if (config.getSimArch() == null && otherArch == Arch.x86_64) {
-                        simArch.setSelectedItem(otherArch);
+        if (wrapper != null) {
+            for (Arch arch : SIMULATOR_ARCHS) {
+                for (Arch otherArch : wrapper.getType().getArchs()) {
+                    if (arch == otherArch) {
+                        simArch.addItem(otherArch);
+                        if (otherArch == config.getSimArch()) {
+                            simArch.setSelectedItem(otherArch);
+                        } else if (config.getSimArch() == null && otherArch == Arch.x86_64) {
+                            simArch.setSelectedItem(otherArch);
+                        }
                     }
                 }
             }
