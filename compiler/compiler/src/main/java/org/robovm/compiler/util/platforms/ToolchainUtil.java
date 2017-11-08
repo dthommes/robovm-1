@@ -2,6 +2,7 @@ package org.robovm.compiler.util.platforms;
 
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.target.ios.DeviceType;
 import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.compiler.util.platforms.darwin.DarwinToolchain;
 import org.robovm.compiler.util.platforms.external.ExternalCommonToolchain;
@@ -102,6 +103,19 @@ public class ToolchainUtil {
         impl.codesign(config, identity, entitlementsPList, preserveMetadata, verbose, allocate, target);
     }
 
+    public static File getProvisioningProfileDir() {
+        return impl.getProvisioningProfileDir();
+    }
+
+    public static List<DeviceType> listSimulatorDeviceTypes() {
+        return impl.listSimulatorDeviceTypes();
+    }
+
+    public static List<SigningIdentity> listSigningIdentity() {
+        return impl.listSigningIdentity();
+
+    }
+
 
     /**
      * defines api for each platform
@@ -181,13 +195,25 @@ public class ToolchainUtil {
             throw new RuntimeException("packageApplication not implemented for " + platform);
         }
 
-        public void link(Config config, List<String> args, List<File> objectFiles, List<String> libs, File outFile) throws IOException {
+        protected void link(Config config, List<String> args, List<File> objectFiles, List<String> libs, File outFile) throws IOException {
             throw new RuntimeException("link not implemented for " + platform);
         }
 
-        public void codesign(Config config, SigningIdentity identity, File entitlementsPList, boolean preserveMetadata, boolean verbose,
+        protected void codesign(Config config, SigningIdentity identity, File entitlementsPList, boolean preserveMetadata, boolean verbose,
                              boolean allocate, File target) throws IOException {
             throw new RuntimeException("codesign not implemented for " + platform);
+        }
+
+        protected File getProvisioningProfileDir() {
+            throw new RuntimeException("codesign not implemented for " + platform);
+        }
+
+        protected List<DeviceType> listSimulatorDeviceTypes() {
+            throw new RuntimeException("listSimulatorDeviceTypes not implemented for " + platform);
+        }
+
+        protected List<SigningIdentity> listSigningIdentity() {
+            throw new RuntimeException("listSigningIdentity not implemented for " + platform);
         }
     }
 }

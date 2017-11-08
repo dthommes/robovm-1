@@ -16,29 +16,32 @@
  */
 package org.robovm.compiler.target.ios;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
 
-import org.robovm.compiler.log.Logger;
-import org.robovm.compiler.util.Executor;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Represents a signing identity.
  */
-public class SigningIdentity implements Comparable<SigningIdentity> {
+public class SigningIdentity<T> implements Comparable<SigningIdentity> {
 
     private final String name;
     private final String fingerprint;
+    private final T bundle;
     
-    SigningIdentity(String name, String fingerprint) {
+    public SigningIdentity(String name, String fingerprint) {
         this.name = name;
         this.fingerprint = fingerprint;
+        this.bundle = null;
     }
-    
+
+    public SigningIdentity(String name, String fingerprint, T bundle) {
+        this.name = name;
+        this.fingerprint = fingerprint;
+        this.bundle = bundle;
+    }
+
     public String getName() {
         return name;
     }
@@ -46,7 +49,11 @@ public class SigningIdentity implements Comparable<SigningIdentity> {
     public String getFingerprint() {
         return fingerprint;
     }
-    
+
+    public T getBundle() {
+        return bundle;
+    }
+
     @Override
     public int compareTo(SigningIdentity o) {
         return this.name.compareToIgnoreCase(o.name);
@@ -76,42 +83,9 @@ public class SigningIdentity implements Comparable<SigningIdentity> {
         throw new IllegalArgumentException("No signing identity found matching '" + search + "'");
     }
     
-    protected static List<SigningIdentity> parse(String securityOutput) {
-        /* Output from security looks like this:
-         *   [... ommitted output ...]
-         *   Valid identities only
-         *   1) 433D4A1CD97F77226F67959905A2840265A92D31 "iPhone Developer: Rolf Hudson (HS5OW37HQP)" (CSSMERR_TP_CERT_REVOKED)
-         *   2) F8E60167BD74A2E9FC39B239E58CCD73BE1112E6 "iPhone Developer: Rolf Hudson (HS5OW37HQP)"
-         *   3) AC2EC9D4D26889649DE4196FBFD54BF5924169F9 "iPhone Distribution: Acme Inc"
-         *     3 valid identities found
-         */
-        ArrayList<SigningIdentity> ids = new ArrayList<SigningIdentity>();
-        Pattern pattern = Pattern.compile("^\\d+\\)\\s+([0-9A-F]+)\\s+\"([^\"]*)\"\\s*(.*)");
-        for (String line : securityOutput.split("\n")) {
-            line = line.trim();
-            Matcher matcher = pattern.matcher(line);
-            if (!matcher.find()) {
-                continue;
-            }
-            String name = matcher.group(2);
-            String fingerprint = matcher.group(1);
-            String flags = matcher.group(3);
-            // See cssmerr.h for possible CSSMERR_TP_CERT_* constants.
-            if (flags == null || !flags.contains("CSSMERR_TP_CERT_")) {
-                ids.add(new SigningIdentity(name, fingerprint));
-            }
-        }
-        Collections.sort(ids);
-        return ids;
-    }
 
     public static List<SigningIdentity> list() {
-        try {
-            return parse(new Executor(Logger.NULL_LOGGER, "security")
-                .args("find-identity", "-v", "-p", "codesigning").execCapture());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return ToolchainUtil.listSigningIdentity();
     }
     
     public static void main(String[] args) {

@@ -41,6 +41,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSNumber;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
 
 /**
  * Represents a provisioning profile.
@@ -179,7 +180,7 @@ public class ProvisioningProfile implements Comparable<ProvisioningProfile> {
     }
     
     public static List<ProvisioningProfile> list() {
-        File dir = new File(new File(System.getProperty("user.home")), "Library/MobileDevice/Provisioning Profiles");
+        File dir = ToolchainUtil.getProvisioningProfileDir();
         if (!dir.exists() || !dir.isDirectory()) {
             return Collections.emptyList();
         }

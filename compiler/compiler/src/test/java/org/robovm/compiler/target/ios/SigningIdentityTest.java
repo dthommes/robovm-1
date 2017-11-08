@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
+import org.robovm.compiler.util.platforms.darwin.DarwinToolchain;
 
 /**
  * Tests {@link SigningIdentity}.
@@ -30,7 +31,7 @@ public class SigningIdentityTest {
 
     @Test
     public void testParseWithRevokedCerts() throws Exception {
-        List<SigningIdentity> l = SigningIdentity.parse(IOUtils.toString(getClass().getResourceAsStream("codesigning_dump.txt")));
+        List<SigningIdentity> l = DarwinToolchain.parse(IOUtils.toString(getClass().getResourceAsStream("codesigning_dump.txt")));
         assertEquals(2, l.size());
         assertEquals("ABBBE93758B08A8FE7B970354D8B6D9821CF9108", l.get(0).getFingerprint());
         assertEquals("iOS Development: Gerrard Eliot (KDH76S9URT)", l.get(0).getName());
@@ -40,7 +41,7 @@ public class SigningIdentityTest {
 
     @Test
     public void testFindByPrefix() throws Exception {
-        List<SigningIdentity> ids = SigningIdentity.parse(IOUtils.toString(getClass().getResourceAsStream("codesigning_dump.txt")));
+        List<SigningIdentity> ids = DarwinToolchain.parse(IOUtils.toString(getClass().getResourceAsStream("codesigning_dump.txt")));
 
         SigningIdentity identity1 = SigningIdentity.find(ids, "iOS Development");
         assertEquals("ABBBE93758B08A8FE7B970354D8B6D9821CF9108", identity1.getFingerprint());
@@ -59,7 +60,7 @@ public class SigningIdentityTest {
 
     @Test
     public void testFindByRegexp() throws Exception {
-        List<SigningIdentity> ids = SigningIdentity.parse(IOUtils.toString(getClass().getResourceAsStream("codesigning_dump.txt")));
+        List<SigningIdentity> ids = DarwinToolchain.parse(IOUtils.toString(getClass().getResourceAsStream("codesigning_dump.txt")));
 
         SigningIdentity identity1 = SigningIdentity.find(ids, "/(?i)iPhone Developer|iOS Development/");
         assertEquals("ABBBE93758B08A8FE7B970354D8B6D9821CF9108", identity1.getFingerprint());

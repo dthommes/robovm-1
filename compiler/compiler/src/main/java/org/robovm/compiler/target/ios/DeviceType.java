@@ -16,22 +16,13 @@
  */
 package org.robovm.compiler.target.ios;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.robovm.compiler.config.Arch;
-import org.robovm.compiler.log.Logger;
-import org.robovm.compiler.util.Executor;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Simulator device types, consisting of the device type id and SDK version as
@@ -55,7 +46,7 @@ public class DeviceType implements Comparable<DeviceType> {
     private final SDK sdk;
     private final Set<Arch> archs;
 
-    DeviceType(String deviceName, String udid, String state, SDK sdk, Set<Arch> archs) {
+    public DeviceType(String deviceName, String udid, String state, SDK sdk, Set<Arch> archs) {
         this.deviceName = deviceName;
         this.udid = udid;
         this.state = state;
@@ -103,50 +94,7 @@ public class DeviceType implements Comparable<DeviceType> {
     }
 
     public static List<DeviceType> listDeviceTypes() {
-        try {
-        	List<SDK> sdks = SDK.listSimulatorSDKs();
-        	Map<String, SDK> sdkMap = new HashMap<>();
-        	for (SDK sdk : sdks) {
-        		sdkMap.put(sdk.getVersion(), sdk);
-        	}
-        	
-            String capture = new Executor(Logger.NULL_LOGGER, "xcrun").args(
-                    "simctl", "list", "devices", "-j").execCapture();
-            List<DeviceType> types = new ArrayList<DeviceType>();
-            
-            JSONParser parser = new JSONParser();
-            JSONObject deviceList = (JSONObject)((JSONObject) parser.parse(capture)).get("devices");
-            
-            Iterator iter=deviceList.entrySet().iterator();
-            while(iter.hasNext()){
-    			Map.Entry entry=(Map.Entry)iter.next();
-    			String sdkMapKey = entry.getKey().toString().replace("iOS ","");
-    			JSONArray devices = (JSONArray) entry.getValue();
-    			for (Object obj : devices) {
-    				JSONObject device = (JSONObject) obj;
-    				SDK sdk = sdkMap.get(sdkMapKey);
-    				final String deviceName = device.get("name").toString();
-    				
-    				if (!device.get("availability").toString().contains("unavailable") && sdk != null) {
-    					Set<Arch> archs = new HashSet<>();
-    					archs.add(Arch.x86);
-    					if (!Arrays.asList(ONLY_32BIT_DEVICES).contains(deviceName)) {
-    						archs.add(Arch.x86_64);
-    					}
-
-    					types.add(new DeviceType(deviceName, device.get("udid").toString(), 
-    							device.get("state").toString(), sdk, archs));
-    				}
-    			}
-            }
-
-            // Sort. Make sure that devices that have an id which is a prefix of
-            // another id comes before in the list.
-            Collections.sort(types);
-            return types;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return ToolchainUtil.listSimulatorDeviceTypes();
     }
 
     @Override

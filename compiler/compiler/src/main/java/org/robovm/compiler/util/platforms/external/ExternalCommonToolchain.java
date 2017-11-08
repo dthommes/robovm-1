@@ -2,11 +2,15 @@ package org.robovm.compiler.util.platforms.external;
 
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.target.ios.DeviceType;
 import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.compiler.util.platforms.ToolchainUtil;
+import org.robovm.utils.codesign.utils.P12Certificate;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -118,22 +122,56 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     }
 
     @Override
-    public void link(Config config, List<String> args, List<File> objectFiles, List<String> libs, File outFile) throws IOException {
+    protected void link(Config config, List<String> args, List<File> objectFiles, List<String> libs, File outFile) throws IOException {
         super.link(config, args, objectFiles, libs, outFile);
     }
 
     @Override
-    public void codesign(Config config, SigningIdentity identity, File entitlementsPList, boolean preserveMetadata, boolean verbose, boolean allocate, File target) throws IOException {
+    protected void codesign(Config config, SigningIdentity identity, File entitlementsPList, boolean preserveMetadata, boolean verbose, boolean allocate, File target) throws IOException {
         super.codesign(config, identity, entitlementsPList, preserveMetadata, verbose, allocate, target);
     }
 
+    @Override
+    protected File getProvisioningProfileDir() {
+        return new File(new File(System.getProperty("user.home")), "/.robovm/platform/mobileprovision");
+    }
+
+    @Override
+    protected List<DeviceType> listSimulatorDeviceTypes() {
+        // no simulators on platforms other than MacOSX
+        return Collections.emptyList();
+    }
+
+    @Override
+    protected List<SigningIdentity> listSigningIdentity() {
+        File keychainDir = new File(System.getProperty("user.home") + "/.robovm/platform/keychain");
+        List<SigningIdentity> identities = new ArrayList<>();
+        if (keychainDir.exists() && keychainDir.isDirectory()) {
+            File[] files = keychainDir.listFiles();
+            if (files == null)
+                return Collections.emptyList();
+
+            for (File f : files) {
+                if (!f.isFile() || !f.getName().endsWith(".p12"))
+                    continue;
+                try {
+                    P12Certificate p12 = P12Certificate.load(f);
+                    identities.add(new SigningIdentity<>(p12.getCertificateName(), p12.getCertificateFingerprint(), p12));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return identities;
+    }
 
     //
     // private tools
     //
     private String buildXcodePath() {
         if (xcodePath == null)
-            xcodePath =  System.getProperty("user.home") + "/.robovm/platform.windows/Xcode.app/Developer";
+            xcodePath =  System.getProperty("user.home") + "/.robovm/platform/Xcode.app/Developer";
         return xcodePath;
     }
 }
