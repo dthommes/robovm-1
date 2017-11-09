@@ -51,7 +51,7 @@ public class NativeLibrary {
         if (os.startsWith("mac") || os.startsWith("darwin")) {
             if (System.getenv("ROBOVM_FORCE_MACOSXLINUX") != null || System.getProperty("ROBOVM_FORCE_MACOSXLINUX") != null) {
                 // has to be loaded via provider
-                os = "macosxlinux";
+                os = null;
             } else {
                 os = "macosx";
             }
