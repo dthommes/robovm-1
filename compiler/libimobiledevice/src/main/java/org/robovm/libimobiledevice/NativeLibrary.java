@@ -30,9 +30,6 @@ import java.io.OutputStream;
 public class NativeLibrary {
     private static boolean loaded = false;
     public static final boolean supportedPlatform;
-    private static final String os;
-    private static final String arch;
-    private static final String libName;
 
     private static LibMobDevicePlatformLibraryProvider platformLibraryProvider;
     public interface LibMobDevicePlatformLibraryProvider {
@@ -45,10 +42,10 @@ public class NativeLibrary {
     static {
         String osProp = System.getProperty("os.name").toLowerCase();
         String archProp = System.getProperty("os.arch").toLowerCase();
-        String ext = null;
+        String os;
+        String arch;
         if (osProp.startsWith("mac") || osProp.startsWith("darwin")) {
             os = "macosx";
-            ext = ".dylib";
         } else {
             os = null;
         }
@@ -57,15 +54,10 @@ public class NativeLibrary {
         } else {
             arch = null;
         }
-        
+
         supportedPlatform = os != null && arch != null;
-        if (supportedPlatform) {
-            libName = "librobovm-libimobiledevice" + ext;
-        } else {
-            libName = null;
-        }
     }
-    
+
     public static synchronized void load() {
         if (loaded) {
             return;
@@ -77,7 +69,7 @@ public class NativeLibrary {
         if (os.startsWith("mac") || os.startsWith("darwin")) {
             if (System.getenv("ROBOVM_FORCE_MACOSXLINUX") != null || System.getProperty("ROBOVM_FORCE_MACOSXLINUX") != null) {
                 // has to be loaded via provider
-                os = "macosxlinux";
+                os = null;
             } else {
                 os = "macosx";
             }
