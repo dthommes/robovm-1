@@ -19,15 +19,15 @@ public final class SystemInfo {
 
     public final OSInfo os;
     public final String osName;
-    public final ArchInfo archName;
-    public final String arch;
+    public final ArchInfo arch;
+    public final String archName;
     public final String libExt;
 
-    public SystemInfo(OSInfo os, String osName, ArchInfo archName, String arch, String libExt) {
+    public SystemInfo(OSInfo os, String osName, ArchInfo arch, String archName, String libExt) {
         this.os = os;
         this.osName = osName;
-        this.archName = archName;
         this.arch = arch;
+        this.archName = archName;
         this.libExt = libExt;
     }
 

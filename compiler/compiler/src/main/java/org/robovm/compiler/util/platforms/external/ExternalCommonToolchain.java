@@ -20,37 +20,55 @@ import java.util.List;
  */
 public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     private final String URL_XCODE_EXPORT_HELP = "https://github.com/mobivm/robovm";
+    private final String URL_TOOLCHAIN_DOWNLOAD_HELP = "https://github.com/mobivm/robovm";
 
-    // suffix for executable, such as for windows tools to be extended with ".exe"
-    private final String exeSuffix;
+    // extension for executable, such as for windows tools to be extended with ".exe"
+    private final String exeExt;
+
+    // extension for shared libraries, such as for windows libs to be extended with ".dlls"
+    private final String libExt;
 
     // path to expected folder with xcode file export
     private String xcodePath;
+    // path to toolchain home
+    private File toolChainPath;
 
-    private ExternalCommonToolchain(String platform, String exeSuffix) {
+    private ExternalCommonToolchain(String platform, String exeExt, String libExt) {
         super(platform);
-        this.exeSuffix = exeSuffix;
+        this.exeExt = exeExt;
+        this.libExt = libExt;
     }
 
     public static ExternalCommonToolchain Windows() {
-        return new ExternalCommonToolchain("Windows", ".exe");
+        return new ExternalCommonToolchain("Windows", ".exe", ".dll");
     }
 
     public static ExternalCommonToolchain Linux() {
-        return new ExternalCommonToolchain("Linux", "");
+        return new ExternalCommonToolchain("Linux", "", ".so");
     }
 
     // MacOS but using tools Linux way, e.g. without XCode
     public static ExternalCommonToolchain DarwinLinux() {
-        return new ExternalCommonToolchain("DarwinLinux", "");
+        return new ExternalCommonToolchain("DarwinLinux", "", ".dylib");
+    }
+
+    @Override
+    public File getLlvmLibrary() {
+        validateToolchain();
+        return new File(toolChainPath, "librobovm-llvm" + libExt);
+    }
+
+    @Override
+    public File getLibMobDeviceLibrary() {
+        validateToolchain();
+        return new File(toolChainPath, "librobovm-libimobiledevice" + libExt);
     }
 
     @Override
     protected String findXcodePath() throws IOException {
         if (!isXcodeInstalled()) {
-            throw new IllegalArgumentException("Xcode files not found! You have to export XCode files as described at " +
+            throw new Error("Xcode files not found! You have to export XCode files as described at " +
                     URL_XCODE_EXPORT_HELP);
-
         }
         return buildXcodePath();
     }
@@ -171,7 +189,23 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     //
     private String buildXcodePath() {
         if (xcodePath == null)
-            xcodePath =  System.getProperty("user.home") + "/.robovm/platform/Xcode.app/Developer";
+            xcodePath = System.getProperty("user.home") + "/.robovm/platform/Xcode.app/Developer";
         return xcodePath;
+    }
+
+    /**
+     * validates toolchain and throws error if something is not ok
+     */
+    private void validateToolchain() {
+        if (toolChainPath == null)
+            toolChainPath = new File(System.getProperty("user.home") + "/.robovm/platform/toolchain_" + platform + "_"+ ToolchainUtil.getSystemInfo().arch);
+
+        if (!toolChainPath.exists() || !toolChainPath.isDirectory()) {
+            // toolchain not installed
+            throw new Error("Toolchain is not installed for " + ToolchainUtil.getSystemInfo().os + "[" + ToolchainUtil.getSystemInfo().arch +
+                    "]. Please download and install as described at " + URL_TOOLCHAIN_DOWNLOAD_HELP);
+        }
+
+        // TODO: check version and compatibility
     }
 }
