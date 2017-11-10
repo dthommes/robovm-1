@@ -1,17 +1,31 @@
 package org.robovm.utils.codesign.utils;
 
-import com.dd.plist.*;
-import org.bouncycastle.asn1.*;
+import com.dd.plist.NSArray;
+import com.dd.plist.NSData;
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSObject;
+import com.dd.plist.PropertyListFormatException;
+import com.dd.plist.PropertyListParser;
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERSet;
+import org.bouncycastle.asn1.DERUTCTime;
 import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.cms.AttributeTable;
 import org.bouncycastle.asn1.cms.CMSAttributes;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.cms.*;
+import org.bouncycastle.cms.CMSException;
+import org.bouncycastle.cms.CMSProcessableByteArray;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.CMSSignedDataGenerator;
+import org.bouncycastle.cms.DefaultSignedAttributeTableGenerator;
+import org.bouncycastle.cms.SignerInformation;
+import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoGeneratorBuilder;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.util.Store;
 import org.robovm.utils.codesign.CodeSign;
@@ -26,22 +40,21 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.PrivateKey;
-import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 /**
  * utils to sign/check against Cryptographic Message Syntax
  */
 public class CmsSignatureUtils {
     private static ASN1ObjectIdentifier appleHashAgilityOid = new ASN1ObjectIdentifier("1.2.840.113635.100.9.1");
-
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
 
     @SuppressWarnings("unchecked")
     public static boolean verifySignature(VerifyCtx rootCtx, byte[] detachedSignature, List<CodeDirectoryBlob> codeDirs) {
