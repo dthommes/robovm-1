@@ -1,9 +1,13 @@
 package org.robovm.compiler.util.platforms.external;
 
+import org.apache.commons.io.FileUtils;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.OS;
 import org.robovm.compiler.target.ios.DeviceType;
 import org.robovm.compiler.target.ios.SigningIdentity;
+import org.robovm.compiler.util.Executor;
+import org.robovm.compiler.util.platforms.SystemInfo;
 import org.robovm.compiler.util.platforms.ToolchainUtil;
 import org.robovm.utils.codesign.utils.P12Certificate;
 
@@ -11,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -33,10 +38,14 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     // path to toolchain home
     private File toolChainPath;
 
+    // shiny platform name to use in messages
+    private final String shinyPlatformName;
+
     private ExternalCommonToolchain(String platform, String exeExt, String libExt) {
         super(platform);
         this.exeExt = exeExt;
         this.libExt = libExt;
+        shinyPlatformName = ToolchainUtil.getSystemInfo().os + "[" + ToolchainUtil.getSystemInfo().arch + "]";
     }
 
     public static ExternalCommonToolchain Windows() {
@@ -141,7 +150,69 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
 
     @Override
     protected void link(Config config, List<String> args, List<File> objectFiles, List<String> libs, File outFile) throws IOException {
-        super.link(config, args, objectFiles, libs, outFile);
+        validateToolchain();
+
+        // filter out unsupported oses
+        if (config.getOs() == OS.ios && (config.getArch() == Arch.x86 || config.getArch() == Arch.x86_64)) {
+            // simulator is not supported
+            throw new Error("IOS simulator target is not supported in " + shinyPlatformName);
+        } else if (config.getOs() == OS.macosx && ToolchainUtil.getSystemInfo().os != SystemInfo.OSInfo.macosxlinux) {
+            // compile for macos is allowed only in case of forced MACOSLINUX, shall not happen
+            throw new Error("SHALL NOT HAPPEN: MacOSX target shall be selected only under MacOSX platform, not available in " + shinyPlatformName);
+        } else if (config.getOs() == OS.linux && ToolchainUtil.getSystemInfo().os != SystemInfo.OSInfo.linux) {
+            // target is linux on not linux os -- shall not happen
+            throw new Error("SHALL NOT HAPPEN: Linux console target shall be selected only under Linux platform, not available in " + shinyPlatformName);
+        }
+
+        boolean isDarwin = config.getOs().getFamily() == OS.Family.darwin;
+        /*
+         * The Xcode linker doesn't need paths with spaces to be quoted and will
+         * fail if we do quote. The Xcode linker will crash if we pass more than
+         * 65535 files in an objects file.
+         *
+         * The linker on Linux will fail if we don't quote paths with spaces.
+         */
+        List<File> objectsFiles = writeObjectsFiles(config, objectFiles, isDarwin ? 0xffff : Integer.MAX_VALUE,
+                !isDarwin);
+
+        List<String> opts = new ArrayList<String>();
+        if (config.isDebug()) {
+            opts.add("-g");
+        }
+        if (isDarwin) {
+            opts.add("-arch");
+            opts.add(config.getArch().getClangName());
+            for (File objectsFile : objectsFiles) {
+                opts.add("-Wl,-filelist," + objectsFile.getAbsolutePath());
+            }
+            /*
+             * See #123, ignore ld: warning: pointer not aligned at address [infostruct] message with Xcode 8.3
+             * unless we find a better solution
+             */
+            opts.add("-w");
+        } else {
+            opts.add(config.getArch().is32Bit() ? "-m32" : "-m64");
+            for (File objectsFile : objectsFiles) {
+                opts.add("@" + objectsFile.getAbsolutePath());
+            }
+        }
+        opts.addAll(args);
+
+        if (isDarwin) {
+            // there is no clang but only linker so it is required to convert parameters to linkers style similar how it
+            // does CLANG, call it with -v params to observe
+            opts = convertParamsForLinker(opts);
+            libs = convertLibsForLinker(libs);
+
+            // also these to be added when linking directly with ld64
+            opts.add("-demangle");
+            opts.add("-dynamic");
+            libs.add("-lc++");
+        }
+
+        String ccPath = isDarwin ? buildToolPath("arm-apple-darwin11-ld") : "g++";
+        new Executor(config.getLogger(), ccPath).args("-o", outFile, opts, libs).exec();
+
     }
 
     @Override
@@ -202,10 +273,80 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
 
         if (!toolChainPath.exists() || !toolChainPath.isDirectory()) {
             // toolchain not installed
-            throw new Error("Toolchain is not installed for " + ToolchainUtil.getSystemInfo().os + "[" + ToolchainUtil.getSystemInfo().arch +
-                    "]. Please download and install as described at " + URL_TOOLCHAIN_DOWNLOAD_HELP);
+            throw new Error("Toolchain is not installed for " + shinyPlatformName + ". Please download and install as described at " + URL_TOOLCHAIN_DOWNLOAD_HELP);
         }
 
         // TODO: check version and compatibility
+    }
+
+    private String buildToolPath(String toolName) {
+        File toolFile = new File(toolChainPath, toolName + exeExt);
+        return toolFile.getAbsolutePath();
+    }
+
+    // TODO: just copy-paste from DarwinToolchainUtil
+    private static List<File> writeObjectsFiles(Config config, List<File> objectFiles, int maxObjectsPerFile,
+                                                boolean quote) throws IOException {
+
+        ArrayList<File> files = new ArrayList<>();
+        for (int i = 0, start = 0; start < objectFiles.size(); i++, start += maxObjectsPerFile) {
+            List<File> partition = objectFiles.subList(start, Math.min(objectFiles.size(), start + maxObjectsPerFile));
+            List<String> paths = new ArrayList<>();
+            for (File f : partition) {
+                paths.add((quote ? "\"" : "") + f.getAbsolutePath() + (quote ? "\"" : ""));
+            }
+
+            File objectsFile = new File(config.getTmpDir(), "objects" + i);
+            FileUtils.writeLines(objectsFile, paths, "\n");
+            files.add(objectsFile);
+        }
+
+        return files;
+    }
+
+
+    private List<String> convertParamsForLinker(List<String> opts) {
+        List<String> result = new ArrayList<>();
+        Iterator<String> it = opts.iterator();
+        //noinspection WhileLoopReplaceableByForEach
+        while (it.hasNext()) {
+            String p = it.next();
+            if (p.startsWith("-Wl,")) {
+                String str = p.substring("-Wl,".length());
+                // just in case there is a list of params
+                // TODO: potentially problematic
+                Collections.addAll(result, str.split(","));
+            } else if (p.startsWith("-miphoneos-version-min=")) {
+                result.add("-iphoneos_version_min");
+                result.add(p.substring("-miphoneos-version-min=".length()));
+            } else if (p.equals("-isysroot")) {
+                result.add("-syslibroot");
+            } else if (p.equals("-g") || (p.equals("-fPIC"))) {
+                // remove parameters to compiler
+                //noinspection UnnecessaryContinue
+                continue;
+            } else {
+                // just copy
+                result.add(p);
+            }
+        }
+
+        return result;
+    }
+
+    private List<String> convertLibsForLinker(List<String> libs) {
+        List<String> result = new ArrayList<>();
+        Iterator<String> it = libs.iterator();
+        while (it.hasNext()) {
+            String p = it.next();
+            if (p.equals("-Xlinker")) {
+                result.add(it.next());
+            } else {
+                // just copy
+                result.add(p);
+            }
+        }
+
+        return result;
     }
 }

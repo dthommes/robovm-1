@@ -31,6 +31,7 @@ import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
 import org.apache.commons.exec.util.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.robovm.compiler.util.platforms.SystemInfo;
 import org.robovm.compiler.util.platforms.ToolchainUtil;
 
 /**
@@ -120,6 +121,9 @@ public class SDK implements Comparable<SDK> {
     }
 
     private static Collection<? extends SDK> listAdditionalFileFormatSdks() {
+        // no simulator sdk on platforms other than macosx
+        if (ToolchainUtil.getSystemInfo().os != SystemInfo.OSInfo.macosx)
+            return emptyList();
         File sdksDir = new File(ADDITIONAL_SDK_LOCATION);
         if (!sdksDir.isDirectory()) {
             return emptyList();
