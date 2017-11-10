@@ -1,10 +1,12 @@
 package org.robovm.compiler.util.platforms.external;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.target.ios.DeviceType;
+import org.robovm.compiler.target.ios.IOSTarget;
 import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.compiler.util.Executor;
 import org.robovm.compiler.util.platforms.SystemInfo;
@@ -98,9 +100,57 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
         super.textureatlas(config, inDir, outDir);
     }
 
+    // TODO: just copy-paste from DarwinToolchainUtil
     @Override
     protected void actool(Config config, File partialInfoPlist, File inDir, File outDir) throws IOException {
-        super.actool(config, partialInfoPlist, inDir, outDir);
+        List<Object> opts = new ArrayList<>();
+
+        String appIconSetName = null;
+        String launchImagesName = null;
+
+        final String appiconset = "appiconset";
+        final String launchimage = "launchimage";
+
+        for (String fileName : inDir.list()) {
+            String ext = FilenameUtils.getExtension(fileName);
+            if (ext.equals(appiconset)) {
+                appIconSetName = FilenameUtils.getBaseName(fileName);
+            } else if (ext.equals(launchimage)) {
+                launchImagesName = FilenameUtils.getBaseName(fileName);
+            }
+        }
+        if (appIconSetName != null || launchImagesName != null) {
+            if (appIconSetName != null) {
+                opts.add("--app-icon");
+                opts.add(appIconSetName);
+            }
+            if (launchImagesName != null) {
+                opts.add("--launch-image");
+                opts.add(launchImagesName);
+            }
+
+            opts.add("--output-partial-info-plist");
+            opts.add(partialInfoPlist);
+        }
+
+        opts.add("--platform");
+        if (IOSTarget.isDeviceArch(config.getArch())) {
+            opts.add("iphoneos");
+        } else if (IOSTarget.isSimulatorArch(config.getArch())) {
+            opts.add("iphonesimulator");
+        }
+
+        String minOSVersion = config.getOs().getMinVersion();
+        if (config.getIosInfoPList() != null) {
+            String v = config.getIosInfoPList().getMinimumOSVersion();
+            if (v != null) {
+                minOSVersion = v;
+            }
+        }
+
+        new Executor(config.getLogger(), buildToolPath("actool")).args("--output-format", "human-readable-text", opts,
+                "--minimum-deployment-target", minOSVersion, "--target-device", "iphone", "--target-device", "ipad",
+                "--compress-pngs", "--compile", outDir, inDir).exec();
     }
 
     @Override
