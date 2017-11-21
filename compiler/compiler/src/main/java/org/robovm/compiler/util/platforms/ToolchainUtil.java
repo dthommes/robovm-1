@@ -65,10 +65,6 @@ public class ToolchainUtil {
         impl.compileStrings(config, inFile, outFile);
     }
 
-    public static String nm(File file) throws IOException {
-        return impl.nm(file);
-    }
-
     public static String otool(File file) throws IOException {
         return impl.otool(file);
     }
@@ -116,6 +112,13 @@ public class ToolchainUtil {
 
     }
 
+    public static void dsymutil(Config config, File dsymDir, File exePath) throws IOException {
+        impl.dsymutil(config, dsymDir, exePath);
+    }
+
+    public static void strip(Config config,  File exePath) throws IOException {
+        impl.strip(config, exePath);
+    }
 
     /**
      * defines api for each platform
@@ -167,10 +170,6 @@ public class ToolchainUtil {
             throw new RuntimeException("compileStrings not implemented for " + platform);
         }
 
-        protected String nm(File file) throws IOException {
-            throw new RuntimeException("nm not implemented for " + platform);
-        }
-
         protected String otool(File file) throws IOException {
             throw new RuntimeException("otool not implemented for " + platform);
         }
@@ -214,6 +213,14 @@ public class ToolchainUtil {
 
         protected List<SigningIdentity> listSigningIdentity() {
             throw new RuntimeException("listSigningIdentity not implemented for " + platform);
+        }
+
+        protected void dsymutil(Config config, File dsymDir, File exePath) throws IOException {
+            throw new RuntimeException("dsymutil not implemented for " + platform);
+        }
+
+        protected void strip(Config config, File exePath) throws IOException {
+            throw new RuntimeException("strip not implemented for " + platform);
         }
     }
 }

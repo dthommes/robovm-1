@@ -21,6 +21,7 @@ import org.robovm.compiler.util.Executor;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
 
 public class FrameworkTarget extends AbstractTarget {
 
@@ -186,11 +187,11 @@ public class FrameworkTarget extends AbstractTarget {
 		if (dsymDir.exists())
 			FileUtils.deleteDirectory(dsymDir);
 		dsymDir.mkdirs();
-		new Executor(new FilterDSYMWarningsLogger(config.getLogger()), "xcrun").args("dsymutil", "-o", dsymDir, frameworkBinaryFile).exec();
+		ToolchainUtil.dsymutil(config, dsymDir, frameworkBinaryFile);
 		
 		if (!config.isDebug()) {
 			config.getLogger().info("Striping framework binary: %s", frameworkBinaryFile);
-			new Executor(config.getLogger(), "xcrun").args("strip", "-x", frameworkBinaryFile).exec();
+			ToolchainUtil.strip(config, frameworkBinaryFile);
 		}
 		
 		NSDictionary infoPlist = config.getInfoPList().getDictionary();

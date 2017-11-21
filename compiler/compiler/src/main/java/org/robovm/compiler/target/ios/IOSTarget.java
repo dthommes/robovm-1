@@ -490,27 +490,13 @@ public class IOSTarget extends AbstractTarget {
                 }
             }
         };
-        final Process process = new Executor(logger, "xcrun")
-                .args("dsymutil", "-o", dsymDir, exePath)
-                .execAsync();
-        if (copyToIndexedDir) {
-            new Thread() {
-                public void run() {
-                    try {
-                        process.waitFor();
-                    } catch (InterruptedException e) {
-                        return;
-                    }
-                    copyToIndexedDir(dir, executable, dsymDir, exePath);
-                }
-            }.start();
-        }
+        ToolchainUtil.dsymutil(config, dsymDir, exePath);
+        if (copyToIndexedDir)
+            copyToIndexedDir(dir, executable, dsymDir, exePath);
     }
 
     private void strip(File dir, String executable) throws IOException {
-        new Executor(config.getLogger(), "xcrun")
-                .args("strip", "-x", new File(dir, executable))
-                .exec();
+        ToolchainUtil.strip(config, new File(dir, executable));
     }
 
     @Override

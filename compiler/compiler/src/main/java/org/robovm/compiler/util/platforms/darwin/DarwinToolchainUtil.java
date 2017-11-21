@@ -51,6 +51,8 @@ class DarwinToolchainUtil {
     private static String NM;
     private static String OTOOL;
     private static String FILE;
+    private static String DSYMUTIL;
+    private static String STRIP;
 
     private static String getIOSDevClang() throws IOException {
         if (IOS_DEV_CLANG == null) {
@@ -134,6 +136,18 @@ class DarwinToolchainUtil {
             PACKAGE_APPLICATION = findXcodeCommand("PackageApplication", "iphoneos");
         }
         return PACKAGE_APPLICATION;
+    }
+
+    private static String getDSYMUtil() throws IOException {
+        if (DSYMUTIL == null)
+            DSYMUTIL = findXcodeCommand("dsymutil", "iphoneos");
+        return DSYMUTIL;
+    }
+
+    private static String getStrip() throws IOException {
+        if (STRIP == null)
+            STRIP = findXcodeCommand("strip", "iphoneos");
+        return STRIP;
     }
 
     private static void handleExecuteException(ExecuteException e) {
@@ -326,6 +340,14 @@ class DarwinToolchainUtil {
 
     public static void packageApplication(Config config, File appDir, File outFile) throws IOException {
         new Executor(config.getLogger(), getPackageApplication()).args(appDir, "-o", outFile).exec();
+    }
+
+    public static void dsymutil(Config config, File dsymDir, File exePath) throws IOException {
+        new Executor(config.getLogger(), getDSYMUtil()).args("-o", dsymDir, exePath).exec();
+    }
+
+    public static void strip(Config config, File exePath) throws IOException {
+        new Executor(config.getLogger(), getStrip()).args("-x", exePath).exec();
     }
 
     private static List<File> writeObjectsFiles(Config config, List<File> objectFiles, int maxObjectsPerFile,

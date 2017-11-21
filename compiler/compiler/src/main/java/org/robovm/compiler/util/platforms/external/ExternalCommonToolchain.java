@@ -5,16 +5,20 @@ import org.apache.commons.io.FilenameUtils;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
+import org.robovm.compiler.log.ConsoleLogger;
+import org.robovm.compiler.log.Logger;
 import org.robovm.compiler.target.ios.DeviceType;
 import org.robovm.compiler.target.ios.IOSTarget;
 import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.compiler.util.Executor;
 import org.robovm.compiler.util.platforms.SystemInfo;
 import org.robovm.compiler.util.platforms.ToolchainUtil;
+import org.robovm.utils.codesign.CodeSign;
 import org.robovm.utils.codesign.utils.P12Certificate;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -103,6 +107,8 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     // TODO: just copy-paste from DarwinToolchainUtil
     @Override
     protected void actool(Config config, File partialInfoPlist, File inDir, File outDir) throws IOException {
+        validateToolchain();
+
         List<Object> opts = new ArrayList<>();
 
         String appIconSetName = null;
@@ -160,32 +166,47 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
 
     @Override
     protected void compileStrings(Config config, File inFile, File outFile) throws IOException {
-        super.compileStrings(config, inFile, outFile);
-    }
+        validateToolchain();
 
-    @Override
-    protected String nm(File file) throws IOException {
-        return super.nm(file);
+        new Executor(config.getLogger(), buildToolPath("plutil")).args("-convert", "binary1", inFile, "-o", outFile).exec();
     }
 
     @Override
     protected String otool(File file) throws IOException {
-        return super.otool(file);
+        validateToolchain();
+
+        return new Executor(new ConsoleLogger(false), buildToolPath("arm-apple-darwin11-otool")).args("-L", file.getAbsolutePath()).execCapture();
     }
 
     @Override
     protected void lipo(Config config, File outFile, List<File> inFiles) throws IOException {
-        super.lipo(config, outFile, inFiles);
+        validateToolchain();
+
+        new Executor(config.getLogger(), buildToolPath("arm-apple-darwin11-lipo")).args(inFiles, "-create", "-output", outFile).exec();
     }
 
     @Override
-    protected void lipoRemoveArchs(Config config, File file, File inFile, Arch... archs) throws IOException {
-        super.lipoRemoveArchs(config, file, inFile, archs);
+    protected void lipoRemoveArchs(Config config, File outFile, File inFile, Arch... archs) throws IOException {
+        validateToolchain();
+
+        List<Object> args = new ArrayList<>();
+        args.add(inFile);
+        for(Arch arch: archs) {
+            args.add("-remove");
+            args.add(arch.getClangName());
+        }
+        args.add("-output");
+        args.add(outFile);
+        new Executor(config.getLogger(), buildToolPath("arm-apple-darwin11-lipo")).args(args).exec();
     }
 
     @Override
     protected String lipoInfo(Config config, File inFile) throws IOException {
-        return super.lipoInfo(config, inFile);
+        List<Object> args = new ArrayList<>();
+        args.add("-info");
+        args.add(inFile);
+
+        return new Executor(Logger.NULL_LOGGER, buildToolPath("arm-apple-darwin11-lipo")).args(args).execCapture();
     }
 
     @Override
@@ -267,7 +288,13 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
 
     @Override
     protected void codesign(Config config, SigningIdentity identity, File entitlementsPList, boolean preserveMetadata, boolean verbose, boolean allocate, File target) throws IOException {
-        super.codesign(config, identity, entitlementsPList, preserveMetadata, verbose, allocate, target);
+        validateToolchain();
+
+        String codeSignAllocate = null;
+        if (allocate)
+            codeSignAllocate = buildToolPath("arm-apple-darwin11-codesign_allocate");
+        byte[] entitlements = entitlementsPList != null ? Files.readAllBytes(entitlementsPList.toPath()) : null;
+        CodeSign.sign(target, (P12Certificate) identity.getBundle(), entitlements, codeSignAllocate);
     }
 
     @Override
@@ -303,6 +330,20 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
         }
 
         return identities;
+    }
+
+    @Override
+    protected void dsymutil(Config config, File dsymDir, File exePath) throws IOException {
+        validateToolchain();
+
+        new Executor(config.getLogger(), buildToolPath("llvm-dsymutil")).args("-o", dsymDir, exePath).exec();
+    }
+
+    @Override
+    protected void strip(Config config, File exePath) throws IOException {
+        validateToolchain();
+
+        new Executor(config.getLogger(), buildToolPath("arm-apple-darwin11-strip")).args("-x", exePath).exec();
     }
 
     //

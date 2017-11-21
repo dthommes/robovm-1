@@ -81,11 +81,6 @@ public class DarwinToolchain extends ToolchainUtil.Contract {
     }
 
     @Override
-    protected String nm(File file) throws IOException {
-        return DarwinToolchainUtil.nm(file);
-    }
-
-    @Override
     protected String otool(File file) throws IOException {
         return DarwinToolchainUtil.otool(file);
     }
@@ -188,6 +183,20 @@ public class DarwinToolchain extends ToolchainUtil.Contract {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    protected void dsymutil(Config config, File dsymDir, File exePath) throws IOException {
+        DarwinToolchainUtil.dsymutil(config, dsymDir, exePath);
+    }
+
+    @Override
+    protected void strip(Config config, File exePath) throws IOException {
+        DarwinToolchainUtil.strip(config, exePath);
+    }
+
+    //
+    // internal tools
+    //
 
     // intentionally made public static for tests
     public static List<SigningIdentity> parse(String securityOutput) {
