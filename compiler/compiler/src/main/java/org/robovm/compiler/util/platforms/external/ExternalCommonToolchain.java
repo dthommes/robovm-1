@@ -211,7 +211,15 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
 
     @Override
     protected String file(File file) throws IOException {
-        return super.file(file);
+        validateToolchain();
+
+        String filePath;
+        if (ToolchainUtil.getSystemInfo().os == SystemInfo.OSInfo.windows) {
+            filePath = buildToolPath("file");
+        } else {
+            filePath = "file";
+        }
+        return new Executor(Logger.NULL_LOGGER, filePath).args(file).execCapture();
     }
 
     @Override
