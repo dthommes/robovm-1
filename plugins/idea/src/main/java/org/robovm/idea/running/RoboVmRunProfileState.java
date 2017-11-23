@@ -86,15 +86,21 @@ public class RoboVmRunProfileState extends CommandLineState {
     }
 
     protected void customizeLaunchParameters(RoboVmRunConfiguration runConfig, Config config, LaunchParameters launchParameters) throws IOException {
-        launchParameters.setStdoutFifo(Fifos.mkfifo("stdout"));
-        launchParameters.setStderrFifo(Fifos.mkfifo("stderr"));
-
         if(config.getOs() != OS.ios) {
+            launchParameters.setStdoutFifo(Fifos.mkfifo("stdout"));
+            launchParameters.setStderrFifo(Fifos.mkfifo("stderr"));
+
             if(runConfig.getWorkingDir() != null && !runConfig.getWorkingDir().isEmpty()) {
                 launchParameters.setWorkingDirectory(new File(runConfig.getWorkingDir()));
             }
         } else {
             if(launchParameters instanceof IOSSimulatorLaunchParameters) {
+                // create FIFO only for simulator case as it is required with simlauncher
+                // no need in FIFO for run on device as it will be enough regular stdout
+                // also currently no FIFO support done for platforms like Windows
+                launchParameters.setStdoutFifo(Fifos.mkfifo("stdout"));
+                launchParameters.setStderrFifo(Fifos.mkfifo("stderr"));
+
                 IOSSimulatorLaunchParameters simParams = (IOSSimulatorLaunchParameters)launchParameters;
                 for(DeviceType type: DeviceType.listDeviceTypes()) {
                     if (type.getDeviceName().equals(runConfig.getSimulatorName())) {
