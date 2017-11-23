@@ -96,12 +96,14 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
 
     @Override
     protected void pngcrush(Config config, File inFile, File outFile) throws IOException {
-        super.pngcrush(config, inFile, outFile);
+        // TODO: for now just copying png same as in skipcrunch case
+        config.getLogger().info("skipping pngcrunch(just copy) for " + inFile);
+        FileUtils.copyFile(inFile, outFile);
     }
 
     @Override
     protected void textureatlas(Config config, File inDir, File outDir) throws IOException {
-        super.textureatlas(config, inDir, outDir);
+        throw new Error("textureatlas is not available on this platform, please specify custom using Config.Tools.textureAtlas");
     }
 
     // TODO: just copy-paste from DarwinToolchainUtil
