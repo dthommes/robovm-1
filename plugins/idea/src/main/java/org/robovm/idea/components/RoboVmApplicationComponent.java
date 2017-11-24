@@ -64,11 +64,10 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
             } catch (Throwable e) {
                 new XcodeSetupDialog().show();
             }
-        } else {
-            if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_NO_XCODE_WIZARD, false)) {
-                new NoXcodeSetupDialog().show();
-                PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_NO_XCODE_WIZARD, "true");
-            }
+        } else if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_NO_XCODE_WIZARD, false) ||
+                NoXcodeSetupDialog.shallShowDialog()) {
+            new NoXcodeSetupDialog().show();
+            PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_NO_XCODE_WIZARD, "true");
         }
     }
 

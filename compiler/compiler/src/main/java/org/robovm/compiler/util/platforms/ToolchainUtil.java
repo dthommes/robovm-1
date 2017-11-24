@@ -45,6 +45,10 @@ public class ToolchainUtil {
         return impl.isXcodeInstalled();
     }
 
+    public static boolean isToolchainInstalled() {
+        return impl.isToolchainInstalled();
+    }
+
     public static void pngcrush(Config config, File inFile, File outFile) throws IOException {
         impl.pngcrush(config, inFile, outFile);
     }
@@ -132,6 +136,12 @@ public class ToolchainUtil {
             registerLibMobDeviceProvider();
         }
 
+        protected static Contract getImpl() {
+            // this getter is required to expose impl to other contracts to allow finding out which contract is currently
+            // running
+            return impl;
+        }
+
         @Override
         public File getLlvmLibrary() {
             throw new RuntimeException("getLlvmLibrary not implemented for " + platform);
@@ -147,6 +157,10 @@ public class ToolchainUtil {
         }
 
         protected boolean isXcodeInstalled() {
+            return false;
+        }
+
+        protected boolean isToolchainInstalled() {
             return false;
         }
 

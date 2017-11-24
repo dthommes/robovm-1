@@ -30,9 +30,6 @@ import java.util.List;
  * @author dkimitsa
  */
 public class ExternalCommonToolchain extends ToolchainUtil.Contract{
-    private final String URL_XCODE_EXPORT_HELP = "https://github.com/mobivm/robovm";
-    private final String URL_TOOLCHAIN_DOWNLOAD_HELP = "https://github.com/mobivm/robovm";
-
     // extension for executable, such as for windows tools to be extended with ".exe"
     private final String exeExt;
 
@@ -51,7 +48,7 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
         super(platform);
         this.exeExt = exeExt;
         this.libExt = libExt;
-        shinyPlatformName = ToolchainUtil.getSystemInfo().os + "[" + ToolchainUtil.getSystemInfo().arch + "]";
+        shinyPlatformName = ToolchainUtil.getSystemInfo().os + "-" + ToolchainUtil.getSystemInfo().arch;
     }
 
     public static ExternalCommonToolchain Windows() {
@@ -65,6 +62,27 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     // MacOS but using tools Linux way, e.g. without XCode
     public static ExternalCommonToolchain DarwinLinux() {
         return new ExternalCommonToolchain("DarwinLinux", "", ".dylib");
+    }
+
+    /**
+     * @return true if currently running toolchain util is instance of ExternalCommonToolchain
+     */
+    public static boolean isSupported() {
+        return getImpl() instanceof ExternalCommonToolchain;
+    }
+
+    /**
+     * returns help url to be opened in browser, this method to be used with external UI code
+     */
+    public static String getHelpUrl() {
+        return ExternalCommonToolchainConsts.TOOLCHAIN_DOWNLOAD_URL;
+    }
+
+    /**
+     * @return platform id
+     */
+    public static String getPlatformId() {
+        return ToolchainUtil.getSystemInfo().os + "-" + ToolchainUtil.getSystemInfo().arch;
     }
 
     @Override
@@ -83,7 +101,7 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     protected String findXcodePath() throws IOException {
         if (!isXcodeInstalled()) {
             throw new Error("Xcode files not found! You have to export XCode files as described at " +
-                    URL_XCODE_EXPORT_HELP);
+                    ExternalCommonToolchainConsts.TOOLCHAIN_DOWNLOAD_URL);
         }
         return buildXcodePath();
     }
@@ -92,6 +110,17 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     protected boolean isXcodeInstalled() {
         File xcodePath = new File (buildXcodePath());
         return xcodePath.exists() && xcodePath.isDirectory();
+    }
+
+    @Override
+    protected boolean isToolchainInstalled() {
+        try {
+            validateToolchain();
+            return true;
+        } catch (Throwable ignored) {
+        }
+
+        return false;
     }
 
     @Override
@@ -374,7 +403,8 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
 
         if (!toolChainPath.exists() || !toolChainPath.isDirectory()) {
             // toolchain not installed
-            throw new Error("Toolchain is not installed for " + shinyPlatformName + ". Please download and install as described at " + URL_TOOLCHAIN_DOWNLOAD_HELP);
+            throw new Error("Toolchain is not installed for " + shinyPlatformName + ". Please download and install as described at " +
+                    ExternalCommonToolchainConsts.TOOLCHAIN_DOWNLOAD_URL);
         }
 
         // TODO: check version and compatibility

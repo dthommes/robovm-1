@@ -56,6 +56,11 @@ public class DarwinToolchain extends ToolchainUtil.Contract {
     }
 
     @Override
+    protected boolean isToolchainInstalled() {
+        return isXcodeInstalled();
+    }
+
+    @Override
     protected void pngcrush(Config config, File inFile, File outFile) throws IOException {
         DarwinToolchainUtil.pngcrush(config, inFile, outFile);
     }
