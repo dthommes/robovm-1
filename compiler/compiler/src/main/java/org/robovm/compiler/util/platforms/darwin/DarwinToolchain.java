@@ -190,8 +190,8 @@ public class DarwinToolchain extends ToolchainUtil.Contract {
     }
 
     @Override
-    protected void dsymutil(Config config, File dsymDir, File exePath) throws IOException {
-        DarwinToolchainUtil.dsymutil(config, dsymDir, exePath);
+    protected void dsymutil(Logger logger, File dsymDir, File exePath) throws IOException {
+        DarwinToolchainUtil.dsymutil(logger, dsymDir, exePath);
     }
 
     @Override

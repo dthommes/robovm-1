@@ -342,8 +342,8 @@ class DarwinToolchainUtil {
         new Executor(config.getLogger(), getPackageApplication()).args(appDir, "-o", outFile).exec();
     }
 
-    public static void dsymutil(Config config, File dsymDir, File exePath) throws IOException {
-        new Executor(config.getLogger(), getDSYMUtil()).args("-o", dsymDir, exePath).exec();
+    public static void dsymutil(Logger logger, File dsymDir, File exePath) throws IOException {
+        new Executor(logger, getDSYMUtil()).args("-o", dsymDir, exePath).exec();
     }
 
     public static void strip(Config config, File exePath) throws IOException {

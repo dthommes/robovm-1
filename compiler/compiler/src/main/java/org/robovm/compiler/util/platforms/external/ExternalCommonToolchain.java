@@ -378,10 +378,10 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     }
 
     @Override
-    protected void dsymutil(Config config, File dsymDir, File exePath) throws IOException {
+    protected void dsymutil(Logger logger, File dsymDir, File exePath) throws IOException {
         validateToolchain();
 
-        new Executor(config.getLogger(), buildToolPath("llvm-dsymutil")).args("-o", dsymDir, exePath).exec();
+        new Executor(logger, buildToolPath("llvm-dsymutil")).args("-o", dsymDir, exePath).exec();
     }
 
     @Override

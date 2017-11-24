@@ -2,6 +2,8 @@ package org.robovm.compiler.util.platforms;
 
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.log.Logger;
+import org.robovm.compiler.log.LoggerProxy;
 import org.robovm.compiler.target.ios.DeviceType;
 import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.compiler.util.platforms.darwin.DarwinToolchain;
@@ -117,7 +119,16 @@ public class ToolchainUtil {
     }
 
     public static void dsymutil(Config config, File dsymDir, File exePath) throws IOException {
-        impl.dsymutil(config, dsymDir, exePath);
+        Logger logger = new LoggerProxy(config.getLogger()) {
+            @Override
+            public void warn(String format, Object... args) {
+                if (!(format.startsWith("warning:") && format.contains("could not find object file symbol for symbol"))) {
+                    // Suppress this kind of warnings for now. See robovm/robovm#1126.
+                    super.warn(format, args);
+                }
+            }
+        };
+        impl.dsymutil(logger, dsymDir, exePath);
     }
 
     public static void strip(Config config,  File exePath) throws IOException {
@@ -229,7 +240,7 @@ public class ToolchainUtil {
             throw new RuntimeException("listSigningIdentity not implemented for " + platform);
         }
 
-        protected void dsymutil(Config config, File dsymDir, File exePath) throws IOException {
+        protected void dsymutil(Logger logger, File dsymDir, File exePath) throws IOException {
             throw new RuntimeException("dsymutil not implemented for " + platform);
         }
 

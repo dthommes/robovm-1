@@ -25,36 +25,36 @@ import org.robovm.compiler.util.platforms.ToolchainUtil;
 
 public class FrameworkTarget extends AbstractTarget {
 
-	public static final String TYPE = "framework";
+    public static final String TYPE = "framework";
 
     private OS os;
     private Arch arch;
     private SDK sdk;
 
     public FrameworkTarget() {
-	}
-
-	@Override
-	public String getType() {
-		return TYPE;
-	}
-
-	@Override
-	public OS getOs() {
-		return os;
-	}
-
-	@Override
-	public Arch getArch() {
-		return arch;
-	}
+    }
 
     @Override
-	public boolean canLaunch() {
-		return false;
-	}
+    public String getType() {
+        return TYPE;
+    }
 
-	public static boolean isSimulatorArch(Arch arch) {
+    @Override
+    public OS getOs() {
+        return os;
+    }
+
+    @Override
+    public Arch getArch() {
+        return arch;
+    }
+
+    @Override
+    public boolean canLaunch() {
+        return false;
+    }
+
+    public static boolean isSimulatorArch(Arch arch) {
         return arch == Arch.x86 || arch == Arch.x86_64;
     }
 
@@ -71,10 +71,10 @@ public class FrameworkTarget extends AbstractTarget {
         }
     }
 
-	public void init(Config paramConfig) {
-		super.init(paramConfig);
+    public void init(Config paramConfig) {
+        super.init(paramConfig);
 
-		os = config.getOs();
+        os = config.getOs();
         if (os == null)
             os = OS.getDefaultOS();
 
@@ -82,16 +82,16 @@ public class FrameworkTarget extends AbstractTarget {
         if (arch == null)
             arch = Arch.getDefaultArch();
 
-		if (os.getFamily() != OS.Family.darwin)
-			throw new IllegalArgumentException("Frameworks can only be built for Darwin platforms");
-		
-		if (paramConfig.getInfoPList() == null)
-			throw new IllegalArgumentException("Frameworks must have a Info.plist file");
-		paramConfig.getIosInfoPList().parse(paramConfig.getProperties());
-		
-		String sdkVersion = config.getIosSdkVersion();
-        
-		List<SDK> sdks = getSDKs();
+        if (os.getFamily() != OS.Family.darwin)
+            throw new IllegalArgumentException("Frameworks can only be built for Darwin platforms");
+
+        if (paramConfig.getInfoPList() == null)
+            throw new IllegalArgumentException("Frameworks must have a Info.plist file");
+        paramConfig.getIosInfoPList().parse(paramConfig.getProperties());
+
+        String sdkVersion = config.getIosSdkVersion();
+
+        List<SDK> sdks = getSDKs();
         if (sdkVersion == null) {
             if (sdks.isEmpty()) {
                 throw new IllegalArgumentException("No " + (isDeviceArch(arch) ? "device" : "simulator")
@@ -99,8 +99,7 @@ public class FrameworkTarget extends AbstractTarget {
             }
             Collections.sort(sdks);
             this.sdk = sdks.get(sdks.size() - 1);
-        }
-        else {
+        } else {
             for (SDK sdk : sdks) {
                 if (sdk.getVersion().equals(sdkVersion)) {
                     this.sdk = sdk;
@@ -110,109 +109,96 @@ public class FrameworkTarget extends AbstractTarget {
             if (sdk == null) {
                 throw new IllegalArgumentException("No SDK found matching version string " + sdkVersion);
             }
-        }		
-	}
+        }
+    }
 
-	@Override
-	public String getInstallRelativeArchivePath(Path path) {
-		return config.getImageName() + ".bundle/Resources/" + super.getInstallRelativeArchivePath(path);
-	}
+    @Override
+    public String getInstallRelativeArchivePath(Path path) {
+        return config.getImageName() + ".bundle/Resources/" + super.getInstallRelativeArchivePath(path);
+    }
 
-	@Override
-	protected List<String> getTargetExportedSymbols() {
-		return Arrays.asList(new String[] { "JNI_*" });
-	}
-	
-	private String getMinimumOSVersion() {
-		NSObject minimumOSVersion = config.getInfoPList().getDictionary().objectForKey("MinimumOSVersion");
-		if (minimumOSVersion != null)
-			return minimumOSVersion.toString();
-		return "8.0";
-	}
+    @Override
+    protected List<String> getTargetExportedSymbols() {
+        return Arrays.asList(new String[]{"JNI_*"});
+    }
 
-	@Override
-	protected List<String> getTargetCcArgs() {
-		List<String> ccArgs = new ArrayList<String>();
-		
-		ccArgs.add("-stdlib=libc++");
-		
-		if (isDeviceArch(arch))
-			ccArgs.add("-miphoneos-version-min=" + getMinimumOSVersion());
-		else
-			ccArgs.add("-mios-simulator-version-min=" + getMinimumOSVersion());
-		
-		ccArgs.add("-isysroot");
-		ccArgs.add(sdk.getRoot().getAbsolutePath());
-		
-		ccArgs.add("-dynamiclib");
-		ccArgs.add("-single_module");
-		ccArgs.add("-compatibility_version");
-		ccArgs.add("1");
-		ccArgs.add("-current_version");
-		ccArgs.add("1");
-		
-		if (this.config.getArch() == Arch.x86) {
-			ccArgs.add("-read_only_relocs");
-			ccArgs.add("suppress");
-		}
-		
-		ccArgs.add("-install_name");
-		ccArgs.add(String.format("@rpath/%s.framework/%s", config.getImageName(), config.getImageName()));
+    private String getMinimumOSVersion() {
+        NSObject minimumOSVersion = config.getInfoPList().getDictionary().objectForKey("MinimumOSVersion");
+        if (minimumOSVersion != null)
+            return minimumOSVersion.toString();
+        return "8.0";
+    }
 
-		return ccArgs;
-	}
+    @Override
+    protected List<String> getTargetCcArgs() {
+        List<String> ccArgs = new ArrayList<String>();
 
-	@Override
-	protected void doInstall(File installDir, String image, File resourcesDir) throws IOException {
-		File frameworkDir = new File(installDir, image + ".framework");
-		
-		config.getLogger().info("Creating framework: %s", frameworkDir);
-		
-		if (frameworkDir.exists())
-			FileUtils.deleteDirectory(frameworkDir);
-		frameworkDir.mkdirs();
-		
-		File bundleDir = new File(frameworkDir, image + ".bundle");
-		bundleDir.mkdirs();
-		
-		File bundleResourcesDir = new File(bundleDir, "Resources");
-		bundleResourcesDir.mkdirs();
-				
-		super.doInstall(frameworkDir, image, bundleResourcesDir);
-		
-		File frameworkBinaryFile = new File(frameworkDir, image);
-		File dsymDir = new File(installDir, image + ".dSYM");
-		
-		config.getLogger().info("Creating framework symbol directory: %s", dsymDir);
-		if (dsymDir.exists())
-			FileUtils.deleteDirectory(dsymDir);
-		dsymDir.mkdirs();
-		ToolchainUtil.dsymutil(config, dsymDir, frameworkBinaryFile);
-		
-		if (!config.isDebug()) {
-			config.getLogger().info("Striping framework binary: %s", frameworkBinaryFile);
-			ToolchainUtil.strip(config, frameworkBinaryFile);
-		}
-		
-		NSDictionary infoPlist = config.getInfoPList().getDictionary();
-		if (infoPlist.objectForKey("MinimumOSVersion") == null)
-			infoPlist.put("MinimumOSVersion", "8.0");
-		
-		File infoPlistBin = new File(frameworkDir, "Info.plist");
-		config.getLogger().info("Installing Info.plist to: %s", infoPlistBin);
-		PropertyListParser.saveAsBinary(infoPlist, infoPlistBin);
-	}
-	
-	private static class FilterDSYMWarningsLogger extends LoggerProxy {
+        ccArgs.add("-stdlib=libc++");
 
-		public FilterDSYMWarningsLogger(Logger target) {
-			super(target);
-		}
+        if (isDeviceArch(arch))
+            ccArgs.add("-miphoneos-version-min=" + getMinimumOSVersion());
+        else
+            ccArgs.add("-mios-simulator-version-min=" + getMinimumOSVersion());
 
-		@Override
-		public void warn(String format, Object... args) {
-			if (!(format.startsWith("warning:") && format.contains("could not find object file symbol for symbol"))) 
-				super.warn(format, args);
-		}
-	}
+        ccArgs.add("-isysroot");
+        ccArgs.add(sdk.getRoot().getAbsolutePath());
+
+        ccArgs.add("-dynamiclib");
+        ccArgs.add("-single_module");
+        ccArgs.add("-compatibility_version");
+        ccArgs.add("1");
+        ccArgs.add("-current_version");
+        ccArgs.add("1");
+
+        if (this.config.getArch() == Arch.x86) {
+            ccArgs.add("-read_only_relocs");
+            ccArgs.add("suppress");
+        }
+
+        ccArgs.add("-install_name");
+        ccArgs.add(String.format("@rpath/%s.framework/%s", config.getImageName(), config.getImageName()));
+
+        return ccArgs;
+    }
+
+    @Override
+    protected void doInstall(File installDir, String image, File resourcesDir) throws IOException {
+        File frameworkDir = new File(installDir, image + ".framework");
+
+        config.getLogger().info("Creating framework: %s", frameworkDir);
+
+        if (frameworkDir.exists())
+            FileUtils.deleteDirectory(frameworkDir);
+        frameworkDir.mkdirs();
+
+        File bundleDir = new File(frameworkDir, image + ".bundle");
+        bundleDir.mkdirs();
+
+        File bundleResourcesDir = new File(bundleDir, "Resources");
+        bundleResourcesDir.mkdirs();
+
+        super.doInstall(frameworkDir, image, bundleResourcesDir);
+
+        File frameworkBinaryFile = new File(frameworkDir, image);
+        File dsymDir = new File(installDir, image + ".dSYM");
+
+        config.getLogger().info("Creating framework symbol directory: %s", dsymDir);
+        if (dsymDir.exists())
+            FileUtils.deleteDirectory(dsymDir);
+        dsymDir.mkdirs();
+        ToolchainUtil.dsymutil(config, dsymDir, frameworkBinaryFile);
+
+        if (!config.isDebug()) {
+            config.getLogger().info("Striping framework binary: %s", frameworkBinaryFile);
+            ToolchainUtil.strip(config, frameworkBinaryFile);
+        }
+
+        NSDictionary infoPlist = config.getInfoPList().getDictionary();
+        if (infoPlist.objectForKey("MinimumOSVersion") == null)
+            infoPlist.put("MinimumOSVersion", "8.0");
+
+        File infoPlistBin = new File(frameworkDir, "Info.plist");
+        config.getLogger().info("Installing Info.plist to: %s", infoPlistBin);
+        PropertyListParser.saveAsBinary(infoPlist, infoPlistBin);
+    }
 }
