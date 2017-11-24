@@ -7,4 +7,12 @@ package org.robovm.compiler.util.platforms.external;
 class ExternalCommonToolchainConsts {
     // TODO: udpate the link
     final static String TOOLCHAIN_DOWNLOAD_URL = "https://github.com/mobivm/robovm";
+
+    // version of toolchain currently supported
+    // toolchain is considered supported if major.minor.xxx version specified in toolchain
+    // same as defined here. it means that contract (e.g. parameter set) is compatible
+    // rev value could be any but higher than specified
+    // version is encoded as  (((major * 1000 + minor) * 1000 + rev) * 1000) + build + buildType
+    @SuppressWarnings("PointlessArithmeticExpression")
+    final static long TOOLCHAIN_VERSION = ((0 * 1000 + 1) * 1000 + 1);
 }

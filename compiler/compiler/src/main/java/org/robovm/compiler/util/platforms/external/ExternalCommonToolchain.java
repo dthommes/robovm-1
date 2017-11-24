@@ -2,6 +2,7 @@ package org.robovm.compiler.util.platforms.external;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
@@ -17,12 +18,15 @@ import org.robovm.utils.codesign.CodeSign;
 import org.robovm.utils.codesign.utils.P12Certificate;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Toolchain for platforms where tools, certificates, xcode exports are to be crossbuilt and provided
@@ -40,6 +44,8 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     private String xcodePath;
     // path to toolchain home
     private File toolChainPath;
+    // toolchain version
+    private Long toolchainVersion;
 
     // shiny platform name to use in messages
     private final String shinyPlatformName;
@@ -52,16 +58,16 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     }
 
     public static ExternalCommonToolchain Windows() {
-        return new ExternalCommonToolchain("Windows", ".exe", ".dll");
+        return new ExternalCommonToolchain("windows", ".exe", ".dll");
     }
 
     public static ExternalCommonToolchain Linux() {
-        return new ExternalCommonToolchain("Linux", "", ".so");
+        return new ExternalCommonToolchain("linux", "", ".so");
     }
 
     // MacOS but using tools Linux way, e.g. without XCode
     public static ExternalCommonToolchain DarwinLinux() {
-        return new ExternalCommonToolchain("DarwinLinux", "", ".dylib");
+        return new ExternalCommonToolchain("darwinlinux", "", ".dylib");
     }
 
     /**
@@ -398,16 +404,48 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
      * validates toolchain and throws error if something is not ok
      */
     private void validateToolchain() {
-        if (toolChainPath == null)
-            toolChainPath = new File(System.getProperty("user.home") + "/.robovm/platform/toolchain_" + platform + "_"+ ToolchainUtil.getSystemInfo().arch);
+        if (toolchainVersion == null) {
+            if (toolChainPath == null)
+                toolChainPath = new File(System.getProperty("user.home") + "/.robovm/platform/" + platform + "-" + ToolchainUtil.getSystemInfo().arch);
 
-        if (!toolChainPath.exists() || !toolChainPath.isDirectory()) {
-            // toolchain not installed
-            throw new Error("Toolchain is not installed for " + shinyPlatformName + ". Please download and install as described at " +
-                    ExternalCommonToolchainConsts.TOOLCHAIN_DOWNLOAD_URL);
+            if (!toolChainPath.exists() || !toolChainPath.isDirectory()) {
+                // toolchain not installed
+                throw new Error("Toolchain is not installed for " + shinyPlatformName + ". Please download and install as described at " +
+                        ExternalCommonToolchainConsts.TOOLCHAIN_DOWNLOAD_URL);
+            }
+
+            // read manifest to get version
+            InputStream is = null;
+            try {
+                is = new FileInputStream(new File(toolChainPath, "manifest"));
+                Properties props = new Properties();
+                props.load(is);
+                String v = props.getProperty("@version");
+                String[] parts = v.split("\\.");
+                if (parts.length > 3) {
+                    throw new IllegalArgumentException("Illegal version number: " + v);
+                }
+                long major = parts.length > 0 ? Long.parseLong(parts[0]) : 0;
+                long minor = parts.length > 1 ? Long.parseLong(parts[1]) : 0;
+                long rev = parts.length > 2 ? Long.parseLong(parts[2]) : 0;
+                toolchainVersion = (major * 1000 + minor) * 1000 + rev;
+            } catch (Throwable e) {
+                throw new  Error("Toolchain is corrupted! Failed to read manifers", e);
+            } finally {
+                IOUtils.closeQuietly(is);
+            }
         }
 
-        // TODO: check version and compatibility
+        // compare version
+        if (toolchainVersion < ExternalCommonToolchainConsts.TOOLCHAIN_VERSION) {
+            throw new  Error("Toolchain version is outdated(" +  toolchainVersion +
+                    "), expected >= " + ExternalCommonToolchainConsts.TOOLCHAIN_VERSION);
+        }
+
+        if (toolchainVersion / 1000L != ExternalCommonToolchainConsts.TOOLCHAIN_VERSION / 1000L) {
+            throw new  Error("Toolchain version is not compatible(" +  toolchainVersion +
+                    "), expected " + (ExternalCommonToolchainConsts.TOOLCHAIN_VERSION / 1000L) + "XXX");
+        }
     }
 
     private String buildToolPath(String toolName) {
