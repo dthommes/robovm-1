@@ -28,9 +28,9 @@ public class ToolchainUtil {
         else if (systemInfo.os == SystemInfo.OSInfo.macosxlinux)
             impl = ExternalCommonToolchain.DarwinLinux();
         else if (systemInfo.os == SystemInfo.OSInfo.windows)
-            impl = ExternalCommonToolchain.Linux();
-        else if (systemInfo.os == SystemInfo.OSInfo.linux)
             impl = ExternalCommonToolchain.Windows();
+        else if (systemInfo.os == SystemInfo.OSInfo.linux)
+            impl = ExternalCommonToolchain.Linux();
         else
             impl = new Contract("Unsupported OS - " + systemInfo.osName);
     }
