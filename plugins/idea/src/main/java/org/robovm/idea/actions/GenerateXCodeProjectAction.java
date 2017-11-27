@@ -20,10 +20,14 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataConstants;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
+import org.robovm.compiler.util.platforms.SystemInfo;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
 import org.robovm.idea.RoboVmPlugin;
 import org.robovm.idea.ibxcode.RoboVmIbXcodeProjectTask;
 
 public class GenerateXCodeProjectAction extends AnAction {
+    // xcode project is available only on mac
+    private final boolean available = ToolchainUtil.getSystemInfo().os == SystemInfo.OSInfo.macosx;
 
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
@@ -43,7 +47,7 @@ public class GenerateXCodeProjectAction extends AnAction {
         String moduleName = module.getName();
         if (moduleName.endsWith("_main"))
             return module;
-        // try to find module with sufix
+        // try to find module with suffix
         moduleName += "_main";
         for (Module m : ModuleManager.getInstance(module.getProject()).getModules()) {
             if (m.getName().equals(moduleName))
@@ -55,7 +59,7 @@ public class GenerateXCodeProjectAction extends AnAction {
 
     @Override
     public void update(AnActionEvent e) {
-        e.getPresentation().setEnabled(!RoboVmIbXcodeProjectTask.isBusy() && isValidModuleEvent(e));
+        e.getPresentation().setEnabled(available && !RoboVmIbXcodeProjectTask.isBusy() && isValidModuleEvent(e));
     }
 
     private boolean isValidModuleEvent(AnActionEvent e) {
