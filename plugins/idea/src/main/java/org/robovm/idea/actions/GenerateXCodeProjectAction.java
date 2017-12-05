@@ -27,7 +27,8 @@ import org.robovm.idea.ibxcode.RoboVmIbXcodeProjectTask;
 
 public class GenerateXCodeProjectAction extends AnAction {
     // xcode project is available only on mac
-    private final boolean available = ToolchainUtil.getSystemInfo().os == SystemInfo.OSInfo.macosx;
+    private final boolean available = ToolchainUtil.getSystemInfo().os == SystemInfo.OSInfo.macosx ||
+            ToolchainUtil.getSystemInfo().os == SystemInfo.OSInfo.macosxlinux;
 
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
