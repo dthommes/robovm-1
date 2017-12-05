@@ -23,7 +23,7 @@ import org.robovm.llvm.Target;
  *
  */
 public enum OS {
-    linux("linux", "linux"), macosx("macosx10.9.0", "10.9"), ios("ios7.0.0", "7.0");
+    linux("linux", "linux"), macosx("macosx10.9.0", "10.9"), ios("ios7.0.0", "7.0"), windows("windows", "windows");
     
     public enum Family {linux, darwin}
 
@@ -54,6 +54,9 @@ public enum OS {
         }
         if (hostTriple.contains("darwin") || hostTriple.contains("apple")) {
             return OS.macosx;
+        }
+        if (hostTriple.contains("windows") || hostTriple.contains("mingw")) {
+            return OS.windows;
         }
         throw new IllegalArgumentException("Unrecognized OS in host triple: " + hostTriple);
     }
