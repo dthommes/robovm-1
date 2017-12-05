@@ -129,4 +129,8 @@ public class VmDebuggerState {
     public Object centralLock() {
         return centralLock;
     }
+
+    public void shutdown() {
+        appFileLoader.close();
+    }
 }

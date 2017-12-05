@@ -90,13 +90,13 @@ public class Debugger implements DebuggerThread.Catcher, IHooksEventsHandler, IJ
         this.hooksChannel.start();
     }
 
-    private volatile boolean shutingDown;
+    private volatile boolean shuttingDown;
     public void shutdown() {
         // only one shutdown is allowed
         synchronized (this) {
-            if (shutingDown)
+            if (shuttingDown)
                 return;
-            shutingDown = true;
+            shuttingDown = true;
         }
 
         delegates.shutdown();
@@ -104,6 +104,9 @@ public class Debugger implements DebuggerThread.Catcher, IHooksEventsHandler, IJ
         // shutdown JDWP and hooks
         jdwpServer.shutdown();
         hooksChannel.shutdown();
+
+        // shutdown state -- just to close mmap to file
+        state.shutdown();
 
         // if it is standalone run -- terminate app
         if (config.isStandalone())

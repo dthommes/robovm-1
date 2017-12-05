@@ -23,13 +23,15 @@ import org.robovm.debugger.utils.macho.cmds.SymtabCommand;
 import org.robovm.debugger.utils.macho.structs.MachHeader;
 import org.robovm.debugger.utils.macho.structs.NList;
 import org.robovm.debugger.utils.macho.structs.Section;
+import sun.nio.ch.DirectBuffer;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,12 +49,15 @@ public class MachOLoader {
     private Map<String, Long> symTable = new HashMap<>();
     private SegmentCommand dataSegment;
 
+    MappedByteBuffer executableFileBuffer;
+    FileChannel executableFileChannel;
 
     public MachOLoader(File executable, int cpuType) throws MachOException {
-
         ByteBuffer bb;
         try {
-            bb = new RandomAccessFile(executable, "r").getChannel().map(FileChannel.MapMode.READ_ONLY, 0, executable.length()).asReadOnlyBuffer();
+            executableFileChannel = FileChannel.open(executable.toPath(), StandardOpenOption.READ);
+            executableFileBuffer = executableFileChannel.map(FileChannel.MapMode.READ_ONLY, 0, executable.length());
+            bb = executableFileBuffer.asReadOnlyBuffer();
         } catch (IOException e) {
             throw new MachOException("Failed to open mach-o file", e);
         }
@@ -75,6 +80,19 @@ public class MachOLoader {
 
         // get some useful data
         readCommandData(rootReader, machOHeader);
+    }
+
+    public void close() {
+        try {
+            executableFileChannel.close();
+            if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+                // dkimitsa: this is extremely not portable solution but it looks it is the only
+                // way to make ByteBuffer to unmap file
+                sun.misc.Cleaner cleaner = ((DirectBuffer) executableFileBuffer).cleaner();
+                cleaner.clean();
+            }
+        } catch (IOException ignored) {
+        }
     }
 
     private MachHeader parseMachHeader(ByteBufferReader reader, long magic) throws MachOException {
