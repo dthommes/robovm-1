@@ -94,6 +94,11 @@
     </dependency>
     <dependency>
       <groupId>com.mobidevelop.robovm</groupId>
+      <artifactId>robovm-codesign</artifactId>
+      <version>0.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.mobidevelop.robovm</groupId>
       <artifactId>robovm-rt</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
