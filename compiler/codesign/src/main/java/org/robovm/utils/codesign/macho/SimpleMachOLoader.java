@@ -42,46 +42,59 @@ public class SimpleMachOLoader implements AutoCloseable{
             throw new MachOException("Failed to open mach-o file", e);
         }
 
-        // read architectures
-        sliceList = new ArrayList<>();
-        int magic = rootReader.getInt();
-        if (magic == FAT_CIGAM || magic == FAT_MAGIC) {
-            // get another reader, as fat header always big endian
-            FileByteBuffer fatReader = rootReader.slice();
-            fatReader.order(magic == FAT_MAGIC ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
+        try {
+            // read architectures
+            sliceList = new ArrayList<>();
+            int magic = rootReader.getInt();
+            if (magic == FAT_CIGAM || magic == FAT_MAGIC) {
+                // get another reader, as fat header always big endian
+                FileByteBuffer fatReader = rootReader.slice();
+                fatReader.order(magic == FAT_MAGIC ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
 
-            int count = fatReader.getInt();
-            for (int i = 0; i < count; i++) {
-                // read FatArch struct
-                //cpu_type_t	cputype;	/* cpu specifier (int) */
-                int cputype = fatReader.getInt();
-                //cpu_subtype_t	cpusubtype;	/* machine specifier (int) */
-                int cpusubtype = fatReader.getInt();
-                //uint32_t	offset;		/* file offset to this object file */
-                int offset = fatReader.getInt();
-                //uint32_t	size;		/* size of this object file */
-                int size = fatReader.getInt();
-                //uint32_t	align;		/* alignment as a power of 2 */
-                int align = fatReader.getInt();
+                int count = fatReader.getInt();
+                for (int i = 0; i < count; i++) {
+                    // read FatArch struct
+                    //cpu_type_t	cputype;	/* cpu specifier (int) */
+                    int cputype = fatReader.getInt();
+                    //cpu_subtype_t	cpusubtype;	/* machine specifier (int) */
+                    int cpusubtype = fatReader.getInt();
+                    //uint32_t	offset;		/* file offset to this object file */
+                    int offset = fatReader.getInt();
+                    //uint32_t	size;		/* size of this object file */
+                    int size = fatReader.getInt();
+                    //uint32_t	align;		/* alignment as a power of 2 */
+                    int align = fatReader.getInt();
 
-                // handle slice
-                rootReader.position(offset);
-                FileByteBuffer sliceReader = rootReader.slice();
-                sliceReader.order(ByteOrder.BIG_ENDIAN);
-                sliceReader.limit(size);
-                int sliceMagic = sliceReader.getInt();
-                sliceList.add(readSlice(offset, sliceReader, sliceMagic));
+                    // handle slice
+                    rootReader.position(offset);
+                    FileByteBuffer sliceReader = rootReader.slice();
+                    sliceReader.order(ByteOrder.BIG_ENDIAN);
+                    sliceReader.limit(size);
+                    int sliceMagic = sliceReader.getInt();
+                    sliceList.add(readSlice(offset, sliceReader, sliceMagic));
+                }
+            } else  {
+                sliceList.add(readSlice(0, rootReader, magic));
             }
-        } else  {
-            sliceList.add(readSlice(0, rootReader, magic));
+        } catch (MachOException e) {
+            close(true);
+            throw e;
+        } catch (Throwable e) {
+            close(true);
+            throw new MachOException("Failed to handle mach-o file", e);
         }
     }
 
     public void close() {
+        close(false);
+    }
+
+    public void close(boolean silent) {
         try {
             executableFile.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            if (!silent)
+                throw new RuntimeException(e);
         }
     }
 

@@ -55,6 +55,7 @@ public enum DiggestAlgorithm {
             while ((bytesRead = is.read(buf)) != -1)
                 hasher.update(buf, 0, bytesRead);
             byte[] bytes = hasher.digest();
+            is.close();
             return (bytes.length > this.hashSize) ? Arrays.copyOf(bytes, this.hashSize) : bytes;
         } catch (NoSuchAlgorithmException | IOException e) {
             throw new RuntimeException(e);
