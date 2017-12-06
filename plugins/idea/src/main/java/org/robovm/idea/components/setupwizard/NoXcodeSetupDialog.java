@@ -28,6 +28,9 @@ public class NoXcodeSetupDialog extends JDialog {
             // this platform is supported, and packages can be downloaded
             infoText.setText(getInfoText(true, true));
 
+            // tell user that next button actually acts as skip
+            nextButton.setText("skip");
+
             // update what is missing and start the process
             validateInput();
             updateThread = new Thread(new Runnable() {
@@ -53,9 +56,6 @@ public class NoXcodeSetupDialog extends JDialog {
                 } catch (Throwable ignored) {
                 }
             });
-
-            // tell user that next button actually acts as skip
-            nextButton.setText("skip");
         } else {
             infoText.setText(getInfoText(false, false));
             howToInstallButton.setVisible(false);
