@@ -88,7 +88,7 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
         updateDeviceConfig(config);
         updateSimulatorConfig(config);
 
-        if (config.getTargetType() == RoboVmRunConfiguration.TargetType.Simulator && !simulatorRadioButton.isEnabled())
+        if (config.getTargetType() != RoboVmRunConfiguration.TargetType.Device && !simulatorRadioButton.isEnabled())
             config.setTargetType(RoboVmRunConfiguration.TargetType.Device );
         attachedDeviceRadioButton.setSelected(config.getTargetType() == RoboVmRunConfiguration.TargetType.Device);
         args.setText(config.getArguments());
