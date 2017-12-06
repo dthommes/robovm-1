@@ -6,7 +6,7 @@ package org.robovm.compiler.util.platforms.external;
  */
 class ExternalCommonToolchainConsts {
     // TODO: udpate the link
-    final static String TOOLCHAIN_DOWNLOAD_URL = "https://github.com/mobivm/robovm";
+    final static String TOOLCHAIN_DOWNLOAD_URL = "https://dkimitsa.github.io/2017/12/07/robovm-now-linux-windows/";
 
     // version of toolchain currently supported
     // toolchain is considered supported if major.minor.xxx version specified in toolchain
