@@ -29,6 +29,7 @@ import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -82,6 +83,8 @@ import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.compiler.util.DigestUtil;
 import org.robovm.compiler.util.InfoPList;
 import org.robovm.compiler.util.io.RamDiskTools;
+import org.robovm.compiler.util.platforms.SystemInfo;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -102,13 +105,22 @@ import org.simpleframework.xml.stream.OutputNode;
 public class Config {
     
 
-	/**
+     /**
      * The max file name length of files stored in the cache. OS X has a limit
      * of 255 characters. Class names are very unlikely to be this long but some
      * JVM language compilers (e.g. the Scala compiler) are known to generate
      * very long class names for auto-generated classes. See #955.
      */
     private static final int MAX_FILE_NAME_LENGTH = 255;
+
+    /**
+     * dkimitsa:
+     * The max path name shall limit path to cache dir due 260 char limit in path components in most
+     * api in Windows. Cross compiled tools doesn't use modern API without this limit so we have to adjust
+     * to this legacy
+     * Zero -- means unlimited
+     */
+    private static final int MAX_PATH_LENGTH = ToolchainUtil.getSystemInfo().os == SystemInfo.OSInfo.windows ? 260 : 0;
 
     public enum Cacerts {
         full
@@ -192,6 +204,11 @@ public class Config {
     private File tmpDir;
     private File cacheDir = new File(System.getProperty("user.home"), ".robovm/cache");
     private File ccBinPath = null;
+
+    // quick template to shorten cache dir path
+    private static java.nio.file.Path userHomePath = Paths.get(System.getProperty("user.home"));
+    private static java.nio.file.Path gradleCacheDir = Paths.get(System.getProperty("user.home"), ".gradle/cache");
+    private static java.nio.file.Path mavenRepoDir = Paths.get(System.getProperty("user.home"), ".m2/repository");
 
     private boolean clean = false;
     private boolean debug = false;
@@ -583,52 +600,129 @@ public class Config {
     }
 
     public File getLlFile(Clazz clazz) {
-        return new File(getCacheDir(clazz.getPath()), getFileName(clazz, "class.ll"));
+        return buildCachePath(clazz.getPath(), getFileName(clazz, "class.ll"));
     }
 
     public File getCFile(Clazz clazz) {
-        return new File(getCacheDir(clazz.getPath()), getFileName(clazz, "class.c"));
+        return buildCachePath(clazz.getPath(), getFileName(clazz, "class.c"));
     }
 
     public File getBcFile(Clazz clazz) {
-        return new File(getCacheDir(clazz.getPath()), getFileName(clazz, "class.bc"));
+        return buildCachePath(clazz.getPath(), getFileName(clazz, "class.bc"));
     }
 
     public File getSFile(Clazz clazz) {
-        return new File(getCacheDir(clazz.getPath()), getFileName(clazz, "class.s"));
+        return buildCachePath(clazz.getPath(), getFileName(clazz, "class.s"));
     }
 
     public File getOFile(Clazz clazz) {
-        return new File(getCacheDir(clazz.getPath()), getFileName(clazz, "class.o"));
+        return buildCachePath(clazz.getPath(), getFileName(clazz, "class.o"));
     }
 
     public File getLinesOFile(Clazz clazz) {
-        return new File(getCacheDir(clazz.getPath()), getFileName(clazz, "class.lines.o"));
+        return buildCachePath(clazz.getPath(), getFileName(clazz, "class.lines.o"));
     }
 
     public File getLinesLlFile(Clazz clazz) {
-        return new File(getCacheDir(clazz.getPath()), getFileName(clazz, "class.lines.ll"));
+        return buildCachePath(clazz.getPath(), getFileName(clazz, "class.lines.ll"));
     }
 
     public File getDebugInfoOFile(Clazz clazz) {
-        return new File(getCacheDir(clazz.getPath()), getFileName(clazz, "class.debuginfo.o"));
+        return buildCachePath(clazz.getPath(), getFileName(clazz, "class.debuginfo.o"));
     }
 
     public File getDebugInfoLlFile(Clazz clazz) {
-        return new File(getCacheDir(clazz.getPath()), getFileName(clazz, "class.debuginfo.ll"));
+        return buildCachePath(clazz.getPath(), getFileName(clazz, "class.debuginfo.ll"));
     }
 
     public File getInfoFile(Clazz clazz) {
-        return new File(getCacheDir(clazz.getPath()), getFileName(clazz, "class.info"));
+        return buildCachePath(clazz.getPath(), getFileName(clazz, "class.info"));
     }
 
     public File getCacheDir(Path path) {
-        File srcRoot = path.getFile().getParentFile();
         String name = path.getFile().getName();
+        File srcRoot;
         try {
-            return new File(makeFileRelativeTo(osArchCacheDir, srcRoot.getCanonicalFile()), name);
+            srcRoot = path.getFile().getParentFile().getCanonicalFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+
+        if (MAX_PATH_LENGTH > 0) {
+            // replace home, maven and gradle common prefixes to shorten one
+            java.nio.file.Path srcRootPath = srcRoot.toPath();
+            if (srcRootPath.startsWith(gradleCacheDir)) {
+                srcRoot = Paths.get(".g").resolve(gradleCacheDir.relativize(srcRootPath)).toFile();
+            } else if (srcRootPath.startsWith(mavenRepoDir)) {
+                srcRoot = Paths.get(".m").resolve(mavenRepoDir.relativize(srcRootPath)).toFile();
+            } else if (srcRootPath.startsWith(userHomePath)) {
+                srcRoot = Paths.get(".u"). resolve(userHomePath.relativize(srcRootPath)).toFile();
+            }
+
+            // always optimize class path if it is longer that 1/3 of max path
+            // it is required to make sure that classes from it goes to same location
+            // as it is possible that one class will fit in limit but other will not and it will
+            // cause different location to be used for same class path
+            String strPath = srcRoot.toString();
+            if (strPath.length() > MAX_PATH_LENGTH / 3) {
+                String sha1 = DigestUtil.sha1(strPath);
+
+                // there is no complicated path, just one with sha
+                File result = new File(osArchCacheDir, ".s1" + File.separatorChar +  sha1);
+                writeOriginMarker(result, path.getFile());
+
+                return result;
+
+            }
+        }
+
+        return new File(makeFileRelativeTo(osArchCacheDir, srcRoot), name);
+    }
+
+    /**
+     * method that builds cache path for file, functionality is similar to snippet
+     * return new File(getCacheDir(clazz.getPath()), getFileName(clazz, "class.o"));
+     * the difference is a logic added that will try to reduce path length to fit OS linimations
+     * (such as 260 chars on Windows) by replacing components with SHA1 hash
+     * @param classPath component of class
+     * @param fileName class component after class
+     * @return combined class path or optimized
+     */
+    public File buildCachePath(Path classPath, String fileName) {
+        // no limit -- no need to bother
+        File cacheDir = getCacheDir(classPath);
+        File result = new File(cacheDir, fileName);
+        if (MAX_PATH_LENGTH == 0)
+            return result;
+
+        if (result.getAbsolutePath().length() > MAX_PATH_LENGTH) {
+            // try to optimize filename by replacing path with sha
+            String fileNamePath = fileName.substring(0, fileName.lastIndexOf(File.separatorChar));
+            // 40 is the length of SHA1 representation
+            int newPathLength = 40;
+            if (result.getAbsolutePath().length() - fileNamePath.length() + newPathLength <= MAX_PATH_LENGTH){
+                // it will help
+                String newFileName = DigestUtil.sha1(fileNamePath) + fileName.substring(fileName.lastIndexOf(File.separatorChar));
+                File longResult = result;
+                result = new File(cacheDir, newFileName);
+
+                writeOriginMarker(result.getParentFile(), longResult.getParentFile());
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * for shorten paths will write origin file with original location for debug purpose
+     */
+    private void writeOriginMarker(File shortLocation, File original) {
+        // create directories right now to put origin file there
+        if (!shortLocation.exists() && shortLocation.mkdirs() ) {
+            try {
+                FileUtils.write(new File(shortLocation, ".origin"), original.getAbsolutePath());
+            } catch (IOException ignored) {
+            }
         }
     }
 
