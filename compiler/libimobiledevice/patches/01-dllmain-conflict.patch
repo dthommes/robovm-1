@@ -1,0 +1,22 @@
+diff --git a/src/plist.c b/src/plist.c
+index f62e6be..1f6eab0 100644
+--- a/src/plist.c
++++ b/src/plist.c
+@@ -57,7 +57,7 @@ static void internal_plist_deinit(void)
+ }
+ 
+ #ifdef WIN32
+-
++/* ROBOVM: conficts with libimobiledevice
+ typedef volatile struct {
+     LONG lock;
+     int state;
+@@ -92,7 +92,7 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD dwReason, LPVOID lpReserved)
+     }
+     return 1;
+ }
+-
++ROBOVM */
+ #else
+ 
+ static pthread_once_t init_once = PTHREAD_ONCE_INIT;

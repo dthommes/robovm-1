@@ -812,7 +812,10 @@ static JavaVM *vm = NULL;
 static jclass class_Callbacks = NULL;
 static jmethodID meth_callInstproxyCallback = NULL;
 static jmethodID meth_callIDeviceEventCallback = NULL;
-jint JNI_OnLoad(JavaVM *_vm, void *reserved) {
+// dkimitsa: using  SWIGEXPORT here instead on JNIEXPORT as when crosscompiling
+// for windows from linux JNIEXPORT keeps Linux value and not being marked as
+// exported
+SWIGEXPORT jint JNICALL JNI_OnLoad(JavaVM *_vm, void *reserved) {
     vm = _vm;
     return JNI_VERSION_1_2;
 }
