@@ -248,7 +248,7 @@ static void assembleDiagHandler(const SMDiagnostic &Diag, void *Context) {
 int LLVMTargetMachineAssembleToOutputStream(LLVMTargetMachineRef TM, LLVMMemoryBufferRef Mem, void *JOStream, LLVMBool RelaxAll, LLVMBool NoExecStack, char **ErrorMessage) {
   *ErrorMessage = NULL;
 
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(_WIN32)
   locale_t loc = newlocale(LC_ALL_MASK, "C", 0);
   locale_t oldLoc = uselocale(loc);
 #endif
@@ -312,7 +312,7 @@ int LLVMTargetMachineAssembleToOutputStream(LLVMTargetMachineRef TM, LLVMMemoryB
   Out.flush();
 
 done:
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(_WIN32)
   uselocale(oldLoc);
   freelocale(loc);
 #endif
@@ -362,7 +362,7 @@ static LLVMBool LLVMTargetMachineEmit(LLVMTargetMachineRef T, LLVMModuleRef M,
 LLVMBool LLVMTargetMachineEmitToOutputStream(LLVMTargetMachineRef T, LLVMModuleRef M,
   void *JOStream, LLVMCodeGenFileType codegen, char** ErrorMessage) {
 
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(_WIN32)
   locale_t loc = newlocale(LC_ALL_MASK, "C", 0);
   locale_t oldLoc = uselocale(loc);
 #endif
@@ -371,7 +371,7 @@ LLVMBool LLVMTargetMachineEmitToOutputStream(LLVMTargetMachineRef T, LLVMModuleR
   bool Result = LLVMTargetMachineEmit(T, M, Out, codegen, ErrorMessage);
   Out.flush();
 
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(_WIN32)
   uselocale(oldLoc);
   freelocale(loc);
 #endif
