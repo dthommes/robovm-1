@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 2.8)
 
 include(ExternalProject)
 
-# Parameters to be specified from command line 
+# Parameters to be specified from command line
 # OS name
-# INSTALL_DIR if required to override 
+# INSTALL_DIR if required to override
 
 if(NOT DEFINED OS)
     message(FATAL_ERROR "Please specify an os (macosx, linux, windows), e.g. -DOS=linux")
@@ -59,13 +59,13 @@ if (WINDOWS)
   # programs in the host environment
   set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
   set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-  set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)  
+  set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 endif()
 
 project(robovm-llvm)
 
 if (WINDOWS)
-  # when system name is set and CMAKE_FIND_ROOT_PATH it will not be able to find java so define includes manualy, 
+  # when system name is set and CMAKE_FIND_ROOT_PATH it will not be able to find java so define includes manualy,
   # assumpt that host is linux
   set(JAVA_INCLUDE_PATH "$ENV{JAVA_HOME}/include")
   set(JAVA_INCLUDE_PATH2 "$ENV{JAVA_HOME}/include/linux")
@@ -170,7 +170,9 @@ ExternalProject_Add(extllvm
                           -DLLVM_ENABLE_CXX1Y=YES
                           -DLLVM_ENABLE_THREADS=YES
                           -DLIBCLANG_BUILD_STATIC=YES
-                          -DLLVM_BUILD_TOOLS=OFF
+                          -DLLVM_INCLUDE_EXAMPLES=OFF
+                          -DLLVM_INCLUDE_TESTS=OFF
+                          -DLLVM_INCLUDE_DOCS=OFF
                           ../extllvm/
   PATCH_COMMAND bash -c "rm -rf tools/clang && cp -r ../../../extclang-prefix/src/extclang/ tools/clang/ && ${CMAKE_SOURCE_DIR}/patches/apply-patches"
 )
