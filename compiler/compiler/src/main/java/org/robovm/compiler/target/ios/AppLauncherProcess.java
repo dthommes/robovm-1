@@ -16,6 +16,14 @@
  */
 package org.robovm.compiler.target.ios;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.NullOutputStream;
+import org.robovm.compiler.log.ErrorOutputStream;
+import org.robovm.compiler.log.Logger;
+import org.robovm.compiler.target.LaunchParameters;
+import org.robovm.compiler.target.Launcher;
+import org.robovm.libimobiledevice.util.AppLauncher;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -23,15 +31,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.NullOutputStream;
-import org.robovm.compiler.log.ErrorOutputStream;
-import org.robovm.compiler.log.Logger;
-import org.robovm.compiler.target.LaunchParameters;
-import org.robovm.compiler.target.Launcher;
-import org.robovm.compiler.util.io.OpenOnWriteFileOutputStream;
-import org.robovm.libimobiledevice.util.AppLauncher;
 
 /**
  * {@link Process} implementation which runs an app on a device using an
@@ -53,7 +52,7 @@ public class AppLauncherProcess extends Process implements Launcher {
         this.log = log;
         this.launcher = launcher;
         if (launchParameters.getStderrFifo() != null) {
-            this.errStream = new OpenOnWriteFileOutputStream(launchParameters.getStderrFifo());
+            this.errStream = launchParameters.getStderrFifo().getOutputStream();
         }
     }
 

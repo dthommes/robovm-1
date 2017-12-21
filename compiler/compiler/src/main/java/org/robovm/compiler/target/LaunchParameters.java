@@ -16,6 +16,8 @@
  */
 package org.robovm.compiler.target;
 
+import org.robovm.compiler.util.io.Fifo;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +29,8 @@ public class LaunchParameters {
     private List<String> arguments = new ArrayList<>();
     private Map<String, String> environment = null;
     private File workingDirectory = new File(".");
-    private File stdoutFifo = null;
-    private File stderrFifo = null;
+    private Fifo stdoutFifo = null;
+    private Fifo stderrFifo = null;
     
     public List<String> getArguments() {
         return arguments;
@@ -54,19 +56,19 @@ public class LaunchParameters {
         this.workingDirectory = workingDirectory;
     }
     
-    public File getStdoutFifo() {
+    public Fifo getStdoutFifo() {
         return stdoutFifo;
     }
     
-    public void setStdoutFifo(File stdoutFifo) {
+    public void setStdoutFifo(Fifo stdoutFifo) {
         this.stdoutFifo = stdoutFifo;
     }
     
-    public File getStderrFifo() {
+    public Fifo getStderrFifo() {
         return stderrFifo;
     }
     
-    public void setStderrFifo(File stderrFifo) {
+    public void setStderrFifo(Fifo stderrFifo) {
         this.stderrFifo = stderrFifo;
     }
 }

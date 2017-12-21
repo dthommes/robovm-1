@@ -16,18 +16,17 @@
  */
 package org.robovm.compiler.target;
 
+import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.OS;
+import org.robovm.compiler.util.Executor;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import org.robovm.compiler.config.Arch;
-import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.OS;
-import org.robovm.compiler.util.Executor;
-import org.robovm.compiler.util.io.OpenOnWriteFileOutputStream;
 
 
 /**
@@ -65,10 +64,10 @@ public class ConsoleTarget extends AbstractTarget {
         OutputStream out = System.out;
         OutputStream err = System.err;
         if (launchParameters.getStdoutFifo() != null) {
-            out = new OpenOnWriteFileOutputStream(launchParameters.getStdoutFifo());
+            out = launchParameters.getStdoutFifo().getOutputStream();
         }
         if (launchParameters.getStderrFifo() != null) {
-            err = new OpenOnWriteFileOutputStream(launchParameters.getStderrFifo());
+            err = launchParameters.getStderrFifo().getOutputStream();
         }
         
         return createExecutor(launchParameters, new File(dir, 

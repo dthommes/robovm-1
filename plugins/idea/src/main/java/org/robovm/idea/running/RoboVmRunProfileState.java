@@ -17,30 +17,20 @@
 package org.robovm.idea.running;
 
 import com.intellij.execution.ExecutionException;
-import com.intellij.execution.ExecutionResult;
-import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.CommandLineState;
-import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.process.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.execution.runners.ProgramRunner;
-import com.intellij.execution.ui.RunContentDescriptor;
-import com.intellij.util.ReflectionUtil;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.target.LaunchParameters;
 import org.robovm.compiler.target.ios.DeviceType;
 import org.robovm.compiler.target.ios.IOSSimulatorLaunchParameters;
-import org.robovm.compiler.util.io.Fifos;
-import org.robovm.compiler.util.io.OpenOnReadFileInputStream;
+import org.robovm.compiler.util.io.Fifo;
 import org.robovm.idea.RoboVmPlugin;
-import org.robovm.idea.compilation.RoboVmCompileTask;
 
 import java.io.*;
-import java.util.List;
 
 public class RoboVmRunProfileState extends CommandLineState {
     public RoboVmRunProfileState(ExecutionEnvironment environment) {
@@ -62,19 +52,19 @@ public class RoboVmRunProfileState extends CommandLineState {
 
         // launch plugin may proxy stdout/stderr fifo, which
         // it then writes to. Need to save the original fifos
-        File stdOutFifo = launchParameters.getStdoutFifo();
-        File stdErrFifo = launchParameters.getStderrFifo();
+        Fifo stdOutFifo = launchParameters.getStdoutFifo();
+        Fifo stdErrFifo = launchParameters.getStderrFifo();
         PipedInputStream pipedIn = new PipedInputStream();
         PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
         Process process = compiler.launchAsync(launchParameters, pipedIn);
         if (stdOutFifo != null || stdErrFifo != null) {
             InputStream stdoutStream = null;
             InputStream stderrStream = null;
-            if (launchParameters.getStdoutFifo() != null) {
-                stdoutStream = new OpenOnReadFileInputStream(stdOutFifo);
+            if (stdOutFifo != null) {
+                stdoutStream = stdOutFifo.getInputStream();
             }
-            if (launchParameters.getStderrFifo() != null) {
-                stderrStream = new OpenOnReadFileInputStream(stdErrFifo);
+            if (stdErrFifo != null) {
+                stderrStream = stdErrFifo.getInputStream();
             }
             process = new ProcessProxy(process, pipedOut, stdoutStream, stderrStream, compiler);
         }
@@ -86,21 +76,17 @@ public class RoboVmRunProfileState extends CommandLineState {
     }
 
     protected void customizeLaunchParameters(RoboVmRunConfiguration runConfig, Config config, LaunchParameters launchParameters) throws IOException {
-        if(config.getOs() != OS.ios) {
-            launchParameters.setStdoutFifo(Fifos.mkfifo("stdout"));
-            launchParameters.setStderrFifo(Fifos.mkfifo("stderr"));
+        // dkimitsa: checked all cases: file based FIFO is not required anymore, so it is simple
+        // so everything just use piped loopback
+        launchParameters.setStdoutFifo(Fifo.echofifo());
+        launchParameters.setStderrFifo(Fifo.echofifo());
 
+        if(config.getOs() != OS.ios) {
             if(runConfig.getWorkingDir() != null && !runConfig.getWorkingDir().isEmpty()) {
                 launchParameters.setWorkingDirectory(new File(runConfig.getWorkingDir()));
             }
         } else {
             if(launchParameters instanceof IOSSimulatorLaunchParameters) {
-                // create FIFO only for simulator case as it is required with simlauncher
-                // no need in FIFO for run on device as it will be enough regular stdout
-                // also currently no FIFO support done for platforms like Windows
-                launchParameters.setStdoutFifo(Fifos.mkfifo("stdout"));
-                launchParameters.setStderrFifo(Fifos.mkfifo("stderr"));
-
                 IOSSimulatorLaunchParameters simParams = (IOSSimulatorLaunchParameters)launchParameters;
                 for(DeviceType type: DeviceType.listDeviceTypes()) {
                     if (type.getDeviceName().equals(runConfig.getSimulatorName())) {

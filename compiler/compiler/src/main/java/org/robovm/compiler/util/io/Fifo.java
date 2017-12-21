@@ -18,18 +18,44 @@ package org.robovm.compiler.util.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 
 /**
  * fifo related utility methods.
  */
-public class Fifos {
+public class Fifo {
+
+    private InputStream is;
+    private OutputStream os;
+    private final File file;
+
+    private Fifo(InputStream is, OutputStream os, File file) {
+        this.is = is;
+        this.os = os;
+        this.file = file;
+    }
+
+    public InputStream getInputStream() {
+        return is;
+    }
+
+    public OutputStream getOutputStream() {
+        return os;
+    }
+
+    public File getFile() {
+        return file;
+    }
 
     /**
      * Creates a new fifo using {@code mkfifo}. The specified type argument will
      * be part of the fifo file name. The fifo will be created in the temporary
      * file directory used by {@link File#createTempFile(String, String)}.
      */
-    public static File mkfifo(String type) throws IOException {
+    public static Fifo mkfifo(String type) throws IOException {
         File f = File.createTempFile("robovm-" + type + "-", ".fifo");
         f.delete();
         ProcessBuilder pb = new ProcessBuilder("mkfifo", "-m", "600", f.getAbsolutePath());
@@ -41,7 +67,16 @@ public class Fifos {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        return f;
+
+        return new Fifo(new OpenOnReadFileInputStream(f), new OpenOnWriteFileOutputStream(f), f);
     }
 
+    /**
+     * Creates a echo fido using PipedInputStream/PipedOutputStream
+     */
+    public static Fifo echofifo() throws IOException {
+        PipedInputStream pipedIn = new PipedInputStream();
+        PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
+        return new Fifo(pipedIn, pipedOut, null);
+    }
 }

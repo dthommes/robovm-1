@@ -35,13 +35,11 @@ import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.log.Logger;
-import org.robovm.compiler.log.LoggerProxy;
 import org.robovm.compiler.target.AbstractTarget;
 import org.robovm.compiler.target.LaunchParameters;
 import org.robovm.compiler.target.Launcher;
 import org.robovm.compiler.target.ios.ProvisioningProfile.Type;
 import org.robovm.compiler.util.Executor;
-import org.robovm.compiler.util.io.OpenOnWriteFileOutputStream;
 import org.robovm.compiler.util.platforms.ToolchainUtil;
 import org.robovm.libimobiledevice.AfcClient.UploadProgressCallback;
 import org.robovm.libimobiledevice.IDevice;
@@ -184,10 +182,10 @@ public class IOSTarget extends AbstractTarget {
         OutputStream out = System.out;
         OutputStream err = System.err;
         if (launchParameters.getStdoutFifo() != null) {
-            out = new OpenOnWriteFileOutputStream(launchParameters.getStdoutFifo());
+            out = launchParameters.getStdoutFifo().getOutputStream();
         }
         if (launchParameters.getStderrFifo() != null) {
-            err = new OpenOnWriteFileOutputStream(launchParameters.getStderrFifo());
+            err = launchParameters.getStderrFifo().getOutputStream();
         }
         
         return new Executor(config.getLogger(), iosSimPath)
@@ -220,7 +218,7 @@ public class IOSTarget extends AbstractTarget {
 
         OutputStream out = null;
         if (launchParameters.getStdoutFifo() != null) {
-            out = new OpenOnWriteFileOutputStream(launchParameters.getStdoutFifo());
+            out = launchParameters.getStdoutFifo().getOutputStream();
         } else {
             out = System.out;
         }
