@@ -114,7 +114,7 @@ if(DEFINED ENV{ROBOVM_CLANG_GIT_PATH})
   set(CLANG_GIT_PATH "$ENV{ROBOVM_CLANG_GIT_PATH}")
   message (STATUS "Using custom clang.git @ ${CLANG_GIT_PATH}")
 else()
-  set(CLANG_GIT_PATH git://github.com/robovm/clang.git)
+  set(CLANG_GIT_PATH git://github.com/mobivm/clang.git)
 endif()
 
 ExternalProject_Add(extclang
@@ -140,7 +140,7 @@ if(DEFINED ENV{ROBOVM_LLVM_GIT_PATH})
   set(LLVM_GIT_PATH "$ENV{ROBOVM_LLVM_GIT_PATH}")
   message (STATUS "Using custom llvm.git @ ${LLVM_GIT_PATH}")
 else()
-  set(LLVM_GIT_PATH git://github.com/robovm/llvm.git)
+  set(LLVM_GIT_PATH git://github.com/mobivm/llvm.git)
 endif()
 
 # optimization breaks code execution which caused NPE when working with ARM64 target
