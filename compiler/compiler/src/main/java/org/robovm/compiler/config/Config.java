@@ -164,6 +164,10 @@ public class Config {
     private ArrayList<String> weakFrameworks;
     @ElementList(required = false, entry = "path")
     private ArrayList<File> frameworkPaths;
+    @ElementList(required = false, entry = "extension")
+    private ArrayList<String> appExtensions;
+    @ElementList(required = false, entry = "path")
+    private ArrayList<File> appExtensionPaths;
     @ElementList(required = false, entry = "resource")
     private ArrayList<Resource> resources;   
     @ElementList(required = false, entry = "classpathentry")
@@ -430,6 +434,16 @@ public class Config {
     public List<File> getFrameworkPaths() {
         return frameworkPaths == null ? Collections.<File> emptyList()
                 : Collections.unmodifiableList(frameworkPaths);
+    }
+
+    public List<String> getAppExtensions() {
+        return appExtensions == null ? Collections.<String> emptyList()
+                : Collections.unmodifiableList(appExtensions);
+    }
+
+    public List<File> getAppExtensionPaths() {
+        return appExtensionPaths == null ? Collections.<File> emptyList()
+                : Collections.unmodifiableList(appExtensionPaths);
     }
 
     public List<Resource> getResources() {
@@ -1199,6 +1213,18 @@ public class Config {
         }
     }
 
+    /**
+     * reads configuration from disk without any analysis
+     */
+    public static Config loadRawConfig(File contentRoot) throws IOException {
+        // dkimitsa: config retrieved this way shall not be used for any compilation needs
+        // just for IB and other UI related things
+        Builder builder = new Builder();
+        builder.readProjectProperties(contentRoot, false);
+        builder.readProjectConfig(contentRoot, false);
+        return builder.config;
+    }
+
     public static class Builder {
         protected final Config config;
 
@@ -1464,6 +1490,36 @@ public class Config {
                 config.frameworkPaths = new ArrayList<File>();
             }
             config.frameworkPaths.add(frameworkPath);
+            return this;
+        }
+
+        public Builder clearExtensions() {
+            if (config.appExtensions != null) {
+                config.appExtensions.clear();
+            }
+            return this;
+        }
+
+        public Builder addExtension(String extension) {
+            if (config.appExtensions == null) {
+                config.appExtensions = new ArrayList<>();
+            }
+            config.appExtensions.add(extension);
+            return this;
+        }
+
+        public Builder clearExtensionPaths() {
+            if (config.appExtensionPaths != null) {
+                config.appExtensionPaths.clear();
+            }
+            return this;
+        }
+
+        public Builder addExtenaionPath(File extensionPath) {
+            if (config.appExtensionPaths == null) {
+                config.appExtensionPaths = new ArrayList<File>();
+            }
+            config.appExtensionPaths.add(extensionPath);
             return this;
         }
 

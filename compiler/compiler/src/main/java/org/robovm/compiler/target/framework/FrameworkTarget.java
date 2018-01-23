@@ -1,27 +1,23 @@
 package org.robovm.compiler.target.framework;
 
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSObject;
+import com.dd.plist.PropertyListParser;
+import org.apache.commons.io.FileUtils;
+import org.robovm.compiler.clazz.Path;
+import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.OS;
+import org.robovm.compiler.target.AbstractTarget;
+import org.robovm.compiler.target.ios.SDK;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import org.apache.commons.io.FileUtils;
-import org.robovm.compiler.clazz.Path;
-import org.robovm.compiler.config.Arch;
-import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.OS;
-import org.robovm.compiler.log.Logger;
-import org.robovm.compiler.log.LoggerProxy;
-import org.robovm.compiler.target.AbstractTarget;
-import org.robovm.compiler.target.ios.SDK;
-import org.robovm.compiler.util.Executor;
-
-import com.dd.plist.NSDictionary;
-import com.dd.plist.NSObject;
-import com.dd.plist.PropertyListParser;
-import org.robovm.compiler.util.platforms.ToolchainUtil;
 
 public class FrameworkTarget extends AbstractTarget {
 
@@ -119,7 +115,7 @@ public class FrameworkTarget extends AbstractTarget {
 
     @Override
     protected List<String> getTargetExportedSymbols() {
-        return Arrays.asList(new String[]{"JNI_*"});
+		return Arrays.asList("JNI_*", "rvmInstantiateFramework");
     }
 
     private String getMinimumOSVersion() {
@@ -160,6 +156,14 @@ public class FrameworkTarget extends AbstractTarget {
 
         return ccArgs;
     }
+
+	@Override
+	protected List<String> getTargetLibs() {
+    	// adding framework support library
+		String libSuffix = config.isUseDebugLibs() ? "-dbg" : "";
+		return Collections.singletonList("-lrobovm-frameworksupport" + libSuffix);
+	}
+
 
     @Override
     protected void doInstall(File installDir, String image, File resourcesDir) throws IOException {

@@ -69,22 +69,22 @@ import java.util.NoSuchElementException;
  */
 public class IOSTarget extends AbstractTarget {
     final List<String> excludedKeys = Arrays.asList(
-        "com.apple.developer.icloud-container-development-container-identifiers",
-        "com.apple.developer.icloud-container-environment",
-        "com.apple.developer.icloud-container-identifiers",
-        "com.apple.developer.icloud-services",
-        "com.apple.developer.restricted-resource-mode",
-        "com.apple.developer.ubiquity-container-identifiers",
-        "com.apple.developer.ubiquity-kvstore-identifier",
-        "inter-app-audio",
-        "com.apple.developer.homekit",
-        "com.apple.developer.healthkit",
-        "com.apple.developer.in-app-payments",
-        "com.apple.developer.associated-domains",
-        "com.apple.security.application-groups",
-        "com.apple.developer.maps",
-        "com.apple.developer.networking.vpn.api",
-        "com.apple.external-accessory.wireless-configuration"
+            "com.apple.developer.icloud-container-development-container-identifiers",
+            "com.apple.developer.icloud-container-environment",
+            "com.apple.developer.icloud-container-identifiers",
+            "com.apple.developer.icloud-services",
+            "com.apple.developer.restricted-resource-mode",
+            "com.apple.developer.ubiquity-container-identifiers",
+            "com.apple.developer.ubiquity-kvstore-identifier",
+            "inter-app-audio",
+            "com.apple.developer.homekit",
+            "com.apple.developer.healthkit",
+            "com.apple.developer.in-app-payments",
+            "com.apple.developer.associated-domains",
+            "com.apple.security.application-groups",
+            "com.apple.developer.maps",
+            "com.apple.developer.networking.vpn.api",
+            "com.apple.external-accessory.wireless-configuration"
     );
 
     public static final String TYPE = "ios";
@@ -92,7 +92,7 @@ public class IOSTarget extends AbstractTarget {
     private static File iosSimPath;
 
     private Arch arch;
-    private SDK sdk;    
+    private SDK sdk;
     private File entitlementsPList;
     private SigningIdentity signIdentity;
     private ProvisioningProfile provisioningProfile;
@@ -159,11 +159,11 @@ public class IOSTarget extends AbstractTarget {
         String iosSimPath = new File(config.getHome().getBinDir(), "simlauncher").getAbsolutePath();;
 
         IOSSimulatorLaunchParameters simulatorLaunchParameters = (IOSSimulatorLaunchParameters) launchParameters;
-        
+
         List<Object> args = new ArrayList<Object>();
         args.add("-a=" + dir);
         args.add("-u=" + simulatorLaunchParameters.getDeviceType().getUdid());
-        
+
         if (launchParameters.getEnvironment() != null) {
             for (Entry<String, String> entry : launchParameters.getEnvironment().entrySet()) {
                 args.add("-e="+ entry.getKey() + "=" + entry.getValue() + "");
@@ -171,14 +171,14 @@ public class IOSTarget extends AbstractTarget {
         }
 
         if (!launchParameters.getArguments().isEmpty()) {
-        	for (String entry : launchParameters.getArguments()) {
+            for (String entry : launchParameters.getArguments()) {
                 args.add("-x=" + entry);
-            }        
+            }
         }
 
         File xcodePath = new File(ToolchainUtil.findXcodePath());
         Map<String, String> env = Collections.singletonMap("DEVELOPER_DIR", xcodePath.getAbsolutePath());
-        
+
         OutputStream out = System.out;
         OutputStream err = System.err;
         if (launchParameters.getStdoutFifo() != null) {
@@ -187,7 +187,7 @@ public class IOSTarget extends AbstractTarget {
         if (launchParameters.getStderrFifo() != null) {
             err = launchParameters.getStderrFifo().getOutputStream();
         }
-        
+
         return new Executor(config.getLogger(), iosSimPath)
                 .args(args)
                 .wd(launchParameters.getWorkingDirectory())
@@ -282,7 +282,7 @@ public class IOSTarget extends AbstractTarget {
 
     @Override
     protected void doBuild(File outFile, List<String> ccArgs,
-            List<File> objectFiles, List<String> libArgs)
+                           List<File> objectFiles, List<String> libArgs)
             throws IOException {
 
         // Always link against UIKit or else it will not be initialized properly
@@ -302,7 +302,7 @@ public class IOSTarget extends AbstractTarget {
 
             if (majorVersionNumber < minMajorSupportedVersion) {
                 throw new CompilerException("MinimumOSVersion of " + minVersion + " is not supported. "
-                    + "The minimum version for this platform is " + config.getOs().getMinVersion());
+                        + "The minimum version for this platform is " + config.getOs().getMinVersion());
             }
 
         } catch (NumberFormatException e) {
@@ -322,7 +322,7 @@ public class IOSTarget extends AbstractTarget {
         }
         ccArgs.add("-isysroot");
         ccArgs.add(sdk.getRoot().getAbsolutePath());
-        
+
         // specify dynamic library loading path
         libArgs.add("-Xlinker");
         libArgs.add("-rpath");
@@ -332,7 +332,7 @@ public class IOSTarget extends AbstractTarget {
         libArgs.add("-rpath");
         libArgs.add("-Xlinker");
         libArgs.add("@loader_path/Frameworks");
-        
+
         super.doBuild(outFile, ccArgs, objectFiles, libArgs);
     }
 
@@ -345,7 +345,7 @@ public class IOSTarget extends AbstractTarget {
             // LLDB can't resolve the DWARF info
             if (!config.isDebug()) {
                 strip(installDir, getExecutable());
-            }            
+            }
             if (config.isIosSkipSigning()) {
                 config.getLogger().warn("Skipping code signing. The resulting app will "
                         + "be unsigned and will not run on unjailbroken devices");
@@ -355,6 +355,7 @@ public class IOSTarget extends AbstractTarget {
                 copyProvisioningProfile(provisioningProfile, installDir);
                 boolean getTaskAllow = provisioningProfile.getType() == Type.Development;
                 signFrameworks(installDir, getTaskAllow);
+                signAppExtensions(installDir, getTaskAllow);
                 codesignApp(signIdentity, getOrCreateEntitlementsPList(getTaskAllow, getBundleId()), installDir);
             }
         }
@@ -379,16 +380,18 @@ public class IOSTarget extends AbstractTarget {
         createInfoPList(appDir);
         generateDsym(appDir, getExecutable(), true);
 
-        if (isDeviceArch(arch)) {            
+        if (isDeviceArch(arch)) {
             if (config.isIosSkipSigning()) {
                 config.getLogger().warn("Skiping code signing. The resulting app will "
                         + "be unsigned and will not run on unjailbroken devices");
                 ldid(getOrCreateEntitlementsPList(true, getBundleId()), appDir);
             } else {
                 copyProvisioningProfile(provisioningProfile, appDir);
-                signFrameworks(appDir, true);
+                boolean getTaskAllow = provisioningProfile.getType() == Type.Development;
+                signFrameworks(appDir, getTaskAllow);
+                signAppExtensions(appDir, getTaskAllow);
                 // sign the app
-                codesignApp(signIdentity, getOrCreateEntitlementsPList(true, getBundleId()), appDir);
+                codesignApp(signIdentity, getOrCreateEntitlementsPList(getTaskAllow, getBundleId()), appDir);
             }
         }
     }
@@ -413,6 +416,20 @@ public class IOSTarget extends AbstractTarget {
         }
     }
 
+    private void signAppExtensions(File appDir, boolean getTaskAllow) throws IOException {
+        // sign dynamic frameworks first
+        File extensionsDir = new File(appDir, "PlugIns");
+        if (extensionsDir.exists() && extensionsDir.isDirectory()) {
+            // sign embedded app-extensions
+            for (File extension : extensionsDir.listFiles()) {
+                if (extension.isDirectory() && extension.getName().endsWith(".appex")) {
+                    // now sign
+                    codesignAppExtension(signIdentity, extension);
+                }
+            }
+        }
+    }
+
     private void codesignApp(SigningIdentity identity, File entitlementsPList, File appDir) throws IOException {
         config.getLogger().info("Code signing app using identity '%s' with fingerprint %s", identity.getName(),
                 identity.getFingerprint());
@@ -429,6 +446,12 @@ public class IOSTarget extends AbstractTarget {
         config.getLogger().info("Code signing framework '%s' using identity '%s' with fingerprint %s", frameworkDir.getName(), identity.getName(),
                 identity.getFingerprint());
         ToolchainUtil.codesign(config, identity, null, true, false, true, frameworkDir);
+    }
+
+    private void codesignAppExtension(SigningIdentity identity, File extensionDir) throws IOException {
+        config.getLogger().info("Code signing app-extension '%s' using identity '%s' with fingerprint %s", extensionDir.getName(), identity.getName(),
+                identity.getFingerprint());
+        ToolchainUtil.codesign(config, identity, null, false, false, true, extensionDir);
     }
 
     private void ldid(File entitlementsPList, File appDir) throws IOException {
@@ -497,7 +520,7 @@ public class IOSTarget extends AbstractTarget {
     @Override
     protected Process doLaunch(LaunchParameters launchParameters) throws IOException {
         // in IDEA prepare for launch is happening during build phase to not block calling thread
-        // all other pluggins will prepare here
+        // all other plugins will prepare here
         if (!config.isManuallyPreparedForLaunch())
             prepareLaunch();
         Process process = super.doLaunch(launchParameters);
@@ -630,6 +653,7 @@ public class IOSTarget extends AbstractTarget {
         return config.getExecutableName();
     }
 
+    @Override
     protected String getBundleId() {
         if (config.getIosInfoPList() != null) {
             String bundleIdentifier = config.getIosInfoPList().getBundleIdentifier();
@@ -655,11 +679,11 @@ public class IOSTarget extends AbstractTarget {
             dict.put(key, value);
         }
     }
-    
+
     protected void customizeInfoPList(NSDictionary dict) {
         if (isSimulatorArch(arch)) {
             dict.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneSimulator")));
-        } else {            
+        } else {
             dict.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneOS")));
             dict.put("DTPlatformVersion", sdk.getPlatformVersion());
             dict.put("DTPlatformBuild", sdk.getPlatformBuild());
@@ -737,13 +761,13 @@ public class IOSTarget extends AbstractTarget {
                     new NSString("UIInterfaceOrientationLandscapeLeft"),
                     new NSString("UIInterfaceOrientationLandscapeRight"),
                     new NSString("UIInterfaceOrientationPortraitUpsideDown")
-                    ));
+            ));
             dict.put("UISupportedInterfaceOrientations~ipad", new NSArray(
                     new NSString("UIInterfaceOrientationPortrait"),
                     new NSString("UIInterfaceOrientationLandscapeLeft"),
                     new NSString("UIInterfaceOrientationLandscapeRight"),
                     new NSString("UIInterfaceOrientationPortraitUpsideDown")
-                    ));
+            ));
             dict.put("UIRequiredDeviceCapabilities", new NSArray(new NSString("armv7")));
         }
 
