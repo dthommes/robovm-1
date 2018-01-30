@@ -149,12 +149,13 @@ public class SimpleMachOLoader implements AutoCloseable{
         return sliceList;
     }
 
-    public static String archToString(int arch) {
+    public static String archToString(int arch, int subtype) {
         final int CPU_ARCH_ABI64 = 0x01000000;
         final int CPU_TYPE_X86 = 7;
         final int CPU_TYPE_X86_64 = (CPU_TYPE_X86 | CPU_ARCH_ABI64);
         final int CPU_TYPE_ARM = 12;
         final int CPU_TYPE_ARM64 = (CPU_TYPE_ARM | CPU_ARCH_ABI64);
+        final int CPU_SUBTYPE_ARM_V7S = 11;
 
         switch (arch) {
             case CPU_TYPE_X86:
@@ -162,7 +163,7 @@ public class SimpleMachOLoader implements AutoCloseable{
             case CPU_TYPE_X86_64:
                 return "x86_64";
             case CPU_TYPE_ARM:
-                return "armv7";
+                return (subtype == CPU_SUBTYPE_ARM_V7S) ? "armv7s" : "armv7";
             case CPU_TYPE_ARM64:
                 return "arm64";
             default:
@@ -203,6 +204,10 @@ public class SimpleMachOLoader implements AutoCloseable{
 
         public int cpuType() {
             return cputype;
+        }
+
+        public int cpuSubType() {
+            return cpusubtype;
         }
 
         public int sliceFileOffset() {

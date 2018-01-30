@@ -22,19 +22,19 @@ import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.bouncycastle.cms.CMSSignedData;
 import org.robovm.utils.codesign.coderesources.CodeResources;
 import org.robovm.utils.codesign.context.Ctx;
 import org.robovm.utils.codesign.context.SignCtx;
 import org.robovm.utils.codesign.context.VerifyCtx;
 import org.robovm.utils.codesign.exceptions.CodeSignException;
+import org.robovm.utils.codesign.macho.EmbeddedSignature;
 import org.robovm.utils.codesign.macho.MachOException;
 import org.robovm.utils.codesign.macho.SimpleMachOLoader;
-import org.robovm.utils.codesign.macho.EmbeddedSignature;
 import org.robovm.utils.codesign.utils.FileByteBuffer;
 
-import java.io.*;
-import java.nio.ByteBuffer;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
@@ -43,7 +43,7 @@ import java.util.List;
  * A bundle is a standard directory structure, a signable, installable set of files.
  * Apps are Bundles, but so are some kinds of Frameworks (libraries)
  */
-public abstract class Bundle {
+public class Bundle {
 
     protected File path;
     protected File infoPlistPath;
@@ -52,14 +52,16 @@ public abstract class Bundle {
 
     protected Bundle(File path) {
         this.path = path;
-        infoPlistPath = new File(this.path, "Info.plist");
-        if (!infoPlistPath.exists())
-            throw new CodeSignException("no Info.plist found; probably not a bundle");
+        if (path.isDirectory()) {
+            infoPlistPath = new File(this.path, "Info.plist");
+            if (!infoPlistPath.exists())
+                throw new CodeSignException("no Info.plist found; probably not a bundle");
 
-        try {
-            this.infoPlist = (NSDictionary) PropertyListParser.parse(infoPlistPath);
-        } catch (Throwable e) {
-            throw new CodeSignException("failed to parse Info.plist", e);
+            try {
+                this.infoPlist = (NSDictionary) PropertyListParser.parse(infoPlistPath);
+            } catch (Throwable e) {
+                throw new CodeSignException("failed to parse Info.plist", e);
+            }
         }
     }
 
@@ -84,7 +86,7 @@ public abstract class Bundle {
             // verify slice
             VerifyCtx sliceCtx = executableCtx.push();
             for (SimpleMachOLoader.ArchSlice slice : slices) {
-                executableCtx.debug("Verifying arch slice " + SimpleMachOLoader.archToString(slice.cpuType()));
+                executableCtx.debug("Verifying arch slice " + SimpleMachOLoader.archToString(slice.cpuType(), slice.cpuSubType()));
                 verifyExecutableSlice(sliceCtx, slice, codeResourcePath, infoPlistPath);
             }
         } catch (MachOException e ) {
@@ -134,23 +136,23 @@ public abstract class Bundle {
         if (!executablePath.exists())
             throw new CodeSignException("Executable is missing in bundle!");
 
-        // start signing all children that are there
-        // TODO: frameworks
-        // TODO: dylibs
-
         // remove old signatures if any
         // link (legacy)
-        File codeResourcePath = CodeResources.codeResourceLinkPath(path);
-        if (codeResourcePath.exists())
-            if (!codeResourcePath.delete())
-                throw new CodeSignException("Filed to remove old CodeResources signature");
-        // and old signature
-        File codeResourceDir = CodeResources.codeResourceDir(path);
-        if (codeResourceDir.exists()) {
-            try {
-                FileUtils.deleteDirectory(codeResourceDir);
-            } catch (IOException e) {
-                throw new CodeSignException("Filed to remove old CodeResources signature due " + e.getMessage(), e);
+        File codeResourcePath = null;
+        File codeResourceDir = null;
+        if (path.isDirectory()) {
+            codeResourcePath = CodeResources.codeResourceLinkPath(path);
+            if (codeResourcePath.exists())
+                if (!codeResourcePath.delete())
+                    throw new CodeSignException("Filed to remove old CodeResources signature");
+            // and old signature
+            codeResourceDir = CodeResources.codeResourceDir(path);
+            if (codeResourceDir.exists()) {
+                try {
+                    FileUtils.deleteDirectory(codeResourceDir);
+                } catch (IOException e) {
+                    throw new CodeSignException("Filed to remove old CodeResources signature due " + e.getMessage(), e);
+                }
             }
         }
 
@@ -160,6 +162,38 @@ public abstract class Bundle {
             // TODO: read from plist
         }
 
+        // peek binary to se if there is signature present and allocate if not
+        boolean codeSignatureAllocated = allocateSignCommand(appCtx, executablePath, codeResourcePath, entitlements, false);
+
+        // create CodeResources signature
+        if (path.isDirectory()) {
+            CodeResources.Builder b = CodeResources.BuilderForSigning(path, executablePath);
+            CodeResources seal = b.build();
+
+            // and write it back
+            if (!codeResourceDir.exists() && !codeResourceDir.mkdirs())
+                throw new CodeSignException("Filed to create dirs to CodeResources signature = " + codeResourceDir);
+            codeResourcePath = CodeResources.codeResourcePath(path);
+            seal.writeTo(codeResourcePath);
+        }
+
+        // signing
+        // first attempt could fails as there could be not enough space as previous signature could contain only
+        // SHA1 code dir
+        // if codeSignature already was allocated -- no sense try to allocate twice, just throw exception
+        boolean success = signMachOBinary(appCtx, executablePath, codeResourcePath, entitlements, codeSignatureAllocated);
+        if (!success) {
+            // no space, allocate
+            allocateSignCommand(appCtx, executablePath, codeResourcePath, entitlements, true);
+            // second try to sing
+            signMachOBinary(appCtx, executablePath, codeResourcePath, entitlements, true);
+        }
+
+        // creating new code-directory data
+    }
+
+
+    private boolean allocateSignCommand(SignCtx appCtx, File executablePath, File codeResourcePath, byte[] entitlements, boolean forced) {
         // check if there is LC_CODE_SIGNATURE present in binary
         // creating new code-directory data
         // contains size available for each signature4
@@ -169,101 +203,97 @@ public abstract class Bundle {
             int[] codeSignatureSizes = new int[slices.size()];
             // check for LC_CODE_SIGNATURE section in each slice
 
-            for (int idx = 0; idx < slices.size(); idx++) {
-                codeSignatureSizes[idx] = slices.get(idx).codeSignSize();
-                if (codeSignatureSizes[idx] <= 0) {
-                    // there is no such section, make idx 0 negative as flag
-                    codeSignatureSizes[0] = -1;
-                    break;
+            if (!forced) {
+                // it is not forced, first check if binary was signed before
+                for (int idx = 0; idx < slices.size(); idx++) {
+                    codeSignatureSizes[idx] = slices.get(idx).codeSignSize();
+                    if (codeSignatureSizes[idx] <= 0) {
+                        // there is no such section, make idx 0 negative as flag
+                        forced = true;
+                        break;
+                    }
                 }
             }
 
-            // check if there are LC_CODE_SIGNATURE present (e.g. was signed before)
-            if (codeSignatureSizes[0] < 0) {
-                // no code signature, need to allocate with codesign_allocate
-                // 0. check if codesign_allocate is available
-                if (appCtx.getCodesignAllocatePath() == null)
-                    throw new CodeSignException("Binary was not signed before and codesign_allocate path is not specified, use CODESIGN_ALLOCATE env variable to specify one");
+            if (!forced) {
+                // there is already signature present so no allocation was done
+                return false;
+            }
 
-                // 1. evaluate size required
+            // no code signature, need to allocate with codesign_allocate
+            // 0. check if codesign_allocate is available
+            if (appCtx.getCodesignAllocatePath() == null)
+                throw new CodeSignException("Binary was not signed before and codesign_allocate path is not specified, use CODESIGN_ALLOCATE env variable to specify one");
+
+            // 1. evaluate size required
+            for (int idx = 0; idx < slices.size(); idx++) {
+                SimpleMachOLoader.ArchSlice slice = slices.get(idx);
+                codeSignatureSizes[idx] = EmbeddedSignature.estimateSignatureSize(appCtx, slice.archBytes(), slice.sliceSize(), codeResourcePath, infoPlistPath, entitlements);
+            }
+
+            // 2. run codesign_allocate to resize things
+            try {
+                reallocatedExecutablePath = File.createTempFile(executablePath.getName(), "codesign_allocate");
+                CommandLine cmdLine = new CommandLine(appCtx.getCodesignAllocatePath());
+                cmdLine.addArgument("-i");
+                cmdLine.addArgument(executablePath.getAbsolutePath(), true);
+                cmdLine.addArgument("-o");
+                cmdLine.addArgument(reallocatedExecutablePath.getAbsolutePath(), true);
+
+                // add arches
                 for (int idx = 0; idx < slices.size(); idx++) {
                     SimpleMachOLoader.ArchSlice slice = slices.get(idx);
-                    codeSignatureSizes[idx] = EmbeddedSignature.estimateSignatureSize(appCtx, slice.archBytes(), slice.sliceSize(), codeResourcePath, infoPlistPath, entitlements);
+                    cmdLine.addArgument("-a");
+                    cmdLine.addArgument(SimpleMachOLoader.archToString(slice.cpuType(), slice.cpuSubType()));
+                    cmdLine.addArgument(Integer.toString(codeSignatureSizes[idx]));
                 }
 
-                // 2. run codesign_allocate to resize things
+                ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+                DefaultExecutor executor = new DefaultExecutor();
+                executor.setStreamHandler(new PumpStreamHandler(stdout));
                 try {
-                    reallocatedExecutablePath = File.createTempFile(executablePath.getName(), "codesign_allocate");
-                    CommandLine cmdLine = new CommandLine(appCtx.getCodesignAllocatePath());
-                    cmdLine.addArgument("-i");
-                    cmdLine.addArgument(executablePath.getAbsolutePath(), true);
-                    cmdLine.addArgument("-o");
-                    cmdLine.addArgument(reallocatedExecutablePath.getAbsolutePath(), true);
-
-                    // add arches
-                    for (int idx = 0; idx < slices.size(); idx++) {
-                        SimpleMachOLoader.ArchSlice slice = slices.get(idx);
-                        cmdLine.addArgument("-a");
-                        cmdLine.addArgument(SimpleMachOLoader.archToString(slice.cpuType()));
-                        cmdLine.addArgument(Integer.toString(codeSignatureSizes[idx]));
-                    }
-
-                    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-                    DefaultExecutor executor = new DefaultExecutor();
-                    executor.setStreamHandler(new PumpStreamHandler(stdout));
-                    try {
-                        executor.execute(cmdLine);
-                    } catch (ExecuteException e) {
-                        throw new CodeSignException("codesign_allocate failed due " + e.getMessage() + " with out " + stdout.toString());
-                    }
-                } catch (IOException e) {
-                    throw new CodeSignException("codesign_allocate failed due " + e.getMessage(), e);
+                    executor.execute(cmdLine);
+                } catch (ExecuteException e) {
+                    throw new CodeSignException("codesign_allocate failed due " + e.getMessage() + " with out " + stdout.toString());
                 }
+            } catch (IOException e) {
+                throw new CodeSignException("codesign_allocate failed due " + e.getMessage(), e);
             }
         } catch (MachOException e) {
             throw new CodeSignException("Unable to load mach-o of executable", e);
         }
 
         // override file with re-allocated one
-        // do this here when mach loader is closed
-        if (reallocatedExecutablePath != null) {
-            try {
-                Files.move(reallocatedExecutablePath.toPath(), executablePath.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException e) {
-                throw new CodeSignException("codesign_allocate failed when replacing app file due " + e.getMessage(), e);
-            }
+        try {
+            Files.move(reallocatedExecutablePath.toPath(), executablePath.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new CodeSignException("codesign_allocate failed when replacing app file due " + e.getMessage(), e);
         }
 
-        // create CodeResources signature
-        CodeResources.Builder b = CodeResources.BuilderForSigning(path, executablePath);
-        CodeResources seal = b.build();
+        return true;
+    }
 
-        // and write it back
-        if (!codeResourceDir.exists() && !codeResourceDir.mkdirs())
-            throw new CodeSignException("Filed to create dirs to CodeResources signature = " + codeResourceDir);
-        codeResourcePath = CodeResources.codeResourcePath(path);
-        seal.writeTo(codeResourcePath);
-
-        // signing
-
-        // creating new code-directory data
+    private boolean signMachOBinary(SignCtx appCtx, File executablePath, File codeResourcePath, byte[] entitlements,
+                                    boolean throwIfNoSpace) {
         try (SimpleMachOLoader loader = new SimpleMachOLoader(executablePath, true)) {
-            // lets work with slices
             List<SimpleMachOLoader.ArchSlice> slices = loader.getSliceList();
-
             // sign slice
             SignCtx sliceCtx = appCtx.push();
             for (SimpleMachOLoader.ArchSlice slice : slices) {
-                appCtx.debug("Signing arch slice " + SimpleMachOLoader.archToString(slice.cpuType()));
+                appCtx.debug("Signing arch slice " + SimpleMachOLoader.archToString(slice.cpuType(), slice.cpuSubType()));
                 if (slice.codeSignSize() <= 0)
-                    throw new CodeSignException("Arch " + SimpleMachOLoader.archToString(slice.cpuType()) +
+                    throw new CodeSignException("Arch " + SimpleMachOLoader.archToString(slice.cpuType(), slice.cpuSubType()) +
                             " has no LC_CODE_SIGNATURE section (INTERNAL ERROR)");
                 EmbeddedSignature signature = EmbeddedSignature.sign(sliceCtx, slice.archBytes(), slice.codeSignOffset(),
                         codeResourcePath, infoPlistPath, entitlements);
                 // checking if size of signature fits section
                 byte[] bytes = signature.rawBytes();
-                if (bytes.length > slice.codeSignSize())
-                    throw new CodeSignException("Unable to fit signature into existing LC_CODE_SIGNATURE slot (INTERNAL ERROR)");
+                if (bytes.length > slice.codeSignSize()) {
+                    if (throwIfNoSpace)
+                        throw new CodeSignException("Unable to fit signature into existing LC_CODE_SIGNATURE slot (INTERNAL ERROR)");
+                    else
+                        return false;
+                }
                 // write this sign data back
                 loader.writeSectionToFile(slice.sliceFileOffset() + slice.codeSignOffset(), bytes, slice.codeSignSize());
             }
@@ -272,57 +302,53 @@ public abstract class Bundle {
         } catch (IOException e) {
             throw new CodeSignException("Error while writing LC_CODE_SIGNATURE to executable due " + e.getMessage(), e);
         }
-    }
 
+        return true;
+    }
 
     /**
      * Path to the main executable. For an app, this is app itthis. For
      * a Framework, this is the main framework
      */
     private File getExecutablePath(Ctx ctx) {
-        String name;
-        if (this.infoPlist.containsKey("CFBundleExecutable")) {
-            name = (String) this.infoPlist.get(("CFBundleExecutable")).toJavaObject();
-            ctx.debug("Executable name specified in info.plist[CFBundleExecutable] = " + name);
-        } else {
-            name = FilenameUtils.removeExtension(this.path.getName());
-            ctx.debug("Executable name is not specified in info.plist[CFBundleExecutable], making a guess = " + name);
-        }
+        if (path.isDirectory()) {
+            // app/framework/appex -- info plist is expected
+            String name;
+            if (this.infoPlist.containsKey("CFBundleExecutable")) {
+                name = (String) this.infoPlist.get(("CFBundleExecutable")).toJavaObject();
+                ctx.debug("Executable name specified in info.plist[CFBundleExecutable] = " + name);
+            } else {
+                name = FilenameUtils.removeExtension(this.path.getName());
+                ctx.debug("Executable name is not specified in info.plist[CFBundleExecutable], making a guess = " + name);
+            }
 
-        return new File(this.path, name);
+            return new File(this.path, name);
+        } else {
+            // single file -- dylib
+            return path;
+        }
     }
 
 
     private String getIdentifier() {
-        return (String) this.infoPlist.get(("CFBundleIdentifier")).toJavaObject();
-    }
-
-    /**
-     * Subclass responsible for signing mobile application itself
-     */
-    private static class AppBundle extends Bundle {
-        private NSDictionary provisioningProfile;
-
-        AppBundle(File path) {
-            super(path);
-
-            // read provisioning profile
-            File provProfilePath = new File(this.path, "embedded.mobileprovision");
-            if (!provProfilePath.exists())
-                throw new CodeSignException("no embedded.mobileprovision found; probably not a bundle");
-
-            try (InputStream in = new BufferedInputStream(new FileInputStream(provProfilePath))) {
-                CMSSignedData data = new CMSSignedData(in);
-                byte[] content = (byte[]) data.getSignedContent().getContent();
-                provisioningProfile = (NSDictionary) PropertyListParser.parse(content);
-            } catch (Exception e) {
-                throw new CodeSignException("Error while reading provisioning profile due " + e);
-            }
+        if (this.infoPlist != null) {
+            // app/framework/appex -- info plist is expected
+            return (String) this.infoPlist.get(("CFBundleIdentifier")).toJavaObject();
+        } else {
+            // for dylib just return its file name
+            return path.getName();
         }
     }
 
     public static Bundle bundleForPath(File path) {
-        return new AppBundle(path);
+        String pathName = path.getName();
+        boolean canHandle = path.isDirectory() && (pathName.endsWith(".app") || pathName.endsWith(".framework") || pathName.endsWith(".appex"));
+        canHandle |= path.isFile() && pathName.endsWith(".dylib");
+
+        if (!canHandle)
+            throw new CodeSignException("Do not know how to sign (uknown type) " + path);
+
+        return new Bundle(path);
     }
 }
 

@@ -445,7 +445,7 @@ public class IOSTarget extends AbstractTarget {
     private void codesignSwiftLib(SigningIdentity identity, File swiftLib) throws IOException {
         config.getLogger().info("Code signing swift dylib '%s' using identity '%s' with fingerprint %s", swiftLib.getName(), identity.getName(),
                 identity.getFingerprint());
-        ToolchainUtil.codesign(config, identity, null, false, true, false, swiftLib);
+        ToolchainUtil.codesign(config, identity, null, false, true, true, swiftLib);
     }
 
     private void codesignCustomFramework(SigningIdentity identity, File frameworkDir) throws IOException {
