@@ -490,6 +490,8 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
                 result.add(p.substring("-miphoneos-version-min=".length()));
             } else if (p.equals("-isysroot")) {
                 result.add("-syslibroot");
+            } else if (p.equals("-Xlinker")) {
+                result.add(it.next());
             } else if (p.equals("-g") || (p.equals("-fPIC"))) {
                 // remove parameters to compiler
                 //noinspection UnnecessaryContinue
