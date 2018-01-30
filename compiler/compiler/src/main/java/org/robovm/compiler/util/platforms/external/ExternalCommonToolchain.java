@@ -223,7 +223,7 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     }
 
     @Override
-    protected void lipoRemoveArchs(Config config, File outFile, File inFile, Arch... archs) throws IOException {
+    protected void lipoRemoveArchs(Config config, File inFile, File outFile, Arch... archs) throws IOException {
         validateToolchain();
 
         List<Object> args = new ArrayList<>();
