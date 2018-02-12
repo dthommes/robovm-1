@@ -198,7 +198,19 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
 
     @Override
     protected void ibtool(Config config, File partialInfoPlist, File inFile, File outFile) throws IOException {
-        super.ibtool(config, partialInfoPlist, inFile, outFile);
+        validateToolchain();
+
+        String minOSVersion = config.getOs().getMinVersion();
+        if (config.getIosInfoPList() != null) {
+            String v = config.getIosInfoPList().getMinimumOSVersion();
+            if (v != null) {
+                minOSVersion = v;
+            }
+        }
+
+        Executor executor = new Executor(config.getLogger(), buildToolPath("xib2nib")).args("--minimum-deployment-target",
+                minOSVersion, "--compile", outFile, inFile);
+        executor.exec();
     }
 
     @Override
