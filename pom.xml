@@ -32,6 +32,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
+    <project.build.timestamp>${maven.build.timestamp}</project.build.timestamp>
   </properties>
 
   <modules>
