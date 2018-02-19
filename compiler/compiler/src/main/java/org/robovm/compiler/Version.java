@@ -161,6 +161,22 @@ public class Version {
     }
 
     /**
+     * Return packed version code a.b.c in way a * 1000 * 1000 + b * 1000 + c
+     * @return version code
+     */
+    public long getVersionCode() {
+        return versionCode;
+    }
+
+    /**
+     * Return extended version same as packed but also includes beta/snapshot bits
+     * @return version code
+     */
+    public long getVersionCodeEx() {
+        return versionCodeEx;
+    }
+
+    /**
      * Returns <code>true</code> if this version is less than the specified
      * version number.
      */

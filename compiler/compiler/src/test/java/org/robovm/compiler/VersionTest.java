@@ -27,13 +27,13 @@ public class VersionTest {
 
     @Test
     public void testToInt() {
-        assertEquals(15701, Version.toLong("0.0.15"));
-        assertEquals(1001001701, Version.toLong("1.1.1"));
-        assertEquals(123456789701L, Version.toLong("123.456.789"));
-        assertEquals(1002003000, Version.toLong("1.2.3-SNAPSHOT"));
-        assertEquals(1002003101, Version.toLong("1.2.3-alpha-01"));
-        assertEquals(1002003323, Version.toLong("1.2.3-beta-23"));
-        assertEquals(1002003507, Version.toLong("1.2.3-rc-07"));
+        assertEquals(15701, new Version("0.0.15").getVersionCodeEx());
+        assertEquals(1001001701, new Version("1.1.1").getVersionCodeEx());
+        assertEquals(123456789701L, new Version("123.456.789").getVersionCodeEx());
+        assertEquals(1002003000, new Version("1.2.3-SNAPSHOT").getVersionCodeEx());
+        assertEquals(1002003101, new Version("1.2.3-alpha-01").getVersionCodeEx());
+        assertEquals(1002003323, new Version("1.2.3-beta-23").getVersionCodeEx());
+        assertEquals(1002003507, new Version("1.2.3-rc-07").getVersionCodeEx());
     }
 
 }
