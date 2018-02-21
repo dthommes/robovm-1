@@ -20,26 +20,22 @@ import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
-import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.robovm.compiler.util.update.UpdateChecker;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Action command to clean cache. Due different kind of problems this is often required operation
- */
-public class CleanRoboVmCacheAction extends AnAction {
+public class CheckForUpdateAction extends AnAction {
     private static AtomicBoolean busy = new AtomicBoolean(false);
 
     @Override
-    public void actionPerformed(AnActionEvent anActionEvent) {
+    public void actionPerformed(AnActionEvent e) {
         if (!busy.get())
-            ProgressManager.getInstance().run(new CleanTask());
+            ProgressManager.getInstance().run(new CheckForUpdateTask());
     }
 
     @Override
@@ -48,25 +44,30 @@ public class CleanRoboVmCacheAction extends AnAction {
     }
 
     /**
-     * background task that cleans cache directory
+     * background task that check for udpate
      */
-    private static class CleanTask extends Task.Backgroundable {
+    private static class CheckForUpdateTask extends Task.Backgroundable {
         Throwable exceptionIfHappened;
-        CleanTask() {
-            super(null, "RoboVM Cache Clearer");
+
+        CheckForUpdateTask() {
+            super(null, "RoboVM Checking for Update");
         }
 
         @Override
         public void run(@NotNull ProgressIndicator progress) {
             busy.set(true);
-            progress.setText("Clearing RoboVM cache (~/.robovm/cache)");
-            progress.setFraction(0.5);
+            progress.setText("Downloading....");
+            progress.setIndeterminate(true);
 
-            File file = new File(System.getProperty("user.home"), ".robovm/cache");
-            try {
-                FileUtils.deleteDirectory(file);
-            } catch (IOException e) {
-            }
+            UpdateChecker.Update update = UpdateChecker.fetchUpdateSilent();
+
+            progress.stop();
+            ApplicationManager.getApplication().invokeLater(() -> {
+                if (update != null) {
+                    UpdateDialog dialog = new UpdateDialog(update);
+                    dialog.show();
+                }
+            });
         }
 
         @Override
@@ -80,11 +81,12 @@ public class CleanRoboVmCacheAction extends AnAction {
 
             // single exit point
             if (exceptionIfHappened != null) {
-                Notifications.Bus.notify(new Notification( "RoboVM", "RoboVM Cache Clearer",
+                Notifications.Bus.notify(new Notification( "RoboVM", "RoboVM check for update",
                         "Failed due error: " + exceptionIfHappened.getMessage(), NotificationType.ERROR));
             }
 
             busy.set(false);
         }
     }
+
 }

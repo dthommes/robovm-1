@@ -53,6 +53,7 @@ import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.log.Logger;
+import org.robovm.compiler.util.update.UpdateChecker;
 import org.robovm.idea.compilation.RoboVmCompileTask;
 import org.robovm.idea.config.RoboVmGlobalConfig;
 import org.robovm.idea.sdk.RoboVmSdkType;
@@ -352,6 +353,9 @@ public class RoboVmPlugin {
                 logInfo(project, "RoboVM plugin initialized");
             }
         });
+
+        // check for RoboVM updates
+        ApplicationManager.getApplication().executeOnPooledThread(UpdateChecker::checkForUpdates);
 
         // initialize virtual file change listener so we can
         // trigger recompiles on file saves

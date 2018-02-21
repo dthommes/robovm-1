@@ -30,7 +30,6 @@ public class Version {
 
     // version number and build timestamp that is read from version.properties
     private static Version buildVersion = null;
-    private static long buildTimeStamp = 0;
 
 
     /** version string as it passed to constructor */
@@ -41,6 +40,9 @@ public class Version {
 
     /** version code including snapshot/beta etc status */
     private long versionCodeEx;
+
+    /** time stamp when version was built */
+    private long buildTimeStamp;
 
     /** type of version */
     private enum Type {
@@ -53,7 +55,12 @@ public class Version {
     Type type;
 
     public Version(String v) {
+        this(v, -1);
+    }
+
+    public Version(String v, long ts) {
         versionSting = v;
+        buildTimeStamp = ts;
 
         String buildPart;
         long buildType;
@@ -105,11 +112,12 @@ public class Version {
             is = Version.class.getResourceAsStream(PROPERTIES_RESOURCE);
             Properties props = new Properties();
             props.load(is);
-            buildVersion = new Version(props.getProperty("version"));
+            long buildTimeStamp = -1;
             try {
                 buildTimeStamp = Long.parseLong(props.getProperty("build.timestamp"));
             } catch (NumberFormatException ignored) {
             }
+            buildVersion = new Version(props.getProperty("version"), buildTimeStamp);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
@@ -135,11 +143,7 @@ public class Version {
      *
      * @return the timestamp
      */
-    public static long getBuildTimeStamp() {
-        if (buildVersion == null) {
-            readBuildVersion();
-        }
-
+    public long getBuildTimeStamp() {
         return buildTimeStamp;
     }
 
@@ -166,6 +170,14 @@ public class Version {
      */
     public long getVersionCode() {
         return versionCode;
+    }
+
+    /**
+     * Returns version string this object was build around
+     * @return version as string
+     */
+    public String getVersionString() {
+        return versionSting;
     }
 
     /**

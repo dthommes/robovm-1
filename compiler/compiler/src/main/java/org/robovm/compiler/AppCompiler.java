@@ -16,38 +16,8 @@
  */
 package org.robovm.compiler;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.exec.ExecuteException;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 import org.robovm.compiler.clazz.Clazz;
 import org.robovm.compiler.clazz.Clazzes;
 import org.robovm.compiler.clazz.Path;
@@ -70,6 +40,28 @@ import org.robovm.compiler.target.ios.IOSTarget;
 import org.robovm.compiler.target.ios.ProvisioningProfile;
 import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.compiler.util.AntPathMatcher;
+import org.robovm.compiler.util.update.UpdateChecker;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -1063,109 +1055,15 @@ public class AppCompiler {
         return builder.toString();
     }
 
-    private class UpdateChecker extends Thread {
-        private final String address;
-        private volatile JSONObject result;
-
-        public UpdateChecker(String address) {
-            this.address = address;
-            setDaemon(true);
-        }
-
-        @Override
-        public void run() {
-            result = fetchJson(address);
-        }
-    }
-
     /**
      * Performs an update check. If a newer version of RoboVM is available a
      * message will be printed to the log. The update check is also used to
      * gather some anonymous usage statistics.
      */
     private void updateCheck() {
-        try {
-            String uuid = getInstallUuid();
-            if (uuid == null) {
-                return;
-            }
-            long lastCheckTime = getLastUpdateCheckTime();
-            if (System.currentTimeMillis() - lastCheckTime < 6 * 60 * 60 * 1000) {
-                // Only check for an update once every 6 hours
-                return;
-            }
-            updateLastUpdateCheckTime();
-            String osName = System.getProperty("os.name", "Unknown");
-            String osArch = System.getProperty("os.arch", "Unknown");
-            String osVersion = System.getProperty("os.version", "Unknown");
-            UpdateChecker t = new UpdateChecker("http://robovm.mobidevelop.com/version?"
-                    + "uuid=" + URLEncoder.encode(uuid, "UTF-8") + "&"
-                    + "version=" + URLEncoder.encode(Version.getVersion(), "UTF-8") + "&"
-                    + "osName=" + URLEncoder.encode(osName, "UTF-8") + "&"
-                    + "osArch=" + URLEncoder.encode(osArch, "UTF-8") + "&"
-                    + "osVersion=" + URLEncoder.encode(osVersion, "UTF-8"));
-            t.start();
-            t.join(5 * 1000); // Wait for a maximum of 5 seconds
-            JSONObject result = t.result;
-            if (result != null) {
-                String version = (String) result.get("version");
-                if (version != null && Version.isOlderThan(version)) {
-                    config.getLogger().info("A new version of RoboVM is available. "
-                            + "Current version: %s. New version: %s.", Version.getVersion(), version);
-                }
-            }
-        } catch (Throwable t) {
-            if (config.getHome().isDev()) {
-                t.printStackTrace();
-            }
-        }
+        UpdateChecker.Update update = UpdateChecker.checkForUpdates();
+        if (update != null)
+            config.getLogger().info(update.toString());
     }
 
-    private String getInstallUuid() throws IOException {
-        File uuidFile = new File(new File(System.getProperty("user.home"), ".robovm"), "uuid");
-        uuidFile.getParentFile().mkdirs();
-        String uuid = uuidFile.exists() ? FileUtils.readFileToString(uuidFile, "UTF-8") : null;
-        if (uuid == null) {
-            uuid = UUID.randomUUID().toString();
-            FileUtils.writeStringToFile(uuidFile, uuid, "UTF-8");
-        }
-        uuid = uuid.trim();
-        if (uuid.matches("[0-9a-fA-F-]{36}")) {
-            return uuid;
-        }
-        return null;
-    }
-
-    private long getLastUpdateCheckTime() {
-        try {
-            File timeFile = new File(new File(System.getProperty("user.home"), ".robovm"), "last-update-check");
-            timeFile.getParentFile().mkdirs();
-            return timeFile.exists() ? Long.parseLong(FileUtils.readFileToString(timeFile, "UTF-8").trim()) : 0;
-        } catch (IOException e) {
-            return 0;
-        }
-    }
-
-    private void updateLastUpdateCheckTime() throws IOException {
-        File timeFile = new File(new File(System.getProperty("user.home"), ".robovm"), "last-update-check");
-        timeFile.getParentFile().mkdirs();
-        FileUtils.writeStringToFile(timeFile, String.valueOf(System.currentTimeMillis()), "UTF-8");
-    }
-
-    private JSONObject fetchJson(String address) {
-        try {
-            URL url = new URL(address);
-            URLConnection conn = url.openConnection();
-            conn.setConnectTimeout(5 * 1000);
-            conn.setReadTimeout(5 * 1000);
-            try (InputStream in = new BufferedInputStream(conn.getInputStream())) {
-                return (JSONObject) JSONValue.parseWithException(IOUtils.toString(in, "UTF-8"));
-            }
-        } catch (Exception e) {
-            if (config.getHome().isDev()) {
-                e.printStackTrace();
-            }
-        }
-        return null;
-    }
 }
