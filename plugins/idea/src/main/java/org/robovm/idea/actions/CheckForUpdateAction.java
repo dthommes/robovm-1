@@ -63,10 +63,8 @@ public class CheckForUpdateAction extends AnAction {
 
             progress.stop();
             ApplicationManager.getApplication().invokeLater(() -> {
-                if (update != null) {
-                    UpdateDialog dialog = new UpdateDialog(update);
-                    dialog.show();
-                }
+                UpdateDialog dialog = new UpdateDialog(update);
+                dialog.show();
             });
         }
 
