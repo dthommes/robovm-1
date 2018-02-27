@@ -153,6 +153,16 @@ elseif (LINUX)
     CONFIGURE_COMMAND bash -c "./Configure linux-${ARCH} no-shared no-capieng no-dso --prefix=${EXTPREFIX} --openssldir=${EXTPREFIX}"
     BUILD_IN_SOURCE 1
   )
+elseif (MACOSX)
+  # starting 10.13 macosx ships libressl instead of openssl. which will cause library not found so it is better to link it staticaly
+  # also make a dependency to openssl
+  set(TENTATIVE_OPENSSL_DEP extopenssl)
+
+  ExternalProject_Add(extopenssl
+    URL https://github.com/openssl/openssl/archive/OpenSSL_1_1_0f.zip
+    CONFIGURE_COMMAND bash -c "./Configure darwin64-x86_64-cc no-shared no-capieng --prefix=${EXTPREFIX} --openssldir=${EXTPREFIX}"
+    BUILD_IN_SOURCE 1
+  )
 endif()
 ExternalProject_Add(extlibplist
   URL https://github.com/libimobiledevice/libplist/archive/2.0.0.tar.gz
