@@ -59,11 +59,11 @@ public class CheckForUpdateAction extends AnAction {
             progress.setText("Downloading....");
             progress.setIndeterminate(true);
 
-            UpdateChecker.Update update = UpdateChecker.fetchUpdateSilent();
+            UpdateChecker.UpdateBundle updateBundle = UpdateChecker.fetchUpdateSilent();
 
             progress.stop();
             ApplicationManager.getApplication().invokeLater(() -> {
-                UpdateDialog dialog = new UpdateDialog(update);
+                UpdateDialog dialog = new UpdateDialog(updateBundle);
                 dialog.show();
             });
         }
@@ -81,6 +81,7 @@ public class CheckForUpdateAction extends AnAction {
             if (exceptionIfHappened != null) {
                 Notifications.Bus.notify(new Notification( "RoboVM", "RoboVM check for update",
                         "Failed due error: " + exceptionIfHappened.getMessage(), NotificationType.ERROR));
+                exceptionIfHappened.printStackTrace();
             }
 
             busy.set(false);

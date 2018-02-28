@@ -21,8 +21,10 @@ import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.projectRoots.Sdk;
 import org.jetbrains.annotations.NotNull;
 import org.robovm.compiler.util.platforms.ToolchainUtil;
+import org.robovm.compiler.util.platforms.external.ExternalCommonToolchain;
 import org.robovm.idea.RoboVmPlugin;
 import org.robovm.idea.components.setupwizard.JdkSetupDialog;
+import org.robovm.idea.components.setupwizard.NoToolchainSetupDialog;
 import org.robovm.idea.components.setupwizard.NoXcodeSetupDialog;
 import org.robovm.idea.components.setupwizard.XcodeSetupDialog;
 import org.robovm.idea.sdk.RoboVmSdkType;
@@ -56,18 +58,23 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
         // inform the user that they
         // won't be able to compile for
         // iOS
-        // dkimitsa: skip debug case when considering macos as linux
-        if (System.getProperty("os.name").contains("Mac") && System.getenv("ROBOVM_FORCE_MACOSXLINUX") == null &&
-                System.getProperty("ROBOVM_FORCE_MACOSXLINUX") == null) {
+        if (ExternalCommonToolchain.isSupported()) {
+            if (ExternalCommonToolchain.getToolchainVersion() == null || ExternalCommonToolchain.getXcodeVersion() == null) {
+                new NoToolchainSetupDialog().show();
+            }
+        } else if (System.getProperty("os.name").contains("Mac")) {
+            // pure MAC
             try {
                 ToolchainUtil.findXcodePath();
             } catch (Throwable e) {
                 new XcodeSetupDialog().show();
             }
-        } else if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_NO_XCODE_WIZARD, false) ||
-                NoXcodeSetupDialog.shallShowDialog()) {
-            new NoXcodeSetupDialog().show();
-            PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_NO_XCODE_WIZARD, "true");
+        } else {
+            // other unsupported cases
+            if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_NO_XCODE_WIZARD, false)) {
+                new NoXcodeSetupDialog().show();
+                PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_NO_XCODE_WIZARD, "true");
+            }
         }
     }
 

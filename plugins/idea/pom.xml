@@ -188,11 +188,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>1.5</version>
-        </dependency>
-        <dependency>
             <groupId>com.mobidevelop.robovm</groupId>
             <artifactId>robovm-dist</artifactId>
             <version>${project.version}</version>

@@ -80,14 +80,14 @@ public class UpdateCheckerTest {
     public void testSnapshotToSnapshot() {
         UpdateChecker checker = new UpdateChecker(new Version("1.0.0-SNAPSHOT", 20180203));
         JSONObject versionJson = (JSONObject) JSONValue.parse("{\"snapshot\" : {\"version\" : \"1.0.0\", \"build.timestamp\"  : 20180204}}");
-        assertTrue(checker.parseVersionJson(versionJson).toString().matches("(.*)new snapshot(.*)1.0.0-SNAPSHOT(.*)1.0.0(.*)"));
+        assertTrue(checker.parseVersionJson(versionJson).toString().matches("(.*)new snapshot(.*)New version: 1.0.0/20180204(.*)"));
 
         versionJson = (JSONObject) JSONValue.parse("{\"snapshot\" : {\"version\" : \"1.1.0\", \"build.timestamp\"  : 20180204}}");
-        assertTrue(checker.parseVersionJson(versionJson).toString().matches("(.*)new snapshot(.*)1.0.0-SNAPSHOT(.*)1.1.0(.*)"));
+        assertTrue(checker.parseVersionJson(versionJson).toString().matches("(.*)new snapshot(.*)New version: 1.1.0/20180204(.*)"));
 
         // even if TS is older (should not happen)
         versionJson = (JSONObject) JSONValue.parse("{\"snapshot\" : {\"version\" : \"1.1.0\", \"build.timestamp\"  : 20110101}}");
-        assertTrue(checker.parseVersionJson(versionJson).toString().matches("(.*)new snapshot(.*)1.0.0-SNAPSHOT(.*)1.1.0(.*)"));
+        assertTrue(checker.parseVersionJson(versionJson).toString().matches("(.*)new snapshot(.*)New version: 1.1.0/20110101(.*)"));
     }
 
     @Test

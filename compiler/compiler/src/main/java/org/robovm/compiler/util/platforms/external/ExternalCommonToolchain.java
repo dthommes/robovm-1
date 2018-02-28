@@ -3,6 +3,7 @@ package org.robovm.compiler.util.platforms.external;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
@@ -41,11 +42,13 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     private final String libExt;
 
     // path to expected folder with xcode file export
-    private String xcodePath;
+    private File xcodePath;
     // path to toolchain home
     private File toolChainPath;
     // toolchain version
-    private Long toolchainVersion;
+    private Version toolchainVersion;
+    // xcode version
+    private Version xcodeVersion;
 
     // shiny platform name to use in messages
     private final String shinyPlatformName;
@@ -88,7 +91,65 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
      * @return platform id
      */
     public static String getPlatformId() {
-        return ToolchainUtil.getSystemInfo().os + "-" + ToolchainUtil.getSystemInfo().arch;
+        ExternalCommonToolchain tc = (ExternalCommonToolchain) getImpl();
+        return tc.platform + "-" + ToolchainUtil.getSystemInfo().arch;
+    }
+
+    /**
+     * @return platform version this toolchain is compatible with
+     */
+    public static long getPlatformToolchainVersion() {
+        return ExternalCommonToolchainConsts.TOOLCHAIN_VERSION;
+    }
+
+    /**
+     * @return currently installed toolchain version, null if not installed
+     */
+    public static Version getToolchainVersion() {
+        ExternalCommonToolchain tc = (ExternalCommonToolchain) getImpl();
+        try {
+            tc.validateToolchain();
+        } catch (Throwable ignored) {
+        }
+        return tc.toolchainVersion;
+    }
+
+    /**
+     * method resets current toolchain version which causes it to be re-read. used to update information
+     * after toolchain was downloaded
+     */
+    public static void reInitToolchain() {
+        ExternalCommonToolchain tc = (ExternalCommonToolchain) getImpl();
+        tc.toolchainVersion = null;
+        try {
+            tc.validateToolchain();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * @return currently installed xcode version, null if not installed
+     */
+    public static Version getXcodeVersion() {
+        ExternalCommonToolchain tc = (ExternalCommonToolchain) getImpl();
+        try {
+            tc.validateXcode();
+        } catch (Throwable ignored) {
+        }
+        return tc.xcodeVersion;
+    }
+
+    /**
+     * method resets current xcode version which causes it to be re-read. used to update information
+     * after toolchain was downloaded
+     */
+    public static void reInitXcode() {
+        ExternalCommonToolchain tc = (ExternalCommonToolchain) getImpl();
+        tc.xcodeVersion = null;
+        try {
+            tc.validateXcode();
+        } catch (Throwable ignored) {
+        }
     }
 
     @Override
@@ -105,17 +166,19 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
 
     @Override
     protected String findXcodePath() throws IOException {
-        if (!isXcodeInstalled()) {
-            throw new Error("Xcode files not found! You have to export XCode files as described at " +
-                    ExternalCommonToolchainConsts.TOOLCHAIN_DOWNLOAD_URL);
-        }
-        return buildXcodePath();
+        validateXcode();
+        return xcodePath.getAbsolutePath();
     }
 
     @Override
     protected boolean isXcodeInstalled() {
-        File xcodePath = new File (buildXcodePath());
-        return xcodePath.exists() && xcodePath.isDirectory();
+        try {
+            validateXcode();
+            return true;
+        } catch (Throwable ignored) {
+        }
+
+        return false;
     }
 
     @Override
@@ -403,15 +466,6 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
         new Executor(config.getLogger(), buildToolPath("arm-apple-darwin11-strip")).args("-x", exePath).exec();
     }
 
-    //
-    // private tools
-    //
-    private String buildXcodePath() {
-        if (xcodePath == null)
-            xcodePath = System.getProperty("user.home") + "/.robovm/platform/Xcode.app/Developer";
-        return xcodePath;
-    }
-
     /**
      * validates toolchain and throws error if something is not ok
      */
@@ -422,8 +476,7 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
 
             if (!toolChainPath.exists() || !toolChainPath.isDirectory()) {
                 // toolchain not installed
-                throw new Error("Toolchain is not installed for " + shinyPlatformName + ". Please download and install as described at " +
-                        ExternalCommonToolchainConsts.TOOLCHAIN_DOWNLOAD_URL);
+                throw new Error("Toolchain is not installed for " + shinyPlatformName + ". Please run update to install it.");
             }
 
             // read manifest to get version
@@ -433,30 +486,54 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
                 Properties props = new Properties();
                 props.load(is);
                 String v = props.getProperty("@version");
-                String[] parts = v.split("\\.");
-                if (parts.length > 3) {
-                    throw new IllegalArgumentException("Illegal version number: " + v);
-                }
-                long major = parts.length > 0 ? Long.parseLong(parts[0]) : 0;
-                long minor = parts.length > 1 ? Long.parseLong(parts[1]) : 0;
-                long rev = parts.length > 2 ? Long.parseLong(parts[2]) : 0;
-                toolchainVersion = (major * 1000 + minor) * 1000 + rev;
+                toolchainVersion = new Version(props.getProperty("@version"));
             } catch (Throwable e) {
-                throw new  Error("Toolchain is corrupted! Failed to read manifers", e);
+                throw new  Error("Toolchain is corrupted! Failed to read manifest! Run update to fix.", e);
             } finally {
                 IOUtils.closeQuietly(is);
             }
         }
 
         // compare version
-        if (toolchainVersion < ExternalCommonToolchainConsts.TOOLCHAIN_VERSION) {
+        if (toolchainVersion.getVersionCode() < ExternalCommonToolchainConsts.TOOLCHAIN_VERSION) {
             throw new  Error("Toolchain version is outdated(" +  toolchainVersion +
                     "), expected >= " + ExternalCommonToolchainConsts.TOOLCHAIN_VERSION);
         }
 
-        if (toolchainVersion / 1000L != ExternalCommonToolchainConsts.TOOLCHAIN_VERSION / 1000L) {
+        if (toolchainVersion.getVersionCode() / 1000L != ExternalCommonToolchainConsts.TOOLCHAIN_VERSION / 1000L) {
             throw new  Error("Toolchain version is not compatible(" +  toolchainVersion +
-                    "), expected " + (ExternalCommonToolchainConsts.TOOLCHAIN_VERSION / 1000L) + "XXX");
+                    "), expected " + (ExternalCommonToolchainConsts.TOOLCHAIN_VERSION / 1000L) + "XXX, please run update");
+        }
+    }
+
+
+    /**
+     * validates xcode and throws error if something is not ok
+     */
+    private void validateXcode() {
+        if (xcodeVersion == null) {
+            if (xcodePath == null)
+                xcodePath = new File(System.getProperty("user.home") + "/.robovm/platform/Xcode.app/Developer");
+
+            if (!xcodePath.exists() || !xcodePath.isDirectory()) {
+                // toolchain not installed
+                throw new Error("Xcode files are not installed. Please run update to install.");
+            }
+
+            // read manifest to get version
+            InputStream is = null;
+            try {
+                // manifest located in ~/.robovm/platform/Xcode.app/
+                is = new FileInputStream(new File(xcodePath.getParent(), "manifest"));
+                Properties props = new Properties();
+                props.load(is);
+                String v = props.getProperty("@version");
+                xcodeVersion = new Version(props.getProperty("@version"));
+            } catch (Throwable e) {
+                throw new  Error("Xcode files are corrupted! Failed to read manifest! Run update to fix.", e);
+            } finally {
+                IOUtils.closeQuietly(is);
+            }
         }
     }
 

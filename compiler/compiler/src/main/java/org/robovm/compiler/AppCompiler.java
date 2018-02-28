@@ -1061,9 +1061,9 @@ public class AppCompiler {
      * gather some anonymous usage statistics.
      */
     private void updateCheck() {
-        UpdateChecker.Update update = UpdateChecker.checkForUpdates();
-        if (update != null)
-            config.getLogger().info(update.toString());
+        UpdateChecker.UpdateBundle updateBundle = UpdateChecker.checkForUpdates();
+        if (updateBundle != null)
+            config.getLogger().info(updateBundle.toString());
     }
 
 }

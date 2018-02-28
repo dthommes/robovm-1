@@ -15,31 +15,23 @@
  */
 package org.robovm.idea.utils;
 
-import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationDisplayType;
-import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.application.ApplicationManager;
 import org.robovm.compiler.util.update.UpdateCheckPlugin;
 import org.robovm.compiler.util.update.UpdateChecker;
+import org.robovm.idea.RoboVmPlugin;
 import org.robovm.idea.actions.UpdateDialog;
 
 public class RoboVmUpdateCheckPlugin implements UpdateCheckPlugin {
-    private final NotificationGroup NOTIFICATIONS = new NotificationGroup("RoboVM updates",
-            NotificationDisplayType.STICKY_BALLOON, true);
 
     @Override
-    public boolean updateAvailable(UpdateChecker.Update update) {
-        ApplicationManager.getApplication().invokeLater(() -> {
-            Notification notify = NOTIFICATIONS.createNotification("RoboVM", "RoboVM is ready to <a href=\"update\">update</a>",
+    public boolean updateAvailable(UpdateChecker.UpdateBundle updateBundle) {
+        RoboVmPlugin.displayBalloonNotification("RoboVM", "RoboVM is ready to <a href=\"update\">update</a>",
                     NotificationType.INFORMATION, (notification, hyperlinkEvent) -> {
                         notification.expire();
 
-                        UpdateDialog dialog = new UpdateDialog(update);
+                        UpdateDialog dialog = new UpdateDialog(updateBundle);
                         dialog.show();
                     });
-            notify.notify(null);
-        });
 
         // tell update checked that it was handled and information should not be shared
         return true;

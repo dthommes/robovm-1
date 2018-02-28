@@ -19,6 +19,10 @@ package org.robovm.idea;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
+import com.intellij.notification.NotificationDisplayType;
+import com.intellij.notification.NotificationGroup;
+import com.intellij.notification.NotificationListener;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.compiler.CompileScope;
 import com.intellij.openapi.compiler.CompileTask;
@@ -48,6 +52,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
@@ -127,6 +132,8 @@ public class RoboVmPlugin {
     static volatile Map<Project, ToolWindow> toolWindows = new ConcurrentHashMap<>();
     static volatile Map<Project, VirtualFileListener> fileListeners = new ConcurrentHashMap<>();
     static final List<UnprintedMessage> unprintedMessages = new ArrayList<UnprintedMessage>();
+    private final static NotificationGroup NOTIFICATIONS = new NotificationGroup("RoboVM Notifications",
+            NotificationDisplayType.STICKY_BALLOON, true);
 
     public static OS getOs() {
         return os;
@@ -248,6 +255,19 @@ public class RoboVmPlugin {
                 }
             }
         });
+    }
+
+    /**
+     * Single point to display project unrelated notification baloons
+     */
+    public static void displayBalloonNotification(@Nullable String title, @Nullable String subtitle, @Nullable  String content,
+                                                  @NotNull NotificationType type, @Nullable NotificationListener listener) {
+        UIUtil.invokeLaterIfNeeded(() -> NOTIFICATIONS.createNotification(title, subtitle, content, type, listener).notify(null));
+    }
+
+    public static void displayBalloonNotification(@Nullable String title, @Nullable String subtitle,
+                                                  @NotNull NotificationType type, @Nullable NotificationListener listener) {
+        displayBalloonNotification(title, subtitle, null, type, listener);
     }
 
     public static void logInfo(Project project, String format, Object... args) {

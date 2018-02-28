@@ -23,8 +23,8 @@ package org.robovm.compiler.util.update;
 public interface UpdateCheckPlugin {
     /**
      * Called by UpdateCheck if there is an update available to process it in UI
-     * @param update -- vo with update information
+     * @param updateBundle -- vo with update information
      * @return true if update information has to be suppressed (as already handled in UI or due other reasons)
      */
-    boolean updateAvailable(UpdateChecker.Update update);
+    boolean updateAvailable(UpdateChecker.UpdateBundle updateBundle);
 }

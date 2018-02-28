@@ -17,18 +17,23 @@ package org.robovm.compiler.util.update;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.robovm.compiler.Version;
+import org.robovm.compiler.util.platforms.external.ExternalCommonToolchain;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -42,10 +47,22 @@ public class UpdateChecker {
     private final static String VERSION_CHECK_SNAPSHOT_URL = "https://github.com/dkimitsa/configuration-hub/raw/master/robovm/version.json";
 
 
-    private final Version currentVersion;
+    private final Version currentAppVersion;
+    private final Version currentToolchainVersion;
+    private final Version currentXcodeVersion;
+    private final String platformId;
+    private final long platformVersion;
 
-    public UpdateChecker(Version currentVersion) {
-        this.currentVersion = currentVersion;
+    public UpdateChecker(Version currentAppVersion) {
+        this(currentAppVersion, null, 0, null, null);
+    }
+
+    public UpdateChecker(Version currentAppVersion, String platformId, long platformVersion, Version currentToolchainVersion, Version currentXcodeVersion) {
+        this.currentAppVersion = currentAppVersion;
+        this.currentToolchainVersion = currentToolchainVersion;
+        this.currentXcodeVersion = currentXcodeVersion;
+        this.platformId = platformId;
+        this.platformVersion = platformVersion;
     }
 
     /**
@@ -54,18 +71,35 @@ public class UpdateChecker {
      * if it was handled there (e.g. balloon was shown) it will return null
      * @return Update object if high level plugin doesn't handle this update notification null otherwise
      */
-    public static Update checkForUpdates() {
-        UpdateChecker checker = new UpdateChecker(Version.getBuildVersion());
-        return checker.updateCheck(false, false, false);
+    public static UpdateBundle checkForUpdates() {
+        return checkForUpdates(false);
+    }
+
+    private static UpdateBundle checkForUpdates(boolean silent) {
+        UpdateChecker checker;
+        if (ExternalCommonToolchain.isSupported()) {
+            checker = new UpdateChecker(Version.getBuildVersion(),
+                    ExternalCommonToolchain.getPlatformId(),
+                    ExternalCommonToolchain.getPlatformToolchainVersion(),
+                    ExternalCommonToolchain.getToolchainVersion(),
+                    ExternalCommonToolchain.getXcodeVersion());
+
+        } else {
+            checker = new UpdateChecker(Version.getBuildVersion());
+        }
+
+        if (silent)
+            return checker.updateCheck(true, true, true);
+        else
+            return checker.updateCheck(false, false, false);
     }
 
     /**
      * Same as checkForUpdates but will just gather update  data without any try to process in high level plugins
      * @return vo is there is an update null otherwise
      */
-    public static Update fetchUpdateSilent() {
-        UpdateChecker checker = new UpdateChecker(Version.getBuildVersion());
-        return checker.updateCheck(true, true, true);
+    public static UpdateBundle fetchUpdateSilent() {
+        return checkForUpdates(true);
     }
 
     /**
@@ -76,19 +110,36 @@ public class UpdateChecker {
      * @param silent true to deliver to high level plugins
      * @param withException if true exception will be thrown otherwise just nil returned
      */
-    public Update updateCheck(boolean forced, boolean silent, boolean withException) {
-        Update update = null;
+    public UpdateBundle updateCheck(boolean forced, boolean silent, boolean withException) {
+        UpdateBundle updateBundle = null;
+        Update appUpdate = null;
+        Update toolchainUpdate = null;
+        Update xcodeUpdate = null;
         try {
             if (!forced && !isTimeForUpdate())
                 return null;
 
             updateLastUpdateCheckTime();
+
+            // check for app update
             JSONObject versionJson = fetchVersionJson();
-            update = parseVersionJson(versionJson);
+            appUpdate = parseVersionJson(versionJson);
+
+            if (platformId != null) {
+                // check for toolchain update
+                toolchainUpdate = parseToolchainUpdate(versionJson);
+
+                // check for xcode update
+                xcodeUpdate = parseXcodeUpdate(versionJson);
+            }
+
+            // pack everything
+            if (appUpdate != null || toolchainUpdate != null || xcodeUpdate != null)
+                updateBundle = new UpdateBundle(appUpdate, toolchainUpdate, xcodeUpdate);
 
             // try to deliver this update to high level UI plugins
-            if (!silent && update != null)
-                update = handleInPlugins(update);
+            if (!silent && updateBundle != null)
+                updateBundle = handleInPlugins(updateBundle);
 
 
         } catch (Throwable t) {
@@ -97,26 +148,26 @@ public class UpdateChecker {
             }
         }
 
-        return update;
+        return updateBundle;
     }
 
     /**
      * delivers update to plugins registered as service
-     * @param update vo
+     * @param updateBundle vo
      * @return vo or null if update has to be suppressed due plugin
      */
-    private Update handleInPlugins(Update update) {
+    private UpdateBundle handleInPlugins(UpdateBundle updateBundle) {
         ServiceLoader<UpdateCheckPlugin> pluginLoader = ServiceLoader.load(UpdateCheckPlugin.class, getClass().getClassLoader());
         boolean suppress = false;
         for (UpdateCheckPlugin plugin : pluginLoader) {
-            suppress |= plugin.updateAvailable(update);
+            suppress |= plugin.updateAvailable(updateBundle);
         }
-        return suppress ? update : null;
+        return suppress ? updateBundle : null;
     }
 
     Update parseVersionJson(JSONObject versionJson) {
         Update update = parseReleaseVersionJson(versionJson);
-        if (update == null && currentVersion.isSnapshot())
+        if (update == null && currentAppVersion.isSnapshot())
             update = parseSnapshotVersionJson(versionJson);
 
         return update;
@@ -142,21 +193,21 @@ public class UpdateChecker {
         String updateText = null;
         if (releaseVersion != null) {
             // release to release update, version has to be higher
-            if (currentVersion.isSnapshot()) {
+            if (currentAppVersion.isSnapshot()) {
                 // running snapshot version, if release version same or newver it is good to go
-                if (releaseVersion.getVersionCode() >= currentVersion.getVersionCode()) {
+                if (releaseVersion.getVersionCode() >= currentAppVersion.getVersionCode()) {
                     updateText = String.format("A stable version of RoboVM is available. "
-                            + "Current version: %s. New version: %s.", currentVersion.getVersionString(),
+                            + "Current version: %s. New version: %s.", currentAppVersion.getVersionString(),
                             releaseVersion.getVersionString());
                 }
-            } else if (releaseVersion.getVersionCode() > currentVersion.getVersionCode()) {
+            } else if (releaseVersion.getVersionCode() > currentAppVersion.getVersionCode()) {
                 updateText = String.format("A new version of RoboVM is available. "
-                        + "Current version: %s. New version: %s.", currentVersion.getVersionString(),
+                        + "Current version: %s. New version: %s.", currentAppVersion.getVersionString(),
                         releaseVersion.getVersionString());
             }
         }
 
-        return (updateText != null) ? new Update(updateText, whatsNew, updateUrls) : null;
+        return (updateText != null) ? new Update(releaseVersion, updateText, whatsNew, updateUrls) : null;
     }
 
     private Update parseSnapshotVersionJson(JSONObject versionJson) {
@@ -169,16 +220,89 @@ public class UpdateChecker {
             Map updateUrls = (JSONObject) snapshotJson.get("url");
             String updateText = null;
 
-            if (snapshotVersion.getVersionCode() > currentVersion.getVersionCode() ||
-                    (snapshotVersion.getVersionCode() == currentVersion.getVersionCode() &&
-                    snapshotVersion.getBuildTimeStamp() > currentVersion.getBuildTimeStamp())) {
+            if (snapshotVersion.getVersionCode() > currentAppVersion.getVersionCode() ||
+                    (snapshotVersion.getVersionCode() == currentAppVersion.getVersionCode() &&
+                    snapshotVersion.getBuildTimeStamp() > currentAppVersion.getBuildTimeStamp())) {
                 // new snapshot or snapshot is same but build time is newer
                 updateText = String.format("A new snapshot of RoboVM is available. New version: %s/%d.",
                         snapshotVersion.getVersionString(), snapshotVersion.getBuildTimeStamp());
             }
 
             if (updateText != null)
-                update = new Update(updateText, whatsNew, updateUrls);
+                update = new Update(snapshotVersion, updateText, whatsNew, updateUrls);
+        }
+
+        return update;
+    }
+
+
+    private Update parseToolchainUpdate(JSONObject versionJson) {
+        // checking for toolchain updates
+        Update update = null;
+
+        Object o = versionJson.get("toolchain");
+        List<JSONObject> versions = null;
+        if (o != null && o instanceof JSONObject) {
+            // only one version directly without array
+            versions = new ArrayList<>();
+            versions.add((JSONObject) o);
+        } else if (o != null && o instanceof JSONArray) {
+            //noinspection unchecked
+            versions = (List<JSONObject>) o;
+        }
+
+        if (versions != null) {
+            // find out supported version
+            for (JSONObject toolchainJson : versions) {
+                if (!toolchainJson.containsKey(platformId))
+                    continue;
+                Version toolchainVersion = new Version((String) toolchainJson.get("version"));
+
+                // check if version is compatible (a.b.* == c.d.*)
+                if (toolchainVersion.getVersionCode() / 1000 != platformVersion / 1000)
+                    continue;
+
+                if (currentToolchainVersion != null && toolchainVersion.getVersionCode() <= currentToolchainVersion.getVersionCode())
+                    continue;
+
+                // version found
+                String updateText;
+                if (currentToolchainVersion != null) {
+                    updateText = String.format("A new version of Toolchain is available. Current version: %s. New version: %s.",
+                            currentToolchainVersion.getVersionString(), toolchainVersion.getVersionString());
+                } else {
+                    updateText = String.format("A new version of Toolchain is available: %s.",
+                            toolchainVersion.getVersionString());
+                }
+                Map<String, String> updateUrls = new HashMap<>();
+                updateUrls.put(platformId, (String) toolchainJson.get(platformId));
+                update = new Update(toolchainVersion, updateText, (String) toolchainJson.get("description"), updateUrls);
+            }
+        }
+
+        return update;
+    }
+
+    private Update parseXcodeUpdate(JSONObject versionJson) {
+        // checking for xcode updates
+        Update update = null;
+        JSONObject xcodeJson = (JSONObject) versionJson.get("xcode");
+        if (xcodeJson != null) {
+            Version xcodeVersion = new Version((String) xcodeJson.get("version"));
+            if (currentXcodeVersion == null || xcodeVersion.getVersionCode() > currentXcodeVersion.getVersionCode()) {
+                // version found
+                String updateText;
+                if (currentXcodeVersion != null) {
+                    updateText = String.format("A new version of Xcode files is available. Current version: %s. New version: %s.",
+                            currentXcodeVersion.getVersionString(), xcodeVersion.getVersionString());
+                } else {
+                    updateText = String.format("A new version of Xcode files is available: %s.",
+                            xcodeVersion.getVersionString());
+                }
+                Map<String, String> updateUrls = new HashMap<>();
+                updateUrls.put("xcode", (String) xcodeJson.get("url"));
+                update = new Update(xcodeVersion, updateText, (String) xcodeJson.get("description"), updateUrls);
+            }
         }
 
         return update;
@@ -210,7 +334,7 @@ public class UpdateChecker {
         String osArch = System.getProperty("os.arch", "Unknown");
         String osVersion = System.getProperty("os.version", "Unknown");
 
-        String url = currentVersion.isSnapshot() ? VERSION_CHECK_SNAPSHOT_URL : VERSION_CHECK_URL;
+        String url = currentAppVersion.isSnapshot() ? VERSION_CHECK_SNAPSHOT_URL : VERSION_CHECK_URL;
         final String address = url + "?"
                 + "version=" + URLEncoder.encode(Version.getVersion(), "UTF-8") + "&"
                 + "osName=" + URLEncoder.encode(osName, "UTF-8") + "&"
@@ -223,9 +347,13 @@ public class UpdateChecker {
             public void run() {
                 try {
                     URL url = new URL(address);
-                    URLConnection conn = url.openConnection();
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setUseCaches(false);
                     conn.setConnectTimeout(5 * 1000);
                     conn.setReadTimeout(5 * 1000);
+                    conn.setAllowUserInteraction(false);
+                    conn.setInstanceFollowRedirects(true);
+                    int responseCode = conn.getResponseCode();
                     try (InputStream in = new BufferedInputStream(conn.getInputStream())) {
                         result[0] = (JSONObject) JSONValue.parseWithException(IOUtils.toString(in, "UTF-8"));
                     }
@@ -241,14 +369,20 @@ public class UpdateChecker {
 
 
     public static class Update {
+        private final Version version;
         private final String updateText;
         private final String updateWhatsNew;
         private final Map updateUrls;
 
-        Update(String updateText, String updateWhatsNew, Map updateUrls) {
+        Update(Version version, String updateText, String updateWhatsNew, Map updateUrls) {
+            this.version = version;
             this.updateText = updateText;
             this.updateWhatsNew = updateWhatsNew;
             this.updateUrls = updateUrls;
+        }
+
+        public Version getVersion() {
+            return version;
         }
 
         public String getUpdateText() {
@@ -276,6 +410,39 @@ public class UpdateChecker {
             if (updateWhatsNew != null)
                 res += "\nWhat's new:\n" + updateWhatsNew;
             return res;
+        }
+    }
+
+    public static class UpdateBundle {
+        private final Update appUpdate;
+        private final Update toolchainUpdate;
+        private final Update xcodeUpdate;
+
+        public UpdateBundle(Update appUpdate, Update toolchainUpdate, Update xcodeUpdate) {
+            this.appUpdate = appUpdate;
+            this.toolchainUpdate = toolchainUpdate;
+            this.xcodeUpdate = xcodeUpdate;
+        }
+
+        public Update getAppUpdate() {
+            return appUpdate;
+        }
+
+        public Update getToolchainUpdate() {
+            return toolchainUpdate;
+        }
+
+        public Update getXcodeUpdate() {
+            return xcodeUpdate;
+        }
+
+        @Override
+        public String toString() {
+            return "UpdateBundle{" +
+                    "appUpdate=" + appUpdate +
+                    ", toolchainUpdate=" + toolchainUpdate +
+                    ", xcodeUpdate=" + xcodeUpdate +
+                    '}';
         }
     }
 }
