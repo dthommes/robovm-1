@@ -364,6 +364,10 @@ public class UpdateChecker {
 
         t.start();
         t.join(5 * 1000); // Wait for a maximum of 5 seconds
+
+        if (result[0] == null)
+            throw new RuntimeException("Failed to download version.json");
+
         return result[0];
     }
 

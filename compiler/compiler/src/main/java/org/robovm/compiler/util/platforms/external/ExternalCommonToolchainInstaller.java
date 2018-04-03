@@ -48,8 +48,8 @@ public class ExternalCommonToolchainInstaller {
     public void install() {
         try {
             // checking for udpate even if it was checked just before
-            UpdateChecker.UpdateBundle update = UpdateChecker.fetchUpdateSilent();
             deliverProgress("Re-checking for update", 0f);
+            UpdateChecker.UpdateBundle update = UpdateChecker.fetchUpdateSilent();
 
             if (update != null && (update.getXcodeUpdate() != null || update.getToolchainUpdate() != null)) {
                 // create a tmp folder for operations
@@ -94,7 +94,8 @@ public class ExternalCommonToolchainInstaller {
             listener.installerFailed(e);
         } finally {
             if (installTmpFolder != null) {
-                installTmpFolder.deleteOnExit();
+                if (!installTmpFolder.delete())
+                    installTmpFolder.deleteOnExit();
             }
         }
     }
