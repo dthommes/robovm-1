@@ -188,7 +188,7 @@ public class IBXcodeProject {
                     }
                 }
             } catch (IOException e) {
-                IBException ibe = new IBException("Failed to remove destination folder for XCode project: " + exportDir.getAbsolutePath());
+                IBException ibe = new IBException("Failed to remove destination folder for Xcode project: " + exportDir.getAbsolutePath());
                 ibe.addSuppressed(e);
                 throw ibe;
             }

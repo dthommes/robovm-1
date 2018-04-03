@@ -61,7 +61,7 @@ public class XCodeProjectExporter {
             File classDestFolder = new File(exportDir, packageName);
             if (!classDestFolder.exists()) {
                 if (!classDestFolder.mkdirs())
-                    throw new IBException("Failed to create package folder for XCode project: " + classDestFolder.getAbsolutePath());
+                    throw new IBException("Failed to create package folder for Xcode project: " + classDestFolder.getAbsolutePath());
             }
 
             // export files
@@ -125,7 +125,7 @@ public class XCodeProjectExporter {
         File projectFile = new File(exportDir, projectName + ".xcodeproj/project.pbxproj");
         if (!projectFile.getParentFile().exists()) {
             if (!projectFile.getParentFile().mkdirs())
-                throw new IBException("Failed to create project folder for XCode project: " + projectFile.getParentFile().getAbsolutePath());
+                throw new IBException("Failed to create project folder for Xcode project: " + projectFile.getParentFile().getAbsolutePath());
         }
         try (PrintStream ps = new PrintStream(projectFile)) {
             pbxProject.export(ps);
@@ -216,7 +216,7 @@ public class XCodeProjectExporter {
         try {
             rt.exec(new String[]{"open", projectFile.getAbsolutePath()});
         } catch (IOException e) {
-            IBException ibe = new IBException("Failed to start XCode ");
+            IBException ibe = new IBException("Failed to start Xcode ");
             ibe.addSuppressed(e);
             throw ibe;
         }

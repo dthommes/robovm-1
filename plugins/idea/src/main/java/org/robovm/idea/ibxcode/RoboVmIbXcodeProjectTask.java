@@ -79,10 +79,10 @@ public class RoboVmIbXcodeProjectTask {
             @Override
             public void finished(boolean aborted, int errors, int warnings, CompileContext compileContext) {
                 if (aborted) {
-                    RoboVmPlugin.logDebug(project, "XCode project: compilation aborted");
+                    RoboVmPlugin.logDebug(project, "Xcode project: compilation aborted");
                     complete(null);
                 } else if (errors > 0) {
-                    Exception ex = new CompilationException("XCode project generation failed due compilation errors");
+                    Exception ex = new CompilationException("Xcode project generation failed due compilation errors");
                     complete(ex);
                 } else {
                     startGeneratingWithClassPath(compileContext);
@@ -148,7 +148,7 @@ public class RoboVmIbXcodeProjectTask {
     private void complete(Throwable exceptionIfAny) {
         // single exit point
         if (exceptionIfAny != null) {
-            Notifications.Bus.notify(new Notification( "XCode project", "XCode project",
+            Notifications.Bus.notify(new Notification( "Xcode project", "Xcode project",
                     "Failed due error: " + exceptionIfAny.getMessage(), NotificationType.ERROR));
         }
 
@@ -164,7 +164,7 @@ public class RoboVmIbXcodeProjectTask {
 
         @Override
         public void run(@NotNull ProgressIndicator progress) {
-            progress.setText("Generating XCode project");
+            progress.setText("Generating Xcode project");
 
             TaskThread taskThread = new TaskThread();
             taskThread.start();

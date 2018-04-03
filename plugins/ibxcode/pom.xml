@@ -10,7 +10,7 @@
 
     <groupId>com.mobidevelop.robovm</groupId>
     <artifactId>robovm-ibxcode</artifactId>
-    <name>RoboVM XCode/IB project generator</name>
+    <name>RoboVM Xcode/IB project generator</name>
     <version>2.3.4-SNAPSHOT</version>
     <packaging>jar</packaging>
     <url>http://github.com/MobiVM/robovm</url>
