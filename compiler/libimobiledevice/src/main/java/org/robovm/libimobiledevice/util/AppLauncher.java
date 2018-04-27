@@ -16,6 +16,25 @@
  */
 package org.robovm.libimobiledevice.util;
 
+import com.dd.plist.NSArray;
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSNumber;
+import com.dd.plist.NSString;
+import com.dd.plist.PropertyListParser;
+import org.robovm.libimobiledevice.AfcClient;
+import org.robovm.libimobiledevice.AfcClient.UploadProgressCallback;
+import org.robovm.libimobiledevice.IDevice;
+import org.robovm.libimobiledevice.IDeviceConnection;
+import org.robovm.libimobiledevice.InstallationProxyClient;
+import org.robovm.libimobiledevice.InstallationProxyClient.Options;
+import org.robovm.libimobiledevice.InstallationProxyClient.Options.PackageType;
+import org.robovm.libimobiledevice.InstallationProxyClient.StatusCallback;
+import org.robovm.libimobiledevice.LibIMobileDeviceException;
+import org.robovm.libimobiledevice.LockdowndClient;
+import org.robovm.libimobiledevice.LockdowndServiceDescriptor;
+import org.robovm.libimobiledevice.binding.LockdowndError;
+import org.robovm.libimobiledevice.util.AppLauncherCallback.AppLauncherInfo;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -41,27 +60,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import org.robovm.libimobiledevice.AfcClient;
-import org.robovm.libimobiledevice.AfcClient.UploadProgressCallback;
-import org.robovm.libimobiledevice.IDevice;
-import org.robovm.libimobiledevice.IDeviceConnection;
-import org.robovm.libimobiledevice.InstallationProxyClient;
-import org.robovm.libimobiledevice.InstallationProxyClient.Options;
-import org.robovm.libimobiledevice.InstallationProxyClient.Options.PackageType;
-import org.robovm.libimobiledevice.InstallationProxyClient.StatusCallback;
-import org.robovm.libimobiledevice.LibIMobileDeviceException;
-import org.robovm.libimobiledevice.LockdowndClient;
-import org.robovm.libimobiledevice.LockdowndServiceDescriptor;
-import org.robovm.libimobiledevice.MobileImageMounterClient;
-import org.robovm.libimobiledevice.binding.LockdowndError;
-import org.robovm.libimobiledevice.util.AppLauncherCallback.AppLauncherInfo;
-
-import com.dd.plist.NSArray;
-import com.dd.plist.NSDictionary;
-import com.dd.plist.NSNumber;
-import com.dd.plist.NSString;
-import com.dd.plist.PropertyListParser;
 
 /**
  * Launches an application on a device using the {@code com.apple.debuserver}
@@ -579,101 +577,7 @@ public class AppLauncher {
             tmpFile.delete();
         }
     }
-    
-    static File findDeveloperImage(File dsDir, String productVersion, String buildVersion) 
-            throws FileNotFoundException {
-        
-        String[] versionParts = getProductVersionParts(productVersion);
-        
-        String[] patterns = new String[] {
-            // 7.0.3 (11B508)
-            String.format("%s\\.%s\\.%s \\(%s\\)", versionParts[0], versionParts[1], versionParts[2], buildVersion), 
-            // 7.0.3 (*)
-            String.format("%s\\.%s\\.%s \\(.*\\)", versionParts[0], versionParts[1], versionParts[2], buildVersion), 
-            // 7.0.3
-            String.format("%s\\.%s\\.%s", versionParts[0], versionParts[1], versionParts[2]), 
-            // 7.0 (11A465)
-            String.format("%s\\.%s \\(%s\\)", versionParts[0], versionParts[1], buildVersion),
-            // 7.0 (*)
-            String.format("%s\\.%s \\(.*\\)", versionParts[0], versionParts[1], buildVersion),
-            // 7.0
-            String.format("%s\\.%s", versionParts[0], versionParts[1]) 
-        };
-        
-        File[] dirs = dsDir.listFiles();
-        for (String pattern : patterns) {
-            for (File dir : dirs) {
-                if (dir.isDirectory() && dir.getName().matches(pattern)) {
-                    File dmg = new File(dir, "DeveloperDiskImage.dmg");
-                    File sig = new File(dir, dmg.getName() + ".signature");
-                    if (dmg.isFile() && sig.isFile()) {
-                        return dmg;
-                    }
-                }
-            }
-        }
-        throw new FileNotFoundException("No DeveloperDiskImage.dmg found in " 
-                + dsDir.getAbsolutePath() + " for iOS version " + productVersion 
-                + " (" + buildVersion + ")");
-    }
 
-    /**
-     * Splits productVersion and expand to 3 parts (e.g. 7.0 -> 7.0.0)
-     */
-    private static String[] getProductVersionParts(String productVersion) {
-        String[] versionParts = Arrays.copyOf(productVersion.split("\\."), 3);
-        for (int i = 0; i < versionParts.length; i++) {
-            if (versionParts[i] == null) {
-                versionParts[i] = "0";
-            }
-        }
-        return versionParts;
-    }
-    
-    private void mountDeveloperImage(LockdowndClient lockdowndClient) throws Exception {
-        // Find the DeveloperDiskImage.dmg path that best matches the current device. Here's what
-        // the paths look like:
-        // Platforms/iPhoneOS.platform/DeviceSupport/5.0/DeveloperDiskImage.dmg
-        // Platforms/iPhoneOS.platform/DeviceSupport/6.0/DeveloperDiskImage.dmg
-        // Platforms/iPhoneOS.platform/DeviceSupport/6.1/DeveloperDiskImage.dmg
-        // Platforms/iPhoneOS.platform/DeviceSupport/7.0/DeveloperDiskImage.dmg
-        // Platforms/iPhoneOS.platform/DeviceSupport/7.0 (11A465)/DeveloperDiskImage.dmg
-        // Platforms/iPhoneOS.platform/DeviceSupport/7.0.3 (11B508)/DeveloperDiskImage.dmg
-        
-        String productVersion = lockdowndClient.getValue(null, "ProductVersion").toString(); // E.g. 7.0.2
-        String buildVersion = lockdowndClient.getValue(null, "BuildVersion").toString(); // E.g. 11B508
-        File deviceSupport = new File(getXcodePath(), "Platforms/iPhoneOS.platform/DeviceSupport");
-        log("Looking up developer disk image for iOS version %s (%s) in %s", productVersion, buildVersion, deviceSupport);
-        File devImage = findDeveloperImage(deviceSupport, productVersion, buildVersion);
-        File devImageSig = new File(devImage.getParentFile(), devImage.getName() + ".signature");
-        byte[] devImageSigBytes = Files.readAllBytes(devImageSig.toPath());
-        
-        LockdowndServiceDescriptor mimService = lockdowndClient.startService(MobileImageMounterClient.SERVICE_NAME);
-        try (MobileImageMounterClient mimClient = new MobileImageMounterClient(device, mimService)) {
-
-            log("Copying developer disk image %s to device", devImage);
-            
-            int majorVersion = Integer.parseInt(getProductVersionParts(productVersion)[0]);
-            if (majorVersion >= 7) {
-                // Use new upload method
-                mimClient.uploadImage(devImage, null, devImageSigBytes);
-            } else {
-                LockdowndServiceDescriptor afcService = lockdowndClient.startService(AfcClient.SERVICE_NAME);
-                try (AfcClient afcClient = new AfcClient(device, afcService)) {
-                    afcClient.makeDirectory("/PublicStaging");
-                    afcClient.fileCopy(devImage, "/PublicStaging/staging.dimage");
-                }
-            }
-            
-            log("Mounting developer disk image");                        
-            NSDictionary result = mimClient.mountImage("/PublicStaging/staging.dimage", devImageSigBytes, null);
-            NSString status = (NSString) result.objectForKey("Status");
-            if (status == null || !"Complete".equals(status.toString())) {
-                throw new IOException("Failed to mount " + devImage.getAbsolutePath() + " on the device.");
-            }
-        }
-    }
-    
     private int launchInternal() throws Exception {
         install();
         
@@ -696,7 +600,7 @@ public class AppLauncher {
                     if (e.getErrorCode() == LockdowndError.LOCKDOWN_E_INVALID_SERVICE.swigValue()) {
                         // This happens when the developer image hasn't been mounted.
                         // Mount and try again.
-                        mountDeveloperImage(lockdowndClient);
+                        MobileImageMounter.mountDeveloperImage(device, lockdowndClient, this::log);
                         debugService = lockdowndClient.startService(DEBUG_SERVER_SERVICE_NAME);
                     } else {
                         throw e;

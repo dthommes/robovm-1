@@ -27,7 +27,7 @@ import org.junit.Test;
 /**
  * Tests {@link AppLauncher}.
  */
-public class AppLauncherTest {
+public class MobileImageMounterTest {
 
     private File createDeveloperImage(Path dsDir, String version) throws Exception {
         return createDeveloperImage(dsDir, version, true);
@@ -53,12 +53,12 @@ public class AppLauncherTest {
         File f70_11A465 = createDeveloperImage(dsDir, "7.0 (11A465)");
         File f703_11B508 = createDeveloperImage(dsDir, "7.0.3 (11B508)");
         
-        assertEquals(f703_11B508, AppLauncher.findDeveloperImage(dsDir.toFile(), "7.0.3", "11B508"));
-        assertEquals(f61, AppLauncher.findDeveloperImage(dsDir.toFile(), "6.1.3", "10A123"));
-        assertEquals(f61, AppLauncher.findDeveloperImage(dsDir.toFile(), "6.1.1", "10A123"));
-        assertEquals(f612, AppLauncher.findDeveloperImage(dsDir.toFile(), "6.1.2", "10A123"));
-        assertEquals(f703_11B508, AppLauncher.findDeveloperImage(dsDir.toFile(), "7.0.3", "12C123"));
-        assertEquals(f70_11A465, AppLauncher.findDeveloperImage(dsDir.toFile(), "7.0.2", "12C123"));
+        assertEquals(f703_11B508, MobileImageMounter.findDeveloperImage(dsDir.toFile(), "7.0.3", "11B508"));
+        assertEquals(f61, MobileImageMounter.findDeveloperImage(dsDir.toFile(), "6.1.3", "10A123"));
+        assertEquals(f61, MobileImageMounter.findDeveloperImage(dsDir.toFile(), "6.1.1", "10A123"));
+        assertEquals(f612, MobileImageMounter.findDeveloperImage(dsDir.toFile(), "6.1.2", "10A123"));
+        assertEquals(f703_11B508, MobileImageMounter.findDeveloperImage(dsDir.toFile(), "7.0.3", "12C123"));
+        assertEquals(f70_11A465, MobileImageMounter.findDeveloperImage(dsDir.toFile(), "7.0.2", "12C123"));
     }
 
 }

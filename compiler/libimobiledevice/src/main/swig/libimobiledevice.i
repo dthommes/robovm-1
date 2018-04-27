@@ -6,6 +6,8 @@
 #include <libimobiledevice/afc.h>
 #include <libimobiledevice/installation_proxy.h>
 #include <libimobiledevice/mobile_image_mounter.h>
+#include <libimobiledevice/syslog_relay.h>
+#include <libimobiledevice/screenshotr.h>
 
 %}
 
@@ -79,6 +81,7 @@ SWIG_JAVABODY_METHODS(protected, protected, SWIGTYPE)
 %enddef
 CALLBACK(instproxy_status_cb_t)
 CALLBACK(idevice_event_cb_t)
+CALLBACK(syslog_relay_receive_cb_t)
 
 // Map user_data passed to callbacks as int. We will pass in a
 // callback id which is mapped to a cllback object instance in Java.
@@ -103,6 +106,8 @@ OUT_CLASS(afc_client_t, AfcClientRefOut)
 OUT_CLASS(plist_t, PlistRefOut)
 OUT_CLASS(instproxy_client_t, InstproxyClientRefOut)
 OUT_CLASS(mobile_image_mounter_client_t, MobileImageMounterClientRefOut)
+OUT_CLASS(syslog_relay_client_t, SyslogRelayClientRefOut)
+OUT_CLASS(screenshotr_client_t, ScreenShotrClientRefOut)
 OUT_ARG(IntOut, int *)
 OUT_ARG(IntOut, uint32_t *)
 OUT_ARG(LongOut, uint64_t *)
@@ -127,6 +132,7 @@ OUT_ARG(StringOut, char **udid)
 OUT_ARG(StringOut, char **value)
 OUT_ARG(ByteArrayOut, char **plist_bin)
 OUT_ARG(ByteArrayOut, char **plist_xml)
+OUT_ARG(ByteArrayOut, char **imgdata)
 OUT_ARG(IDeviceRefOut, idevice_t *device)
 OUT_ARG(IDeviceConnectionRefOut, idevice_connection_t *connection)
 OUT_ARG(LockdowndClientRefOut, lockdownd_client_t *client)
@@ -135,6 +141,8 @@ OUT_ARG(PlistRefOut, plist_t *)
 OUT_ARG(AfcClientRefOut, afc_client_t *client)
 OUT_ARG(InstproxyClientRefOut, instproxy_client_t *client)
 OUT_ARG(MobileImageMounterClientRefOut, mobile_image_mounter_client_t *client)
+OUT_ARG(SyslogRelayClientRefOut, syslog_relay_client_t *client)
+OUT_ARG(ScreenShotrClientRefOut, screenshotr_client_t *client)
 
 %apply signed char[] {char *data};
 %apply signed char[] {char *plist_bin};
@@ -176,12 +184,15 @@ extern void delete_StringArray_values(StringArray* s, int length);
 extern void delete_StringArray_values_z(StringArray* s);
 extern jlong get_global_instproxy_status_cb(void);
 extern jlong get_global_idevice_event_cb(void);
+extern jlong get_global_syslog_relay_cb(void);
 extern mobile_image_mounter_error_t upload_image(mobile_image_mounter_client_t client, const char *image_path, const char *image_type, const char* sig, size_t sig_size);
 %{
 static JavaVM *vm = NULL;
 static jclass class_Callbacks = NULL;
 static jmethodID meth_callInstproxyCallback = NULL;
 static jmethodID meth_callIDeviceEventCallback = NULL;
+static jmethodID meth_callSyslogRelayCallback = NULL;
+
 jint JNI_OnLoad(JavaVM *_vm, void *reserved) {
     vm = _vm;
     return JNI_VERSION_1_2;
@@ -215,6 +226,8 @@ SWIGEXPORT void JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDevic
     meth_callInstproxyCallback = (*env)->GetStaticMethodID(env, class_Callbacks, "callInstproxyCallback", "(Ljava/lang/String;[BI)V");
     if ((*env)->ExceptionCheck(env)) return;
     meth_callIDeviceEventCallback = (*env)->GetStaticMethodID(env, class_Callbacks, "callIDeviceEventCallback", "(ILjava/lang/String;)V");
+    if ((*env)->ExceptionCheck(env)) return;
+    meth_callSyslogRelayCallback = (*env)->GetStaticMethodID(env, class_Callbacks, "callSyslogRelayCallback", "(IB)V");
     if ((*env)->ExceptionCheck(env)) return;
 }
 static void global_instproxy_status_cb(const char *operation, plist_t status, void *user_data) {
@@ -269,6 +282,21 @@ mobile_image_mounter_error_t upload_image(mobile_image_mounter_client_t client, 
     fclose(f);
     return err;
 }
+
+static void global_syslog_relay_cb(char c, void *user_data) {
+    JNIEnv *env;
+    if ((*vm)->AttachCurrentThreadAsDaemon(vm, (void**) &env, NULL) != JNI_OK) {
+        fprintf(stderr, "Failed to attach callback thread\n");
+        abort();
+    }
+    jbyte b = c;
+    jint loggerId = (jint)user_data;
+    (*env)->CallStaticVoidMethod(env, class_Callbacks, meth_callSyslogRelayCallback, loggerId, b);
+}
+jlong get_global_syslog_relay_cb(void) {
+    return (jlong) global_syslog_relay_cb;
+}
+
 %}
 
 %include "libimobiledevice/libimobiledevice.h"
@@ -276,6 +304,8 @@ mobile_image_mounter_error_t upload_image(mobile_image_mounter_client_t client, 
 %include "libimobiledevice/afc.h"
 %include "libimobiledevice/installation_proxy.h"
 %include "libimobiledevice/mobile_image_mounter.h"
+%include "libimobiledevice/syslog_relay.h"
+%include "libimobiledevice/screenshotr.h"
 
 %pragma(java) jniclasscode=%{
   private static native void initNative();

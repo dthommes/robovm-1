@@ -104,4 +104,9 @@ class Callbacks {
             t.printStackTrace();
         }
     }
+
+
+    static void callSyslogRelayCallback(int loggerId, byte b) {
+        // dkimitsa: it is a placeholder as callback is not used right now
+    }
 }

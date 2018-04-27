@@ -81,9 +81,11 @@
 #endif
 
 /* exporting methods */
-#if (__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
-#  ifndef GCC_HASCLASSVISIBILITY
-#    define GCC_HASCLASSVISIBILITY
+#if defined(__GNUC__)
+#  if (__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+#    ifndef GCC_HASCLASSVISIBILITY
+#      define GCC_HASCLASSVISIBILITY
+#    endif
 #  endif
 #endif
 
@@ -210,6 +212,8 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 #include <libimobiledevice/afc.h>
 #include <libimobiledevice/installation_proxy.h>
 #include <libimobiledevice/mobile_image_mounter.h>
+#include <libimobiledevice/syslog_relay.h>
+#include <libimobiledevice/screenshotr.h>
 
 
 
@@ -808,14 +812,37 @@ SWIGINTERN void delete_MobileImageMounterClientRefOut(struct MobileImageMounterC
           free(self);
         }
 
+        typedef struct SyslogRelayClientRefOut {
+            syslog_relay_client_t value;
+        } SyslogRelayClientRefOut;
+    
+SWIGINTERN struct SyslogRelayClientRefOut *new_SyslogRelayClientRefOut(void){
+          return (SyslogRelayClientRefOut *) calloc(1,sizeof(syslog_relay_client_t));
+        }
+SWIGINTERN void delete_SyslogRelayClientRefOut(struct SyslogRelayClientRefOut *self){
+          ;
+          free(self);
+        }
+
+        typedef struct ScreenShotrClientRefOut {
+            screenshotr_client_t value;
+        } ScreenShotrClientRefOut;
+    
+SWIGINTERN struct ScreenShotrClientRefOut *new_ScreenShotrClientRefOut(void){
+          return (ScreenShotrClientRefOut *) calloc(1,sizeof(screenshotr_client_t));
+        }
+SWIGINTERN void delete_ScreenShotrClientRefOut(struct ScreenShotrClientRefOut *self){
+          ;
+          free(self);
+        }
+
 static JavaVM *vm = NULL;
 static jclass class_Callbacks = NULL;
 static jmethodID meth_callInstproxyCallback = NULL;
 static jmethodID meth_callIDeviceEventCallback = NULL;
-// dkimitsa: using  SWIGEXPORT here instead on JNIEXPORT as when crosscompiling
-// for windows from linux JNIEXPORT keeps Linux value and not being marked as
-// exported
-SWIGEXPORT jint JNICALL JNI_OnLoad(JavaVM *_vm, void *reserved) {
+static jmethodID meth_callSyslogRelayCallback = NULL;
+
+jint JNI_OnLoad(JavaVM *_vm, void *reserved) {
     vm = _vm;
     return JNI_VERSION_1_2;
 }
@@ -848,6 +875,8 @@ SWIGEXPORT void JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDevic
     meth_callInstproxyCallback = (*env)->GetStaticMethodID(env, class_Callbacks, "callInstproxyCallback", "(Ljava/lang/String;[BI)V");
     if ((*env)->ExceptionCheck(env)) return;
     meth_callIDeviceEventCallback = (*env)->GetStaticMethodID(env, class_Callbacks, "callIDeviceEventCallback", "(ILjava/lang/String;)V");
+    if ((*env)->ExceptionCheck(env)) return;
+    meth_callSyslogRelayCallback = (*env)->GetStaticMethodID(env, class_Callbacks, "callSyslogRelayCallback", "(IB)V");
     if ((*env)->ExceptionCheck(env)) return;
 }
 static void global_instproxy_status_cb(const char *operation, plist_t status, void *user_data) {
@@ -902,6 +931,21 @@ mobile_image_mounter_error_t upload_image(mobile_image_mounter_client_t client, 
     fclose(f);
     return err;
 }
+
+static void global_syslog_relay_cb(char c, void *user_data) {
+    JNIEnv *env;
+    if ((*vm)->AttachCurrentThreadAsDaemon(vm, (void**) &env, NULL) != JNI_OK) {
+        fprintf(stderr, "Failed to attach callback thread\n");
+        abort();
+    }
+    jbyte b = c;
+    jint loggerId = (jint)user_data;
+    (*env)->CallStaticVoidMethod(env, class_Callbacks, meth_callSyslogRelayCallback, loggerId, b);
+}
+jlong get_global_syslog_relay_cb(void) {
+    return (jlong) global_syslog_relay_cb;
+}
+
 
 
 #ifdef __cplusplus
@@ -1579,6 +1623,80 @@ SWIGEXPORT void JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDevic
 }
 
 
+SWIGEXPORT jlong JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_SyslogRelayClientRefOut_1value_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  struct SyslogRelayClientRefOut *arg1 = (struct SyslogRelayClientRefOut *) 0 ;
+  syslog_relay_client_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(struct SyslogRelayClientRefOut **)&jarg1; 
+  result = (syslog_relay_client_t) ((arg1)->value);
+  *(syslog_relay_client_t *)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_new_1SyslogRelayClientRefOut(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  struct SyslogRelayClientRefOut *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (struct SyslogRelayClientRefOut *)new_SyslogRelayClientRefOut();
+  *(struct SyslogRelayClientRefOut **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_delete_1SyslogRelayClientRefOut(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  struct SyslogRelayClientRefOut *arg1 = (struct SyslogRelayClientRefOut *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(struct SyslogRelayClientRefOut **)&jarg1; 
+  delete_SyslogRelayClientRefOut(arg1);
+}
+
+
+SWIGEXPORT jlong JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_ScreenShotrClientRefOut_1value_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  struct ScreenShotrClientRefOut *arg1 = (struct ScreenShotrClientRefOut *) 0 ;
+  screenshotr_client_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(struct ScreenShotrClientRefOut **)&jarg1; 
+  result = (screenshotr_client_t) ((arg1)->value);
+  *(screenshotr_client_t *)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_new_1ScreenShotrClientRefOut(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  struct ScreenShotrClientRefOut *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  result = (struct ScreenShotrClientRefOut *)new_ScreenShotrClientRefOut();
+  *(struct ScreenShotrClientRefOut **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_delete_1ScreenShotrClientRefOut(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  struct ScreenShotrClientRefOut *arg1 = (struct ScreenShotrClientRefOut *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(struct ScreenShotrClientRefOut **)&jarg1; 
+  delete_ScreenShotrClientRefOut(arg1);
+}
+
+
 SWIGEXPORT jlong JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_plist_1new_1dict(JNIEnv *jenv, jclass jcls) {
   jlong jresult = 0 ;
   plist_t result;
@@ -1738,6 +1856,18 @@ SWIGEXPORT jlong JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDevi
   (void)jenv;
   (void)jcls;
   result = get_global_idevice_event_cb();
+  jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_get_1global_1syslog_1relay_1cb(JNIEnv *jenv, jclass jcls) {
+  jlong jresult = 0 ;
+  jlong result;
+  
+  (void)jenv;
+  (void)jcls;
+  result = get_global_syslog_relay_cb();
   jresult = result; 
   return jresult;
 }
@@ -4249,6 +4379,224 @@ SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDevic
   (void)jcls;
   arg1 = *(mobile_image_mounter_client_t *)&jarg1; 
   result = (mobile_image_mounter_error_t)mobile_image_mounter_hangup(arg1);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_syslog_1relay_1client_1new(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
+  jint jresult = 0 ;
+  idevice_t arg1 = (idevice_t) 0 ;
+  lockdownd_service_descriptor_t arg2 = (lockdownd_service_descriptor_t) 0 ;
+  syslog_relay_client_t *arg3 = (syslog_relay_client_t *) 0 ;
+  syslog_relay_error_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg2_;
+  (void)jarg3_;
+  arg1 = *(idevice_t *)&jarg1; 
+  arg2 = *(lockdownd_service_descriptor_t *)&jarg2; 
+  arg3 = *(syslog_relay_client_t **)&jarg3; 
+  result = (syslog_relay_error_t)syslog_relay_client_new(arg1,arg2,arg3);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_syslog_1relay_1client_1start_1service(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jobject jarg2_, jstring jarg3) {
+  jint jresult = 0 ;
+  idevice_t arg1 = (idevice_t) 0 ;
+  syslog_relay_client_t *arg2 = (syslog_relay_client_t *) 0 ;
+  char *arg3 = (char *) 0 ;
+  syslog_relay_error_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg2_;
+  arg1 = *(idevice_t *)&jarg1; 
+  arg2 = *(syslog_relay_client_t **)&jarg2; 
+  arg3 = 0;
+  if (jarg3) {
+    arg3 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg3, 0);
+    if (!arg3) return 0;
+  }
+  result = (syslog_relay_error_t)syslog_relay_client_start_service(arg1,arg2,(char const *)arg3);
+  jresult = (jint)result; 
+  if (arg3) (*jenv)->ReleaseStringUTFChars(jenv, jarg3, (const char *)arg3);
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_syslog_1relay_1client_1free(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  jint jresult = 0 ;
+  syslog_relay_client_t arg1 = (syslog_relay_client_t) 0 ;
+  syslog_relay_error_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(syslog_relay_client_t *)&jarg1; 
+  result = (syslog_relay_error_t)syslog_relay_client_free(arg1);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_syslog_1relay_1start_1capture(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jint jarg3) {
+  jint jresult = 0 ;
+  syslog_relay_client_t arg1 = (syslog_relay_client_t) 0 ;
+  syslog_relay_receive_cb_t arg2 = (syslog_relay_receive_cb_t) 0 ;
+  void *arg3 = (void *) 0 ;
+  syslog_relay_error_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(syslog_relay_client_t *)&jarg1; 
+  arg2 = *(syslog_relay_receive_cb_t *)&jarg2; 
+  arg3 = *(void **)&jarg3; 
+  result = (syslog_relay_error_t)syslog_relay_start_capture(arg1,arg2,arg3);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_syslog_1relay_1stop_1capture(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  jint jresult = 0 ;
+  syslog_relay_client_t arg1 = (syslog_relay_client_t) 0 ;
+  syslog_relay_error_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(syslog_relay_client_t *)&jarg1; 
+  result = (syslog_relay_error_t)syslog_relay_stop_capture(arg1);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_syslog_1relay_1receive_1with_1timeout(JNIEnv *jenv, jclass jcls, jlong jarg1, jbyteArray jarg2, jint jarg3, jlong jarg4, jobject jarg4_, jlong jarg5) {
+  jint jresult = 0 ;
+  syslog_relay_client_t arg1 = (syslog_relay_client_t) 0 ;
+  char *arg2 = (char *) 0 ;
+  uint32_t arg3 ;
+  uint32_t *arg4 = (uint32_t *) 0 ;
+  unsigned int arg5 ;
+  jbyte *jarr2 ;
+  syslog_relay_error_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg4_;
+  arg1 = *(syslog_relay_client_t *)&jarg1; 
+  if (!SWIG_JavaArrayInSchar(jenv, &jarr2, (signed char **)&arg2, jarg2)) return 0; 
+  arg3 = (uint32_t)jarg3; 
+  arg4 = *(uint32_t **)&jarg4; 
+  arg5 = (unsigned int)jarg5; 
+  result = (syslog_relay_error_t)syslog_relay_receive_with_timeout(arg1,arg2,arg3,arg4,arg5);
+  jresult = (jint)result; 
+  SWIG_JavaArrayArgoutSchar(jenv, jarr2, (signed char *)arg2, jarg2); 
+  
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_syslog_1relay_1receive(JNIEnv *jenv, jclass jcls, jlong jarg1, jbyteArray jarg2, jint jarg3, jlong jarg4, jobject jarg4_) {
+  jint jresult = 0 ;
+  syslog_relay_client_t arg1 = (syslog_relay_client_t) 0 ;
+  char *arg2 = (char *) 0 ;
+  uint32_t arg3 ;
+  uint32_t *arg4 = (uint32_t *) 0 ;
+  jbyte *jarr2 ;
+  syslog_relay_error_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg4_;
+  arg1 = *(syslog_relay_client_t *)&jarg1; 
+  if (!SWIG_JavaArrayInSchar(jenv, &jarr2, (signed char **)&arg2, jarg2)) return 0; 
+  arg3 = (uint32_t)jarg3; 
+  arg4 = *(uint32_t **)&jarg4; 
+  result = (syslog_relay_error_t)syslog_relay_receive(arg1,arg2,arg3,arg4);
+  jresult = (jint)result; 
+  SWIG_JavaArrayArgoutSchar(jenv, jarr2, (signed char *)arg2, jarg2); 
+  
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_screenshotr_1client_1new(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
+  jint jresult = 0 ;
+  idevice_t arg1 = (idevice_t) 0 ;
+  lockdownd_service_descriptor_t arg2 = (lockdownd_service_descriptor_t) 0 ;
+  screenshotr_client_t *arg3 = (screenshotr_client_t *) 0 ;
+  screenshotr_error_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg2_;
+  (void)jarg3_;
+  arg1 = *(idevice_t *)&jarg1; 
+  arg2 = *(lockdownd_service_descriptor_t *)&jarg2; 
+  arg3 = *(screenshotr_client_t **)&jarg3; 
+  result = (screenshotr_error_t)screenshotr_client_new(arg1,arg2,arg3);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_screenshotr_1client_1start_1service(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jobject jarg2_, jstring jarg3) {
+  jint jresult = 0 ;
+  idevice_t arg1 = (idevice_t) 0 ;
+  screenshotr_client_t *arg2 = (screenshotr_client_t *) 0 ;
+  char *arg3 = (char *) 0 ;
+  screenshotr_error_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg2_;
+  arg1 = *(idevice_t *)&jarg1; 
+  arg2 = *(screenshotr_client_t **)&jarg2; 
+  arg3 = 0;
+  if (jarg3) {
+    arg3 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg3, 0);
+    if (!arg3) return 0;
+  }
+  result = (screenshotr_error_t)screenshotr_client_start_service(arg1,arg2,(char const *)arg3);
+  jresult = (jint)result; 
+  if (arg3) (*jenv)->ReleaseStringUTFChars(jenv, jarg3, (const char *)arg3);
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_screenshotr_1client_1free(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+  jint jresult = 0 ;
+  screenshotr_client_t arg1 = (screenshotr_client_t) 0 ;
+  screenshotr_error_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = *(screenshotr_client_t *)&jarg1; 
+  result = (screenshotr_error_t)screenshotr_client_free(arg1);
+  jresult = (jint)result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jint JNICALL Java_org_robovm_libimobiledevice_binding_LibIMobileDeviceJNI_screenshotr_1take_1screenshot(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
+  jint jresult = 0 ;
+  screenshotr_client_t arg1 = (screenshotr_client_t) 0 ;
+  char **arg2 = (char **) 0 ;
+  uint64_t *arg3 = (uint64_t *) 0 ;
+  screenshotr_error_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg2_;
+  (void)jarg3_;
+  arg1 = *(screenshotr_client_t *)&jarg1; 
+  arg2 = *(char ***)&jarg2; 
+  arg3 = *(uint64_t **)&jarg3; 
+  result = (screenshotr_error_t)screenshotr_take_screenshot(arg1,arg2,arg3);
   jresult = (jint)result; 
   return jresult;
 }

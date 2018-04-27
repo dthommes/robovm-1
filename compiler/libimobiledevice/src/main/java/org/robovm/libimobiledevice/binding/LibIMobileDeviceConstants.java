@@ -12,4 +12,6 @@ public interface LibIMobileDeviceConstants {
   public final static String AFC_SERVICE_NAME = "com.apple.afc";
   public final static String INSTPROXY_SERVICE_NAME = "com.apple.mobile.installation_proxy";
   public final static String MOBILE_IMAGE_MOUNTER_SERVICE_NAME = "com.apple.mobile.mobile_image_mounter";
+  public final static String SYSLOG_RELAY_SERVICE_NAME = "com.apple.syslog_relay";
+  public final static String SCREENSHOTR_SERVICE_NAME = "com.apple.mobile.screenshotr";
 }
