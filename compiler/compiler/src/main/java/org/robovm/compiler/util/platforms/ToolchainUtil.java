@@ -163,6 +163,11 @@ public class ToolchainUtil {
             throw new RuntimeException("getLibMobDeviceLibrary not implemented for " + platform);
         }
 
+        @Override
+        public File getDeveloperImagePath() throws IOException {
+            return new File(findXcodePath(), "Platforms/iPhoneOS.platform/DeviceSupport");
+        }
+
         protected String findXcodePath() throws IOException {
             throw new RuntimeException("findXcodePath not implemented for " + platform);
         }
