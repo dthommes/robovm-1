@@ -29,7 +29,8 @@ public class SigningIdentity<T> implements Comparable<SigningIdentity> {
     private final String name;
     private final String fingerprint;
     private final T bundle;
-    
+    public static final SigningIdentity ADHOC = new SigningIdentity("ad-hoc (simulator only)", "-");
+
     public SigningIdentity(String name, String fingerprint) {
         this.name = name;
         this.fingerprint = fingerprint;
@@ -45,7 +46,7 @@ public class SigningIdentity<T> implements Comparable<SigningIdentity> {
     public String getName() {
         return name;
     }
-    
+
     public String getFingerprint() {
         return fingerprint;
     }
@@ -58,7 +59,7 @@ public class SigningIdentity<T> implements Comparable<SigningIdentity> {
     public int compareTo(SigningIdentity o) {
         return this.name.compareToIgnoreCase(o.name);
     }
-    
+
     @Override
     public String toString() {
         return "SigningIdentity [name=" + name + ", fingerprint=" + fingerprint
@@ -82,12 +83,12 @@ public class SigningIdentity<T> implements Comparable<SigningIdentity> {
         }
         throw new IllegalArgumentException("No signing identity found matching '" + search + "'");
     }
-    
+
 
     public static List<SigningIdentity> list() {
         return ToolchainUtil.listSigningIdentity();
     }
-    
+
     public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println(list());
