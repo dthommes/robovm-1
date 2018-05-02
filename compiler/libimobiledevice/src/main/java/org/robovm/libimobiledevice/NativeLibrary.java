@@ -34,6 +34,7 @@ public class NativeLibrary {
     private static LibMobDevicePlatformLibraryProvider platformLibraryProvider;
     public interface LibMobDevicePlatformLibraryProvider {
         File getLibMobDeviceLibrary();
+        File getDeveloperImagePath() throws IOException;
         default void registerLibMobDeviceProvider() {
             platformLibraryProvider = this;
         }
@@ -112,7 +113,11 @@ public class NativeLibrary {
 
         Runtime.getRuntime().load(libFile.getAbsolutePath());
     }
-    
+
+    public static synchronized File getDeveloperImagePath() throws IOException {
+        return platformLibraryProvider.getDeveloperImagePath();
+    }
+
     private static void copy(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[4096];
         int n = 0;

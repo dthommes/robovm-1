@@ -63,6 +63,10 @@
             <action id="org.robovm.idea.clean-cache" class="org.robovm.idea.actions.CleanRoboVmCacheAction" text="Clean cache"
                     description="Deletes as files in ~/.robovm/cache folder"/>
 
+            <group id="org.robovm.idea.devices" text="Devices" description="Operations with iOS devices" popup="true">
+                <action id="org.robovm.idea.devices-syslog" class="org.robovm.idea.actions.OpenDeviceSystemLogAction" text="System Log"/>
+            </group>
+
             <group id="org.robovm.idea.as-fixes-new" text="AS New" description="new Project/Module workaround for Android Studio" popup="true">
                 <action id="org.robovm.idea.as-fixes-new-project" class="org.robovm.idea.actions.ASNewProjectAction" text="Project..."/>
                 <action id="org.robovm.idea.as-fixes-new-module" class="org.robovm.idea.actions.ASNewModuleAction" text="Module..."/>

@@ -53,6 +53,10 @@ public class LibIMobileDevice implements LibIMobileDeviceConstants {
     return LibIMobileDeviceJNI.get_global_idevice_event_cb();
   }
 
+  public static long get_global_syslog_relay_cb() {
+    return LibIMobileDeviceJNI.get_global_syslog_relay_cb();
+  }
+
   public static MobileImageMounterError upload_image(MobileImageMounterClientRef client, String image_path, String image_type, byte[] sig, long sig_size) {
     return MobileImageMounterError.swigToEnum(LibIMobileDeviceJNI.upload_image(MobileImageMounterClientRef.getCPtr(client), image_path, image_type, sig, sig_size));
   }
@@ -439,6 +443,50 @@ public class LibIMobileDevice implements LibIMobileDeviceConstants {
 
   public static MobileImageMounterError mobile_image_mounter_hangup(MobileImageMounterClientRef client) {
     return MobileImageMounterError.swigToEnum(LibIMobileDeviceJNI.mobile_image_mounter_hangup(MobileImageMounterClientRef.getCPtr(client)));
+  }
+
+  public static SyslogRelayError syslog_relay_client_new(IDeviceRef device, LockdowndServiceDescriptorStruct service, SyslogRelayClientRefOut client) {
+    return SyslogRelayError.swigToEnum(LibIMobileDeviceJNI.syslog_relay_client_new(IDeviceRef.getCPtr(device), LockdowndServiceDescriptorStruct.getCPtr(service), service, SyslogRelayClientRefOut.getCPtr(client), client));
+  }
+
+  public static SyslogRelayError syslog_relay_client_start_service(IDeviceRef device, SyslogRelayClientRefOut client, String label) {
+    return SyslogRelayError.swigToEnum(LibIMobileDeviceJNI.syslog_relay_client_start_service(IDeviceRef.getCPtr(device), SyslogRelayClientRefOut.getCPtr(client), client, label));
+  }
+
+  public static SyslogRelayError syslog_relay_client_free(SyslogRelayClientRef client) {
+    return SyslogRelayError.swigToEnum(LibIMobileDeviceJNI.syslog_relay_client_free(SyslogRelayClientRef.getCPtr(client)));
+  }
+
+  public static SyslogRelayError syslog_relay_start_capture(SyslogRelayClientRef client, long callback, int user_data) {
+    return SyslogRelayError.swigToEnum(LibIMobileDeviceJNI.syslog_relay_start_capture(SyslogRelayClientRef.getCPtr(client), callback, user_data));
+  }
+
+  public static SyslogRelayError syslog_relay_stop_capture(SyslogRelayClientRef client) {
+    return SyslogRelayError.swigToEnum(LibIMobileDeviceJNI.syslog_relay_stop_capture(SyslogRelayClientRef.getCPtr(client)));
+  }
+
+  public static SyslogRelayError syslog_relay_receive_with_timeout(SyslogRelayClientRef client, byte[] data, int size, IntOut received, long timeout) {
+    return SyslogRelayError.swigToEnum(LibIMobileDeviceJNI.syslog_relay_receive_with_timeout(SyslogRelayClientRef.getCPtr(client), data, size, IntOut.getCPtr(received), received, timeout));
+  }
+
+  public static SyslogRelayError syslog_relay_receive(SyslogRelayClientRef client, byte[] data, int size, IntOut received) {
+    return SyslogRelayError.swigToEnum(LibIMobileDeviceJNI.syslog_relay_receive(SyslogRelayClientRef.getCPtr(client), data, size, IntOut.getCPtr(received), received));
+  }
+
+  public static ScreenShotrError screenshotr_client_new(IDeviceRef device, LockdowndServiceDescriptorStruct service, ScreenShotrClientRefOut client) {
+    return ScreenShotrError.swigToEnum(LibIMobileDeviceJNI.screenshotr_client_new(IDeviceRef.getCPtr(device), LockdowndServiceDescriptorStruct.getCPtr(service), service, ScreenShotrClientRefOut.getCPtr(client), client));
+  }
+
+  public static ScreenShotrError screenshotr_client_start_service(IDeviceRef device, ScreenShotrClientRefOut client, String label) {
+    return ScreenShotrError.swigToEnum(LibIMobileDeviceJNI.screenshotr_client_start_service(IDeviceRef.getCPtr(device), ScreenShotrClientRefOut.getCPtr(client), client, label));
+  }
+
+  public static ScreenShotrError screenshotr_client_free(ScreenShotrClientRef client) {
+    return ScreenShotrError.swigToEnum(LibIMobileDeviceJNI.screenshotr_client_free(ScreenShotrClientRef.getCPtr(client)));
+  }
+
+  public static ScreenShotrError screenshotr_take_screenshot(ScreenShotrClientRef client, ByteArrayOut imgdata, LongOut imgsize) {
+    return ScreenShotrError.swigToEnum(LibIMobileDeviceJNI.screenshotr_take_screenshot(ScreenShotrClientRef.getCPtr(client), ByteArrayOut.getCPtr(imgdata), imgdata, LongOut.getCPtr(imgsize), imgsize));
   }
 
 

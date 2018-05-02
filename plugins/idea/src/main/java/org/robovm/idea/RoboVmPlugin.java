@@ -62,6 +62,8 @@ import org.robovm.compiler.log.Logger;
 import org.robovm.compiler.util.update.UpdateChecker;
 import org.robovm.idea.compilation.RoboVmCompileTask;
 import org.robovm.idea.config.RoboVmGlobalConfig;
+import org.robovm.idea.idevlog.DeviceContext;
+import org.robovm.idea.idevlog.DeviceLogView;
 import org.robovm.idea.sdk.RoboVmSdkType;
 
 import java.io.File;
@@ -127,7 +129,9 @@ public class RoboVmPlugin {
         Security.addProvider(bcp);
     }
 
-    private static final String ROBOVM_TOOLWINDOW_ID = "RoboVM";
+    public static final String ROBOVM_TOOLWINDOW_ID = "RoboVM";
+    public static final String ROBOVM_TOOLWINDOW_DEVICE_LOG_ID = "RoboVM Device Log";
+
     private static OS os;
     static volatile Map<Project, ConsoleView> consoleViews = new ConcurrentHashMap<>();
     static volatile Map<Project, ToolWindow> toolWindows = new ConcurrentHashMap<>();
@@ -356,21 +360,38 @@ public class RoboVmPlugin {
             CompilerManager.getInstance(project).addAfterTask(new RoboVmCompileTask());
         }
 
-        // initialize our tool window to which we
-        // log all messages
+        // initialize our tool windows
         UIUtil.invokeLaterIfNeeded(new Runnable() {
             @Override
             public void run() {
                 if (project.isDisposed()) {
                     return;
                 }
-                ToolWindow toolWindow = ToolWindowManager.getInstance(project).registerToolWindow(ROBOVM_TOOLWINDOW_ID, false, ToolWindowAnchor.BOTTOM, project, true);
-                ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(project).getConsole();
-                Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "Console", true);
-                toolWindow.getContentManager().addContent(content);
-                toolWindow.setIcon(RoboVmIcons.ROBOVM_SMALL);
-                consoleViews.put(project, consoleView);
-                toolWindows.put(project, toolWindow);
+
+                // tool window to which we log all messages
+                {
+                    ToolWindow toolWindow = ToolWindowManager.getInstance(project).registerToolWindow(ROBOVM_TOOLWINDOW_ID, false, ToolWindowAnchor.BOTTOM, project, true);
+                    ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(project).getConsole();
+                    Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "Console", true);
+                    toolWindow.getContentManager().addContent(content);
+                    toolWindow.setIcon(RoboVmIcons.ROBOVM_SMALL);
+                    consoleViews.put(project, consoleView);
+                    toolWindows.put(project, toolWindow);
+                }
+
+                // tool window for system logs (android logcat alternative
+                {
+                    ToolWindow toolWindow = ToolWindowManager.getInstance(project).registerToolWindow(ROBOVM_TOOLWINDOW_DEVICE_LOG_ID, false, ToolWindowAnchor.BOTTOM, project, true);
+                    toolWindow.setAvailable(true, null);
+                    toolWindow.setToHideOnEmptyContent(true);
+                    toolWindow.setIcon(RoboVmIcons.ROBOVM_SMALL);
+
+                    DeviceContext deviceContext = new DeviceContext();
+                    DeviceLogView devicelogView = new DeviceLogView(project, deviceContext, ROBOVM_TOOLWINDOW_DEVICE_LOG_ID);
+                    devicelogView.setup(toolWindow);
+
+                }
+
                 logInfo(project, "RoboVM plugin initialized");
             }
         });
