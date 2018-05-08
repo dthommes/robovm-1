@@ -1,7 +1,6 @@
 package org.robovm.libimobiledevice.sweets;
 
 import com.dd.plist.NSDictionary;
-import com.intellij.openapi.diagnostic.Logger;
 import org.robovm.libimobiledevice.IDevice;
 import org.robovm.libimobiledevice.LockdowndClient;
 import org.robovm.libimobiledevice.util.Screenshotr;
@@ -15,13 +14,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Logger;
 
 /**
  * Simple usage utility that wrap around libmobiledevice
  * @author dkimitsa
  */
 public final class AppleDeviceCenter  {
-    private static final Logger LOG = Logger.getInstance(AppleDeviceCenter.class);
+    private static final Logger LOG = Logger.getLogger(AppleDeviceCenter.class.getSimpleName());
 
     /**
      * interface to receive notifications when device added/removed
@@ -271,7 +271,7 @@ public final class AppleDeviceCenter  {
                             case "equals":
                                 return proxy == args[0] ? Boolean.TRUE : Boolean.FALSE;
                             default:
-                                LOG.error("Incorrect Object's method invoked for proxy:" + methodName);
+                                LOG.severe("Incorrect Object's method invoked for proxy:" + methodName);
                                 return null;
                         }
                     } else {

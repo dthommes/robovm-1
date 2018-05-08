@@ -1,6 +1,5 @@
 package org.robovm.libimobiledevice.util;
 
-import com.google.common.io.Files;
 import org.robovm.libimobiledevice.IDevice;
 import org.robovm.libimobiledevice.LibIMobileDeviceException;
 import org.robovm.libimobiledevice.LockdowndClient;
@@ -10,6 +9,7 @@ import org.robovm.libimobiledevice.ScreenshotrClient;
 import org.robovm.libimobiledevice.binding.LockdowndError;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -70,7 +70,9 @@ public final class Screenshotr  {
 
         IDevice device = new IDevice(udids[0]);
         byte[] image = captureScreenshotTiff(device);
-        Files.write(image, new File("screenshot.tiff"));
+        try (FileOutputStream os = new FileOutputStream(new File("screenshot.tiff"))){
+            os.write(image);
+        }
     }
 
     private static File getXcodePath()  {

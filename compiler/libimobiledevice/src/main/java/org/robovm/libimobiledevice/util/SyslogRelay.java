@@ -1,6 +1,5 @@
 package org.robovm.libimobiledevice.util;
 
-import org.jetbrains.annotations.NotNull;
 import org.robovm.libimobiledevice.IDevice;
 import org.robovm.libimobiledevice.LibIMobileDeviceException;
 import org.robovm.libimobiledevice.LockdowndClient;
@@ -138,7 +137,7 @@ public class SyslogRelay implements Runnable {
 
 
         @Override
-        public int read(@NotNull byte[] b) {
+        public int read(byte[] b) {
             int received = 0;
             while (!Thread.currentThread().isInterrupted() &&  received == 0)
                 received = srlClient.receive(b, 1);
@@ -151,7 +150,7 @@ public class SyslogRelay implements Runnable {
 
 
         @Override
-        public int read(@NotNull byte[] b, int off, int len) {
+        public int read(byte[] b, int off, int len) {
             int received;
             if (off == 0 && b.length == len) {
                 // short way as it is full array read-out, can do it without allocating of buffer
