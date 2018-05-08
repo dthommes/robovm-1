@@ -16,9 +16,28 @@
 
 package org.robovm.junit.client;
 
+import org.apache.commons.io.IOUtils;
+import org.junit.runner.notification.RunListener;
+import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.OS;
+import org.robovm.compiler.plugin.LaunchPlugin;
+import org.robovm.compiler.plugin.PluginArgument;
+import org.robovm.compiler.plugin.PluginArguments;
+import org.robovm.compiler.target.LaunchParameters;
+import org.robovm.compiler.target.ios.IOSTarget;
+import org.robovm.compiler.util.io.Fifo;
+import org.robovm.junit.protocol.Command;
+import org.robovm.junit.protocol.ResultObject;
+import org.robovm.junit.protocol.ResultType;
+import org.robovm.libimobiledevice.IDevice;
+import org.robovm.libimobiledevice.IDeviceConnection;
+import rx.Observable;
+import rx.Subscriber;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,29 +51,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import org.apache.commons.io.IOUtils;
-import org.junit.runner.notification.RunListener;
-import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.OS;
-import org.robovm.compiler.plugin.LaunchPlugin;
-import org.robovm.compiler.plugin.PluginArgument;
-import org.robovm.compiler.plugin.PluginArguments;
-import org.robovm.compiler.target.LaunchParameters;
-import org.robovm.compiler.target.ios.IOSTarget;
-import org.robovm.compiler.util.io.Fifos;
-import org.robovm.compiler.util.io.OpenOnReadFileInputStream;
-import org.robovm.compiler.util.io.OpenOnWriteFileOutputStream;
-import org.robovm.junit.protocol.Command;
-import org.robovm.junit.protocol.ResultObject;
-import org.robovm.junit.protocol.ResultType;
-import org.robovm.libimobiledevice.IDevice;
-import org.robovm.libimobiledevice.IDeviceConnection;
-
-import rx.Observable;
-import rx.Subscriber;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 
 /**
  * Client side of the bridge between the tester (IDE, Maven, Gradle, etc) and
@@ -80,8 +76,8 @@ public class TestClient extends LaunchPlugin {
     public static final String SERVER_CLASS_NAME = "org.robovm.junit.server.TestServer";
 
     private ServerPortReader serverPortReader;
-    private File oldStdOutFifo;
-    private File newStdOutFifo;
+    private Fifo oldStdOutFifo;
+    private Fifo newStdOutFifo;
     private OutputStream defaultStdOutStream;
     private LinkedBlockingQueue<Object> runQueue = new LinkedBlockingQueue<>();
     private RunListener runListener;
@@ -145,7 +141,7 @@ public class TestClient extends LaunchPlugin {
 
         try {
             oldStdOutFifo = parameters.getStdoutFifo();
-            newStdOutFifo = Fifos.mkfifo("junit-out-proxy");
+            newStdOutFifo = Fifo.echofifo();
             parameters.setStdoutFifo(newStdOutFifo);
             defaultStdOutStream = System.out;
         } catch (IOException e) {
@@ -287,8 +283,8 @@ public class TestClient extends LaunchPlugin {
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out));
 
-        String line = null;
-        Object action = null;
+        String line;
+        Object action;
         try {
             while (!subscriber.isUnsubscribed() && (action = runQueue.take()) != null) {
                 if (action instanceof String) {
@@ -336,14 +332,14 @@ public class TestClient extends LaunchPlugin {
         volatile boolean closeOutOnExit = true;
 
         public ServerPortReader(final Config config, final LaunchParameters params, final Process process,
-                final File oldStdOutFifo, final File newStdOutFifo,
+                final Fifo oldStdOutFifo, final Fifo newStdOutFifo,
                 final OutputStream defaultStdOutStream) throws IOException {
 
             final BufferedReader in = new BufferedReader(
-                    new InputStreamReader(new OpenOnReadFileInputStream(newStdOutFifo)));
-            BufferedWriter writer = null;
+                    new InputStreamReader(newStdOutFifo.getInputStream()));
+            BufferedWriter writer;
             if (oldStdOutFifo != null) {
-                writer = new BufferedWriter(new OutputStreamWriter(new OpenOnWriteFileOutputStream(oldStdOutFifo)));
+                writer = new BufferedWriter(new OutputStreamWriter(oldStdOutFifo.getOutputStream()));
             } else {
                 writer = new BufferedWriter(new OutputStreamWriter(defaultStdOutStream));
                 closeOutOnExit = false;
