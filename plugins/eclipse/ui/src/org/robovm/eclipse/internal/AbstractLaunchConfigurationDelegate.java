@@ -16,22 +16,10 @@
  */
 package org.robovm.eclipse.internal;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.net.ServerSocket;
-import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.VirtualMachineManager;
+import com.sun.jdi.connect.AttachingConnector;
+import com.sun.jdi.connect.Connector.Argument;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.core.runtime.CoreException;
@@ -58,14 +46,24 @@ import org.robovm.compiler.config.OS;
 import org.robovm.compiler.plugin.Plugin;
 import org.robovm.compiler.plugin.PluginArgument;
 import org.robovm.compiler.target.LaunchParameters;
-import org.robovm.compiler.util.io.Fifos;
-import org.robovm.compiler.util.io.OpenOnReadFileInputStream;
+import org.robovm.compiler.util.io.Fifo;
 import org.robovm.eclipse.RoboVMPlugin;
 
-import com.sun.jdi.VirtualMachine;
-import com.sun.jdi.VirtualMachineManager;
-import com.sun.jdi.connect.AttachingConnector;
-import com.sun.jdi.connect.Connector.Argument;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.net.ServerSocket;
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -87,8 +85,8 @@ public abstract class AbstractLaunchConfigurationDelegate extends AbstractJavaLa
 
     protected void customizeLaunchParameters(Config config, LaunchParameters launchParameters, ILaunchConfiguration configuration,
             String mode) throws IOException, CoreException {
-        launchParameters.setStdoutFifo(Fifos.mkfifo("stdout"));
-        launchParameters.setStderrFifo(Fifos.mkfifo("stderr"));
+        launchParameters.setStdoutFifo(Fifo.echofifo());
+        launchParameters.setStderrFifo(Fifo.echofifo());
     }
 
     protected boolean isTestConfiguration() {
@@ -257,8 +255,8 @@ public abstract class AbstractLaunchConfigurationDelegate extends AbstractJavaLa
                         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(new Date()));
                 // launch plugin may proxy stdout/stderr fifo, which
                 // it then writes to. Need to save the original fifos
-                File stdOutFifo = launchParameters.getStdoutFifo();
-                File stdErrFifo = launchParameters.getStderrFifo();
+                Fifo stdOutFifo = launchParameters.getStdoutFifo();
+                Fifo stdErrFifo = launchParameters.getStderrFifo();
                 PipedInputStream pipedIn = new PipedInputStream();
                 PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
                 
@@ -268,10 +266,10 @@ public abstract class AbstractLaunchConfigurationDelegate extends AbstractJavaLa
                     InputStream stdoutStream = null;
                     InputStream stderrStream = null;
                     if (launchParameters.getStdoutFifo() != null) {
-                        stdoutStream = new OpenOnReadFileInputStream(stdOutFifo);
+                        stdoutStream = stdOutFifo.getInputStream();
                     }
                     if (launchParameters.getStderrFifo() != null) {
-                        stderrStream = new OpenOnReadFileInputStream(stdErrFifo);
+                        stderrStream = stdErrFifo.getInputStream();
                     }
                     process = new ProcessProxy(process, pipedOut, stdoutStream, stderrStream, compiler);
                 }
