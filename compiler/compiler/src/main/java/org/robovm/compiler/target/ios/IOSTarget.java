@@ -16,6 +16,39 @@
  */
 package org.robovm.compiler.target.ios;
 
+import com.dd.plist.NSArray;
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSNumber;
+import com.dd.plist.NSObject;
+import com.dd.plist.NSString;
+import com.dd.plist.PropertyListParser;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.AndFileFilter;
+import org.apache.commons.io.filefilter.PrefixFileFilter;
+import org.apache.commons.io.filefilter.RegexFileFilter;
+import org.apache.commons.io.filefilter.SuffixFileFilter;
+import org.apache.commons.lang3.tuple.Pair;
+import org.robovm.compiler.CompilerException;
+import org.robovm.compiler.config.AppExtension;
+import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.OS;
+import org.robovm.compiler.config.Resource;
+import org.robovm.compiler.log.Logger;
+import org.robovm.compiler.target.AbstractTarget;
+import org.robovm.compiler.target.LaunchParameters;
+import org.robovm.compiler.target.Launcher;
+import org.robovm.compiler.target.ios.ProvisioningProfile.Type;
+import org.robovm.compiler.util.Executor;
+import org.robovm.compiler.util.platforms.ToolchainUtil;
+import org.robovm.libimobiledevice.AfcClient.UploadProgressCallback;
+import org.robovm.libimobiledevice.IDevice;
+import org.robovm.libimobiledevice.InstallationProxyClient.StatusCallback;
+import org.robovm.libimobiledevice.util.AppLauncher;
+import org.robovm.libimobiledevice.util.AppLauncherCallback;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -35,64 +68,28 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.filefilter.AndFileFilter;
-import org.apache.commons.io.filefilter.PrefixFileFilter;
-import org.apache.commons.io.filefilter.RegexFileFilter;
-import org.apache.commons.io.filefilter.SuffixFileFilter;
-import org.apache.commons.lang3.tuple.Pair;
-import org.robovm.compiler.CompilerException;
-import org.robovm.compiler.config.AppExtension;
-import org.robovm.compiler.config.Arch;
-import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.OS;
-import org.robovm.compiler.config.Resource;
-import org.robovm.compiler.log.Logger;
-import org.robovm.compiler.log.LoggerProxy;
-import org.robovm.compiler.target.AbstractTarget;
-import org.robovm.compiler.target.LaunchParameters;
-import org.robovm.compiler.target.Launcher;
-import org.robovm.compiler.target.ios.ProvisioningProfile.Type;
-import org.robovm.compiler.util.Executor;
-import org.robovm.compiler.util.ToolchainUtil;
-import org.robovm.compiler.util.io.OpenOnWriteFileOutputStream;
-import org.robovm.libimobiledevice.AfcClient.UploadProgressCallback;
-import org.robovm.libimobiledevice.IDevice;
-import org.robovm.libimobiledevice.InstallationProxyClient.StatusCallback;
-import org.robovm.libimobiledevice.util.AppLauncher;
-import org.robovm.libimobiledevice.util.AppLauncherCallback;
-
-import com.dd.plist.NSArray;
-import com.dd.plist.NSDictionary;
-import com.dd.plist.NSNumber;
-import com.dd.plist.NSObject;
-import com.dd.plist.NSString;
-import com.dd.plist.PropertyListParser;
-
 /**
  * @author niklas
  *
  */
 public class IOSTarget extends AbstractTarget {
     final List<String> excludedKeys = Arrays.asList(
-        "com.apple.developer.icloud-container-development-container-identifiers",
-        "com.apple.developer.icloud-container-environment",
-        "com.apple.developer.icloud-container-identifiers",
-        "com.apple.developer.icloud-services",
-        "com.apple.developer.restricted-resource-mode",
-        "com.apple.developer.ubiquity-container-identifiers",
-        "com.apple.developer.ubiquity-kvstore-identifier",
-        "inter-app-audio",
-        "com.apple.developer.homekit",
-        "com.apple.developer.healthkit",
-        "com.apple.developer.in-app-payments",
-        "com.apple.developer.associated-domains",
-        "com.apple.security.application-groups",
-        "com.apple.developer.maps",
-        "com.apple.developer.networking.vpn.api",
-        "com.apple.external-accessory.wireless-configuration"
+            "com.apple.developer.icloud-container-development-container-identifiers",
+            "com.apple.developer.icloud-container-environment",
+            "com.apple.developer.icloud-container-identifiers",
+            "com.apple.developer.icloud-services",
+            "com.apple.developer.restricted-resource-mode",
+            "com.apple.developer.ubiquity-container-identifiers",
+            "com.apple.developer.ubiquity-kvstore-identifier",
+            "inter-app-audio",
+            "com.apple.developer.homekit",
+            "com.apple.developer.healthkit",
+            "com.apple.developer.in-app-payments",
+            "com.apple.developer.associated-domains",
+            "com.apple.security.application-groups",
+            "com.apple.developer.maps",
+            "com.apple.developer.networking.vpn.api",
+            "com.apple.external-accessory.wireless-configuration"
     );
 
     public static final String TYPE = "ios";
