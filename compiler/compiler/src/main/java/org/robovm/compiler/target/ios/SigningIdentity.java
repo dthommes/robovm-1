@@ -67,16 +67,21 @@ public class SigningIdentity<T> implements Comparable<SigningIdentity> {
     }
 
     public static SigningIdentity find(List<SigningIdentity> ids, String search) {
+        return find(ids, search, null);
+    }
+
+    public static SigningIdentity find(List<SigningIdentity> ids, String search, ProvisioningProfile profile) {
         if (search.startsWith("/") && search.endsWith("/")) {
             Pattern pattern = Pattern.compile(search.substring(1, search.length() - 1));
             for (SigningIdentity id : ids) {
-                if (pattern.matcher(id.name).find()) {
+                if (pattern.matcher(id.name).find() && (profile  == null || profile.getCertFingerprints().contains(id.getFingerprint()))) {
                     return id;
                 }
             }
         } else {
             for (SigningIdentity id : ids) {
-                if (id.name.startsWith(search) || id.fingerprint.equals(search.toUpperCase())) {
+                if ((id.name.startsWith(search) || id.fingerprint.equals(search.toUpperCase())) &&
+                        (profile  == null || profile.getCertFingerprints().contains(id.getFingerprint()))) {
                     return id;
                 }
             }

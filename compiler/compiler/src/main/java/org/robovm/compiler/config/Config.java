@@ -165,7 +165,7 @@ public class Config {
     @ElementList(required = false, entry = "path")
     private ArrayList<File> frameworkPaths;
     @ElementList(required = false, entry = "extension")
-    private ArrayList<String> appExtensions;
+    private ArrayList<AppExtension> appExtensions;
     @ElementList(required = false, entry = "path")
     private ArrayList<File> appExtensionPaths;
     @ElementList(required = false, entry = "resource")
@@ -436,8 +436,8 @@ public class Config {
                 : Collections.unmodifiableList(frameworkPaths);
     }
 
-    public List<String> getAppExtensions() {
-        return appExtensions == null ? Collections.<String> emptyList()
+    public List<AppExtension> getAppExtensions() {
+        return appExtensions == null ? Collections.<AppExtension> emptyList()
                 : Collections.unmodifiableList(appExtensions);
     }
 
@@ -1500,10 +1500,13 @@ public class Config {
             return this;
         }
 
-        public Builder addExtension(String extension) {
+        public Builder addExtension(String name, String profile) {
             if (config.appExtensions == null) {
                 config.appExtensions = new ArrayList<>();
             }
+            AppExtension extension = new AppExtension();
+            extension.name = name;
+            extension.profile = profile;
             config.appExtensions.add(extension);
             return this;
         }
