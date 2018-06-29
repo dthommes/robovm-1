@@ -18,6 +18,7 @@ package org.robovm.compiler.target.ios;
 
 import org.robovm.compiler.util.platforms.ToolchainUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
