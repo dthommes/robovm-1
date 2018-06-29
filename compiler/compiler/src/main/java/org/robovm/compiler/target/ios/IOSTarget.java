@@ -328,7 +328,7 @@ public class IOSTarget extends AbstractTarget {
         ccArgs.add("-isysroot");
         ccArgs.add(sdk.getRoot().getAbsolutePath());
 
-        // specify sdk version
+        // specify sdk version for linker
         libArgs.add("-Xlinker");
         libArgs.add("-sdk_version");
         libArgs.add("-Xlinker");
@@ -976,7 +976,7 @@ public class IOSTarget extends AbstractTarget {
 
                 if (signIdentity == null && provisioningProfile == null) {
                     // both identity and provisioningProfile are set to auto, start with picking profile s
-                    Pair<SigningIdentity, ProvisioningProfile> pair = ProvisioningProfile.find(ProvisioningProfile.list(), SigningIdentity.list(), bundleId);
+                    Pair<SigningIdentity, ProvisioningProfile> pair = ProvisioningProfile.find(ProvisioningProfile.list(), SigningIdentity.list("/(?i)iPhone Developer|iOS Development/"), bundleId);
                     signIdentity = pair.getLeft();
                     provisioningProfile = pair.getRight();
                 } else if (signIdentity == null) {
