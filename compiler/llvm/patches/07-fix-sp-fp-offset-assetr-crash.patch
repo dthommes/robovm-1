@@ -1,0 +1,43 @@
+diff --git a/lib/MC/MCAsmStreamer.cpp b/lib/MC/MCAsmStreamer.cpp
+index a1233929615..b7458b9e352 100644
+--- a/lib/MC/MCAsmStreamer.cpp
++++ b/lib/MC/MCAsmStreamer.cpp
+@@ -304,7 +304,8 @@ void MCAsmStreamer::ChangeSection(const MCSection *Section,
+ }
+
+ void MCAsmStreamer::EmitLabel(MCSymbol *Symbol) {
+-  assert(Symbol->isUndefined() && "Cannot define a symbol twice!");
++  // RoboVM, dkimitsa note: This assert fail for spfp offset symbols as it has it value assigned once created
++  //  assert(Symbol->isUndefined() && "Cannot define a symbol twice!");
+   MCStreamer::EmitLabel(Symbol);
+
+   OS << *Symbol << MAI->getLabelSuffix();
+diff --git a/lib/MC/MCStreamer.cpp b/lib/MC/MCStreamer.cpp
+index f11ee669b4b..97352524c58 100644
+--- a/lib/MC/MCStreamer.cpp
++++ b/lib/MC/MCStreamer.cpp
+@@ -198,8 +198,9 @@ void MCStreamer::AssignSection(MCSymbol *Symbol, const MCSection *Section) {
+ }
+
+ void MCStreamer::EmitLabel(MCSymbol *Symbol) {
+-  assert(!Symbol->isVariable() && "Cannot emit a variable symbol!");
+-  assert(getCurrentSection().first && "Cannot emit before setting section!");
++  // RoboVM, dkimitsa note: These assert fail for spfp offset symbols as it has it value assigned once created
++  //  assert(!Symbol->isVariable() && "Cannot emit a variable symbol!");
++  //  assert(getCurrentSection().first && "Cannot emit before setting section!");
+   AssignSection(Symbol, getCurrentSection().first);
+
+   MCTargetStreamer *TS = getTargetStreamer();
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 563a249dc53..7ae925c378f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -534,7 +534,7 @@ include(TableGen)
+ if( MINGW )
+   # People report that -O3 is unreliable on MinGW. The traditional
+   # build also uses -O2 for that reason:
+-  llvm_replace_compiler_option(CMAKE_CXX_FLAGS_RELEASE "-O3" "-O2")
++  # llvm_replace_compiler_option(CMAKE_CXX_FLAGS_RELEASE "-O3" "-O2")
+ endif()
+
+ # Put this before tblgen. Else we have a circular dependence.
