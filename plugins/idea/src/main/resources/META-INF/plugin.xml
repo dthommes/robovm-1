@@ -58,10 +58,16 @@
                     description="Create an IPA for App Store or ad-hoc distribution"/>
             <action id="org.robovm.idea.create-framework" class="org.robovm.idea.actions.CreateFrameworkAction" text="Create Framework"
                     description="Create a Framework"/>
-            <action id="org.robovm.idea.open-ibxcode" class="org.robovm.idea.actions.GenerateXCodeProjectAction" text="Open Xcode"
+            <action id="org.robovm.idea.open-ibxcode" class="org.robovm.idea.actions.GenerateXCodeProjectAction" text="Open XCode"
                     description="Generate and open Xcode project to edit xib/storyboard in Interface Builder"/>
-            <action id="org.robovm.idea.clean-cache" class="org.robovm.idea.actions.CleanRoboVmCacheAction" text="Clean cache"
+            <separator/>
+            <action id="org.robovm.idea.clean-build" class="org.robovm.idea.actions.CleanBuildFoldersAction"
+                    text="Clean Build Folders"
+                    description="Deletes all RoboVM build folders in all modules"/>
+            <action id="org.robovm.idea.clean-cache" class="org.robovm.idea.actions.CleanRoboVmCacheAction"
+                    text="Clean Global Cache"
                     description="Deletes as files in ~/.robovm/cache folder"/>
+            <separator/>
 
             <group id="org.robovm.idea.devices" text="Devices" description="Operations with iOS devices" popup="true">
                 <action id="org.robovm.idea.devices-syslog" class="org.robovm.idea.actions.OpenDeviceSystemLogAction" text="System Log"/>

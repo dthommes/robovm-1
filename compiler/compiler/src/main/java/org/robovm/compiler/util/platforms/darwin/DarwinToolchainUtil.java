@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 RoboVM AB
+ * Copyright (C) 2018 Daniel Thommes, NeverNull GmbH, <daniel.thommes@nevernull.io>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -269,6 +270,11 @@ class DarwinToolchainUtil {
             }
         }
 
+        //Writes a text file with paths of resources that are compiled to the asset catalog.
+        //This information can be used to skip asset creation as needed.
+        opts.add("--export-dependency-info");
+        opts.add(config.getTmpDir().getAbsolutePath() + "/assetcatalog_dependencies");
+
         new Executor(config.getLogger(), getACTool()).args("--output-format", "human-readable-text", opts,
                 "--minimum-deployment-target", minOSVersion, "--target-device", "iphone", "--target-device", "ipad",
                 "--compress-pngs", "--compile", outDir, inDir).exec();
@@ -315,12 +321,12 @@ class DarwinToolchainUtil {
         new Executor(config.getLogger(), getLipo()).args(inFiles, "-create", "-output", outFile).exec();
     }
     
-    public static void lipoRemoveArchs(Config config, File inFile, File outFile, Arch ... archs) throws IOException {
+    public static void lipoRemoveArchs(Config config, File inFile, File outFile, String ... archs) throws IOException {
         List<Object> args = new ArrayList<>();
         args.add(inFile);
-        for(Arch arch: archs) {
+        for(String arch: archs) {
             args.add("-remove");
-            args.add(arch.getClangName());
+            args.add(arch);
         }
         args.add("-output");
         args.add(outFile);

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 RoboVM AB
+ * Copyright (C) 2018 Daniel Thommes, NeverNull GmbH, <daniel.thommes@nevernull.io>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -77,6 +78,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.Provider;
 import java.security.Security;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -140,6 +143,11 @@ public class RoboVmPlugin {
     private final static NotificationGroup NOTIFICATIONS = new NotificationGroup("RoboVM Notifications",
             NotificationDisplayType.STICKY_BALLOON, true);
 
+    /**
+     * Formatter for the time stamp printed by the logger
+     */
+    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS ");
+
     public static OS getOs() {
         return os;
     }
@@ -184,8 +192,8 @@ public class RoboVmPlugin {
             if(tokens.length == 3) {
                 try {
                     int version = Integer.parseInt(tokens[0]) * 1000 * 1000 +
-                            Integer.parseInt(tokens[1]) * 1000 +
-                            Integer.parseInt(tokens[2]);
+                                  Integer.parseInt(tokens[1]) * 1000 +
+                                  Integer.parseInt(tokens[2]);
                     if(version > androidBuildToolsVersion) {
                         androidBuildToolsVersion = version;
                         androidBuildToolsVersionString = file.getName();
@@ -275,12 +283,16 @@ public class RoboVmPlugin {
         displayBalloonNotification(title, subtitle, null, type, listener);
     }
 
+    private static String getFormattedTimeStamp() {
+        return LocalDateTime.now().format(formatter);
+    }
+
     public static void logInfo(Project project, String format, Object... args) {
-        log(project, ConsoleViewContentType.SYSTEM_OUTPUT, "[INFO] " + format, args);
+        log(project, ConsoleViewContentType.SYSTEM_OUTPUT, "[INFO] " + getFormattedTimeStamp() + format, args);
     }
 
     public static void logError(Project project, String format, Object... args) {
-        log(project, ConsoleViewContentType.ERROR_OUTPUT, "[ERROR] " + format, args);
+        log(project, ConsoleViewContentType.ERROR_OUTPUT, "[ERROR] " + getFormattedTimeStamp() + format, args);
     }
 
     public static void logErrorThrowable(Project project, String s, Throwable t, boolean showBalloon) {
@@ -292,11 +304,11 @@ public class RoboVmPlugin {
     }
 
     public static void logWarn(Project project, String format, Object... args) {
-        log(project, ConsoleViewContentType.ERROR_OUTPUT, "[WARNING] " + format, args);
+        log(project, ConsoleViewContentType.ERROR_OUTPUT, "[WARNING] " + getFormattedTimeStamp() + format, args);
     }
 
     public static void logDebug(Project project, String format, Object... args) {
-        log(project, ConsoleViewContentType.NORMAL_OUTPUT, "[DEBUG] " + format, args);
+        log(project, ConsoleViewContentType.NORMAL_OUTPUT, "[DEBUG] " + getFormattedTimeStamp() + format, args);
     }
 
     private static void log(final Project project, final ConsoleViewContentType type, String format, Object... args) {

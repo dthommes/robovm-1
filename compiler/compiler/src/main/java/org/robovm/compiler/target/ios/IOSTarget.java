@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 RoboVM AB
+ * Copyright (C) 2018 Daniel Thommes, NeverNull GmbH, <daniel.thommes@nevernull.io>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -131,6 +132,17 @@ public class IOSTarget extends AbstractTarget {
         return arch == Arch.thumbv7 || arch == Arch.arm64;
     }
 
+    /**
+     * Late initialization as we cannot assume that the tmp dir is available at configuration creation
+     *
+     * @return
+     */
+    private File getPartialPListDir() {
+        if (!partialPListDir.exists()) {
+            partialPListDir.mkdirs();
+        }
+        return partialPListDir;
+    }
 
     public List<SDK> getSDKs() {
         if (isSimulatorArch(arch)) {
@@ -754,7 +766,7 @@ public class IOSTarget extends AbstractTarget {
     }
 
     private File createPartialInfoPlistFile(File f) throws IOException {
-        File tmpFile = File.createTempFile(f.getName() + "_", ".plist", partialPListDir);
+        File tmpFile = File.createTempFile(f.getName() + "_", ".plist", getPartialPListDir());
         tmpFile.delete();
         return tmpFile;
     }
@@ -905,7 +917,7 @@ public class IOSTarget extends AbstractTarget {
         dict.put("DTPlatformName", sdk.getPlatformName());
         dict.put("DTSDKName", sdk.getCanonicalName());
 
-        for (File f : FileUtils.listFiles(partialPListDir, new String[] {"plist"}, false)) {
+        for (File f : FileUtils.listFiles(getPartialPListDir(), new String[] {"plist"}, false)) {
             try {
                 NSDictionary d = (NSDictionary) PropertyListParser.parse(f);
                 dict.putAll(d);
@@ -1013,9 +1025,11 @@ public class IOSTarget extends AbstractTarget {
         entitlementsPList = config.getIosEntitlementsPList();
 
         partialPListDir = new File(config.getTmpDir(), "partial-plists");
-        partialPListDir.mkdirs();
         try {
-            FileUtils.cleanDirectory(partialPListDir);
+            //It may not exist, as we might clean the tmp dir depending on the configuration
+            if(partialPListDir.exists()){
+                FileUtils.cleanDirectory(partialPListDir);
+            }
         } catch (IOException e) {
             throw new CompilerException(e);
         }
