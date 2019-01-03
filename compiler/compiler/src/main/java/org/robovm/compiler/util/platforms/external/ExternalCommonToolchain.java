@@ -298,14 +298,14 @@ public class ExternalCommonToolchain extends ToolchainUtil.Contract{
     }
 
     @Override
-    protected void lipoRemoveArchs(Config config, File inFile, File outFile, Arch... archs) throws IOException {
+    protected void lipoRemoveArchs(Config config, File inFile, File outFile, String... archs) throws IOException {
         validateToolchain();
 
         List<Object> args = new ArrayList<>();
         args.add(inFile);
-        for(Arch arch: archs) {
+        for(String arch: archs) {
             args.add("-remove");
-            args.add(arch.getClangName());
+            args.add(arch);
         }
         args.add("-output");
         args.add(outFile);

@@ -96,7 +96,7 @@ public class DarwinToolchain extends ToolchainUtil.Contract {
     }
 
     @Override
-    protected void lipoRemoveArchs(Config config, File inFile, File outFile, Arch ...archs) throws IOException {
+    protected void lipoRemoveArchs(Config config, File inFile, File outFile, String ...archs) throws IOException {
         DarwinToolchainUtil.lipoRemoveArchs(config, inFile, outFile, archs);
     }
 

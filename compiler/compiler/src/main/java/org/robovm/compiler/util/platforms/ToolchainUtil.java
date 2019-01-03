@@ -79,7 +79,7 @@ public class ToolchainUtil {
         impl.lipo(config, outFile, inFiles);
     }
     
-    public static void lipoRemoveArchs(Config config, File inFile, File outFile, Arch ... archs) throws IOException {
+    public static void lipoRemoveArchs(Config config, File inFile, File outFile, String ... archs) throws IOException {
         impl.lipoRemoveArchs(config, inFile, outFile, archs);
     }
     
@@ -208,7 +208,7 @@ public class ToolchainUtil {
             throw new RuntimeException("lipo not implemented for " + platform);
         }
 
-        protected void lipoRemoveArchs(Config config, File file, File inFile, Arch ...archs) throws IOException {
+        protected void lipoRemoveArchs(Config config, File file, File inFile, String ...archs) throws IOException {
             throw new RuntimeException("lipoRemoveArchs not implemented for " + platform);
         }
 
