@@ -1,6 +1,5 @@
 %module LLVM
 %{
-
 #include <llvm-c/Core.h>
 #include <llvm-c/BitReader.h>
 #include <llvm-c/BitWriter.h>
@@ -14,93 +13,60 @@
 #include <llvm-c/Linker.h>
 #include "../native/LLVMExtra.h"
 #include "../native/ClangExtra.h"
-
-struct LongArray;
-typedef char* charp;
-typedef struct LongArray* LongArrayPtr;
 %}
 
-%include "carrays.i"
-%include "enums.swg"
 
-%javaconst(1);
-SWIG_JAVABODY_METHODS(protected, protected, SWIGTYPE)
+%include "LLVMCommon.i"
 
-%rename("%(strip:[LLVM])s") "";
-//%rename("%(regex:/LLVM(Reloc|CodeModel|CodeGenLevel)?(.*)/\\2/)s", %$isenumitem) "";
-//%rename LLVMRelocMode RelocModel;
 
-%define OUT_CLASS(TYPE,NAME,CLEANUP...)
-    %{
-        typedef struct NAME {
-            TYPE value;
-        } NAME;
-    %}
-    typedef struct NAME {
-    %immutable;
-        TYPE value;
-    } NAME;
-    %extend NAME {
-        NAME() {
-          return (NAME *) calloc(1,sizeof(TYPE));
-        }
-        ~NAME() {
-          CLEANUP;
-          free(self);
-        }
-    };
-    %types(NAME = TYPE);
-%enddef
+//
+// Registering pointers to opaque structs
+//
+REF_CLASS(LLVMBasicBlockRef, BasicBlockRef)
+REF_CLASS(LLVMBuilderRef, BuilderRef)
+REF_CLASS(LLVMContextRef, ContextRef)
+REF_CLASS(LLVMDiagnosticInfoRef, DiagnosticInfoRef)
+REF_CLASS(LLVMMemoryBufferRef, MemoryBufferRef)
+REF_CLASS(LLVMModuleProviderRef, ModuleProviderRef)
+REF_CLASS(LLVMModuleRef, ModuleRef)
+REF_CLASS(LLVMPassManagerBuilderRef, PassManagerBuilderRef)
+REF_CLASS(LLVMPassManagerRef, PassManagerRef)
+REF_CLASS(LLVMObjectFileRef, ObjectFileRef)
+REF_CLASS(LLVMPassRegistryRef, PassRegistryRef)
+REF_CLASS(LLVMTargetDataRef, TargetDataRef)
+REF_CLASS(LLVMTargetLibraryInfoRef, TargetLibraryInfoRef)
+REF_CLASS(LLVMTargetMachineRef, TargetMachineRef)
+REF_CLASS(LLVMTargetRef, TargetRef)
+REF_CLASS(LLVMTypeRef, TypeRef)
+REF_CLASS(LLVMUseRef, UseRef)
+REF_CLASS(LLVMValueRef, ValueRef)
+REF_CLASS(LLVMRelocationIteratorRef, RelocationIteratorRef)
+REF_CLASS(LLVMSectionIteratorRef, SectionIteratorRef)
+REF_CLASS(LLVMSymbolIteratorRef, SymbolIteratorRef)
+REF_CLASS(LLVMTargetOptionsRef, TargetOptionsRef)
 
-%define OUT_ARG(javatype, pattern)
-    %typemap(jni) pattern "jlong"
-    %typemap(jtype) pattern "long"
-    %typemap(jstype) pattern "javatype"
-    %typemap(javain) pattern "javatype.getCPtr($javainput)"
-%enddef
-
-%define ARRAY_CLASS(TYPE,NAME)
-    %{
-        typedef struct NAME {
-            TYPE value;
-        } NAME;
-    %}
-    typedef struct NAME {
-        TYPE value;
-    } NAME;
-    %extend NAME {
-        NAME(int nelements) {
-          return (NAME *) calloc(nelements,sizeof(TYPE));
-        }
-        ~NAME() {
-          free(self);
-        }
-        TYPE get(int index) {
-          return self[index].value;
-        }
-        void set(int index, TYPE value) {
-          self[index].value = value;
-        }
-    };
-    %types(TYPE);
-%enddef
-
-%define ARRAY_ARG(javatype, pattern)
-    %typemap(jstype) pattern "javatype"
-    %typemap(javain) pattern "javatype.getCPtr($javainput)"
-%enddef
-
-typedef char* charp;
-typedef LongArray* LongArrayPtr;
-
+//
+// Registering container classes that will be used to receive value by pointer
+//
 OUT_CLASS(LLVMMemoryBufferRef, MemoryBufferRefOut)
 OUT_CLASS(LLVMModuleRef, ModuleRefOut)
 OUT_CLASS(LLVMModuleProviderRef, ModuleProviderRefOut)
 OUT_CLASS(LLVMTargetRef, TargetRefOut)
-OUT_CLASS(charp, StringOut, if (self->value) free(self->value))
 OUT_CLASS(jint, IntOut)
 OUT_CLASS(size_t, SizeTOut)
+
+// wrap char* -> charp otherwise macro fails
+%{typedef char* charp;%}; typedef char* charp;
+OUT_CLASS(charp, StringOut, if (self->value) free(self->value))
+
+// wrap struct LongArray* -> LongArrayPtr here otherwise macro fails
+%{typedef struct LongArray* LongArrayPtr;%}; typedef struct LongArray* LongArrayPtr;
 OUT_CLASS(LongArrayPtr, LongArrayOut, if (self->value) free(self->value))
+
+
+//
+// Map pointer to container classes to receive value by pointer
+//
 OUT_ARG(MemoryBufferRefOut, LLVMMemoryBufferRef *OutMemBuf)
 OUT_ARG(ModuleRefOut, LLVMModuleRef *OutM)
 OUT_ARG(ModuleRefOut, LLVMModuleRef *OutModule)
@@ -114,53 +80,79 @@ OUT_ARG(IntOut, LLVMBool *losesInfo)
 OUT_ARG(SizeTOut, size_t* out)
 OUT_ARG(LongArrayOut, uint64_t **Out)
 
+//
+// registering wrappers for arrays
+//
 ARRAY_CLASS(LLVMTypeRef, TypeRefArray)
 ARRAY_CLASS(LLVMBasicBlockRef, BasicBlockRefArray)
 ARRAY_CLASS(LLVMValueRef, ValueRefArray)
 ARRAY_CLASS(jlong, LongArray)
 ARRAY_CLASS(jint, IntArray)
+
 ARRAY_ARG(TypeRefArray, LLVMTypeRef *)
 ARRAY_ARG(BasicBlockRefArray, LLVMBasicBlockRef *)
 ARRAY_ARG(ValueRefArray, LLVMValueRef *)
 ARRAY_ARG(LongArray, jlong Words[])
 ARRAY_ARG(IntArray, unsigned *IdxList)
 
-// Combine (char*, size_t) into a single parameter of type byte[]
-%typemap(jtype) (char *ARRAY, size_t ARRAYSIZE) "byte[]"
-%typemap(jstype) (char *ARRAY, size_t ARRAYSIZE) "byte[]"
-%typemap(jni) (char *ARRAY, size_t ARRAYSIZE) "jbyteArray"
-%typemap(javain) (char *ARRAY, size_t ARRAYSIZE) "$javainput"
-%typemap(in, numinputs=1) (char *ARRAY, size_t ARRAYSIZE) {
-  if (!$input) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, NULL);
-    return $null;
-  }
-  $1 = JCALL2(GetByteArrayElements, jenv, $input, NULL);
-  if (!$1) return $null;
-  $2 = JCALL1(GetArrayLength, jenv, $input);
-}
-%typemap(freearg) (char *ARRAY, size_t ARRAYSIZE) {
-  JCALL3(ReleaseByteArrayElements, jenv, $input, $1, 0); 
-}
+//
+// register special cases to be turned into arrays (see LLVMCommon)
+//
+%apply (char *ARRAY, size_t ARRAYSIZE) {(const char *InputData, size_t InputDataLength)};
+%apply (char *ARRAY, size_t ARRAYSIZE) {(char *Dest, size_t DestSize)};
 
-// Combine (char*, size_t) into a single parameter of type String
-%typemap(jtype) (char *STRING, size_t STRINGSIZE) "String"
-%typemap(jstype) (char *STRING, size_t STRINGSIZE) "String"
-%typemap(jni) (char *STRING, size_t STRINGSIZE) "jstring"
-%typemap(javain) (char *STRING, size_t STRINGSIZE) "$javainput"
-%typemap(in, numinputs=1) (char *STRING, size_t STRINGSIZE) {
-  if (!$input) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, NULL);
-    return $null;
-  }
-  $1 = ($1_ltype) JCALL2(GetStringUTFChars, jenv, $input, NULL);
-  if (!$1) return $null;
-  $2 = strlen($1);
-}
-%typemap(freearg) (char *STRING, size_t STRINGSIZE) {
-  JCALL2(ReleaseStringUTFChars, jenv, $input, $1); 
-}
+//
+// register special cases to be turned into String (see LLVMCommon)
+//
+%apply (char *STRING, size_t STRINGSIZE) {(const char *Name, unsigned SLen)};
+%apply (char *STRING, size_t STRINGSIZE) {(const char *Str, unsigned Length)};
+%apply (char *STRING, size_t STRINGSIZE) {(const char *Str, unsigned SLen)};
 
+//
+// register out classes to be used for generic pointers
+//
+REF_PTR(size_t*, IntOut)
+REF_PTR(uint64_t*, IntOut)
+REF_PTR(int64_t*, IntOut)
+REF_PTR(uint32_t*, IntOut)
+REF_PTR(unsigned*, IntOut)
+REF_PTR(LLVMBool*, IntOut)
+REF_PTR(void*, IntOut)
+
+//
+// Other setups
+//
+
+// Prevent arguments named ContextRef to interfere with the type named ContextRef
+#define ContextRef contextRef
+
+// do not generate setter
+%immutable llvmHostTriple;
+
+// These return char* which the caller must free.
+%newobject LLVMGetTargetMachineTriple;
+%newobject LLVMGetTargetMachineCPU;
+%newobject LLVMGetTargetMachineFeatureString;
+%newobject LLVMCopyStringRepOfTargetData;
+// release of these shall be done using LLVMDisposeMessage as per doc
+%typemap(newfree) char * "LLVMDisposeMessage($1);";
+
+// expand LLVMAttribute to int values(don't use it as java enum)
+%typemap(javain) enum LLVMAttribute "$javainput"
+%typemap(javaout) enum LLVMAttribute {
+    return $jnicall;
+  }
+%typemap(jni) enum LLVMAttribute "jint"
+%typemap(jtype) enum LLVMAttribute "int"
+%typemap(jstype) enum LLVMAttribute "int"
+%typemap(in) enum LLVMAttribute  %{ $1 = ($1_ltype)$input; %}
+%typemap(out) enum LLVMAttribute  %{ $result = (jint)$1; %}
+%typemap(directorout) enum LLVMAttribute  %{ $result = ($1_ltype)$input; %}
+%typemap(directorin, descriptor="L$packagepath/$javaclassname;") enum LLVMAttribute "$input = (jint) $1;"
+%typemap(javadirectorin) enum LLVMAttribute "$jniinput"
+%typemap(javadirectorout) enum LLVMAttribute "$javacall"
+
+// Wrap output stream using own wrapper implementation
 %typemap(jtype) void *OutputStream "java.io.OutputStream"
 %typemap(jstype) void *OutputStream "java.io.OutputStream"
 %typemap(jni) void *OutputStream "jobject"
@@ -177,54 +169,10 @@ ARRAY_ARG(IntArray, unsigned *IdxList)
   FreeOutputStreamWrapper($1);
 }
 
-%apply (char *ARRAY, size_t ARRAYSIZE) {(const char *InputData, size_t InputDataLength)};
-%apply (char *ARRAY, size_t ARRAYSIZE) {(char *Dest, size_t DestSize)};
-%apply (char *STRING, size_t STRINGSIZE) {(const char *Name, unsigned SLen)};
-%apply (char *STRING, size_t STRINGSIZE) {(const char *Str, unsigned Length)};
-%apply (char *STRING, size_t STRINGSIZE) {(const char *Str, unsigned SLen)};
 
-%typemap(jstype) unsigned "int"
-%typemap(jtype) unsigned "int"
-%typemap(jni) unsigned "jint"
-
-// Insert equals() and hashCode() based on swigCPtr.
-%typemap(javacode) SWIGTYPE, SWIGTYPE *, SWIGTYPE &, SWIGTYPE [], SWIGTYPE (CLASS::*) %{
-  public int hashCode() {
-    return 31 + (int) (swigCPtr ^ (swigCPtr >>> 32));
-  }
-
-  public boolean equals(Object obj) {
-    if (this == obj) {
-        return true;
-    }
-    if (obj == null) {
-        return false;
-    }
-    if (getClass() != obj.getClass()) {
-        return false;
-    }
-    $javaclassname other = ($javaclassname) obj;
-    return swigCPtr == other.swigCPtr;
-  }
-%}
-
-%typemap(javain) enum LLVMAttribute "$javainput"
-%typemap(javaout) enum LLVMAttribute {
-    return $jnicall;
-  }
-%typemap(jni) enum LLVMAttribute "jint"
-%typemap(jtype) enum LLVMAttribute "int"
-%typemap(jstype) enum LLVMAttribute "int"
-%typemap(in) enum LLVMAttribute  %{ $1 = ($1_ltype)$input; %}
-%typemap(out) enum LLVMAttribute  %{ $result = (jint)$1; %}
-%typemap(directorout) enum LLVMAttribute  %{ $result = ($1_ltype)$input; %}
-%typemap(directorin, descriptor="L$packagepath/$javaclassname;") enum LLVMAttribute "$input = (jint) $1;"
-%typemap(javadirectorin) enum LLVMAttribute "$jniinput"
-%typemap(javadirectorout) enum LLVMAttribute "$javacall"
-
-typedef jboolean LLVMBool;
-typedef jbyte uint8_t;
-typedef jlong uint64_t;
+//
+// Ignores
+//
 
 // Deprecated functions
 %ignore LLVMGetBitcodeModuleProviderInContext;
@@ -237,31 +185,24 @@ typedef jlong uint64_t;
 %ignore LLVMConstRealOfStringAndSize;
 
 // This is inlined and based on macros and will only work as expected when
-// called on the same platform as the llvm/Config/llvm-config.h file was 
+// called on the same platform as the llvm/Config/llvm-config.h file was
 // generated for.
 %ignore LLVMInitializeNativeTarget;
 
+// ignore own helper methods
 %ignore AllocOutputStreamWrapper;
 %ignore FreeOutputStreamWrapper;
 
 %ignore LLVMInstallFatalErrorHandler;
 %ignore LLVMResetFatalErrorHandler;
-
 %ignore LLVMContextSetDiagnosticHandler;
 %ignore LLVMContextSetYieldCallback;
 
+// ignore command line and UIs
 %ignore LLVMParseCommandLineOptions;
 
-// Prevent arguments named ContextRef to interfere with the type named ContextRef
-#define ContextRef contextRef
 
-%immutable llvmHostTriple;
 
-// These return char* which the caller must free.
-%newobject LLVMGetTargetMachineTriple;
-%newobject LLVMGetTargetMachineCPU;
-%newobject LLVMGetTargetMachineFeatureString;
-%newobject LLVMCopyStringRepOfTargetData;
 
 %include "llvm-c/Core.h"
 %include "llvm-c/BitReader.h"
