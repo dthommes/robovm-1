@@ -36,7 +36,7 @@ public class BasicBlockRefArray {
   }
 
   public void setValue(BasicBlockRef value) {
-    LLVMJNI.BasicBlockRefArray_value_set(swigCPtr, this, BasicBlockRef.getCPtr(value));
+    LLVMJNI.BasicBlockRefArray_value_set(swigCPtr, this, BasicBlockRef.getCPtr(value), value);
   }
 
   public BasicBlockRef getValue() {
@@ -54,7 +54,7 @@ public class BasicBlockRefArray {
   }
 
   public void set(int index, BasicBlockRef value) {
-    LLVMJNI.BasicBlockRefArray_set(swigCPtr, this, index, BasicBlockRef.getCPtr(value));
+    LLVMJNI.BasicBlockRefArray_set(swigCPtr, this, index, BasicBlockRef.getCPtr(value), value);
   }
 
 }

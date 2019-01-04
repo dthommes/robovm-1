@@ -29,16 +29,15 @@ public class UseRef {
 
   public boolean equals(Object obj) {
     if (this == obj) {
-        return true;
+      return true;
     }
     if (obj == null) {
-        return false;
+      return false;
     }
     if (getClass() != obj.getClass()) {
-        return false;
+      return false;
     }
     UseRef other = (UseRef) obj;
     return swigCPtr == other.swigCPtr;
   }
 }
-

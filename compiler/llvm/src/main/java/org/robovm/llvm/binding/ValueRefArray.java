@@ -36,7 +36,7 @@ public class ValueRefArray {
   }
 
   public void setValue(ValueRef value) {
-    LLVMJNI.ValueRefArray_value_set(swigCPtr, this, ValueRef.getCPtr(value));
+    LLVMJNI.ValueRefArray_value_set(swigCPtr, this, ValueRef.getCPtr(value), value);
   }
 
   public ValueRef getValue() {
@@ -54,7 +54,7 @@ public class ValueRefArray {
   }
 
   public void set(int index, ValueRef value) {
-    LLVMJNI.ValueRefArray_set(swigCPtr, this, index, ValueRef.getCPtr(value));
+    LLVMJNI.ValueRefArray_set(swigCPtr, this, index, ValueRef.getCPtr(value), value);
   }
 
 }
