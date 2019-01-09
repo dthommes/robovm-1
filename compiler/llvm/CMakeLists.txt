@@ -119,7 +119,7 @@ endif()
 
 ExternalProject_Add(extclang
   GIT_REPOSITORY ${CLANG_GIT_PATH}
-  GIT_TAG 7b389564897bc6c0431c42f8f1825f04624ff4e3
+  GIT_TAG RELEASE_70
   UPDATE_COMMAND ""
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
@@ -134,7 +134,9 @@ set(LLVM_CXX_FLAGS "${C_CXX_FLAGS} -fvisibility=hidden -fdata-sections -ffunctio
 if (WINDOWS)
   set(LLVM_CXX_FLAGS "${LLVM_CXX_FLAGS} -Wa,-mbig-obj")
 endif()
-
+if(MACOSX)
+  set(LLVM_CXX_FLAGS "${LLVM_CXX_FLAGS} -stdlib=libc++")
+endif()
 # allow to override repository for quiker checkouts on local builds
 if(DEFINED ENV{ROBOVM_LLVM_GIT_PATH})
   set(LLVM_GIT_PATH "$ENV{ROBOVM_LLVM_GIT_PATH}")
@@ -151,7 +153,7 @@ endif()
 ExternalProject_Add(extllvm
   DEPENDS extclang
   GIT_REPOSITORY ${LLVM_GIT_PATH}
-  GIT_TAG aceb47b80838681fe65a1d01aac7aae7b863ac5a
+  GIT_TAG RELEASE_70
   LIST_SEPARATOR ^^
   CONFIGURE_COMMAND cmake -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS}
                           -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
@@ -170,11 +172,14 @@ ExternalProject_Add(extllvm
                           -DLLVM_ENABLE_CXX1Y=YES
                           -DLLVM_ENABLE_THREADS=YES
                           -DLIBCLANG_BUILD_STATIC=YES
+                          -DLLVM_BUILD_TOOLS=OFF
                           -DLLVM_INCLUDE_EXAMPLES=OFF
                           -DLLVM_INCLUDE_TESTS=OFF
                           -DLLVM_INCLUDE_DOCS=OFF
+                          -DCLANG_BUILD_TOOLS=OFF
                           ../extllvm/
-  PATCH_COMMAND bash -c "rm -rf tools/clang && cp -r ../../../extclang-prefix/src/extclang/ tools/clang/ && ${CMAKE_SOURCE_DIR}/patches/apply-patches"
+  #do not patch for now as patches are not ready for 70
+  #PATCH_COMMAND bash -c "rm -rf tools/clang && cp -r ../../../extclang-prefix/src/extclang/ tools/clang/ && ${CMAKE_SOURCE_DIR}/patches/apply-patches"
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_CXX_FLAGS}")
