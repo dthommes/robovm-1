@@ -8,52 +8,37 @@
 
 package org.robovm.llvm.binding;
 
-public enum TypeKind {
-  VoidTypeKind,
-  HalfTypeKind,
-  FloatTypeKind,
-  DoubleTypeKind,
-  X86_FP80TypeKind,
-  FP128TypeKind,
-  PPC_FP128TypeKind,
-  LabelTypeKind,
-  IntegerTypeKind,
-  FunctionTypeKind,
-  StructTypeKind,
-  ArrayTypeKind,
-  PointerTypeKind,
-  VectorTypeKind,
-  MetadataTypeKind,
-  X86_MMXTypeKind,
-  TokenTypeKind;
+public enum InlineAsmDialect {
+  InlineAsmDialectATT,
+  InlineAsmDialectIntel;
 
   public final int swigValue() {
     return swigValue;
   }
 
-  public static TypeKind swigToEnum(int swigValue) {
-    TypeKind[] swigValues = TypeKind.class.getEnumConstants();
+  public static InlineAsmDialect swigToEnum(int swigValue) {
+    InlineAsmDialect[] swigValues = InlineAsmDialect.class.getEnumConstants();
     if (swigValue < swigValues.length && swigValue >= 0 && swigValues[swigValue].swigValue == swigValue)
       return swigValues[swigValue];
-    for (TypeKind swigEnum : swigValues)
+    for (InlineAsmDialect swigEnum : swigValues)
       if (swigEnum.swigValue == swigValue)
         return swigEnum;
-    throw new IllegalArgumentException("No enum " + TypeKind.class + " with value " + swigValue);
+    throw new IllegalArgumentException("No enum " + InlineAsmDialect.class + " with value " + swigValue);
   }
 
   @SuppressWarnings("unused")
-  private TypeKind() {
+  private InlineAsmDialect() {
     this.swigValue = SwigNext.next++;
   }
 
   @SuppressWarnings("unused")
-  private TypeKind(int swigValue) {
+  private InlineAsmDialect(int swigValue) {
     this.swigValue = swigValue;
     SwigNext.next = swigValue+1;
   }
 
   @SuppressWarnings("unused")
-  private TypeKind(TypeKind swigEnum) {
+  private InlineAsmDialect(InlineAsmDialect swigEnum) {
     this.swigValue = swigEnum.swigValue;
     SwigNext.next = this.swigValue+1;
   }

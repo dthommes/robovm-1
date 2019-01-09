@@ -8,52 +8,41 @@
 
 package org.robovm.llvm.binding;
 
-public enum TypeKind {
-  VoidTypeKind,
-  HalfTypeKind,
-  FloatTypeKind,
-  DoubleTypeKind,
-  X86_FP80TypeKind,
-  FP128TypeKind,
-  PPC_FP128TypeKind,
-  LabelTypeKind,
-  IntegerTypeKind,
-  FunctionTypeKind,
-  StructTypeKind,
-  ArrayTypeKind,
-  PointerTypeKind,
-  VectorTypeKind,
-  MetadataTypeKind,
-  X86_MMXTypeKind,
-  TokenTypeKind;
+public enum ModuleFlagBehavior {
+  ModuleFlagBehaviorError,
+  ModuleFlagBehaviorWarning,
+  ModuleFlagBehaviorRequire,
+  ModuleFlagBehaviorOverride,
+  ModuleFlagBehaviorAppend,
+  ModuleFlagBehaviorAppendUnique;
 
   public final int swigValue() {
     return swigValue;
   }
 
-  public static TypeKind swigToEnum(int swigValue) {
-    TypeKind[] swigValues = TypeKind.class.getEnumConstants();
+  public static ModuleFlagBehavior swigToEnum(int swigValue) {
+    ModuleFlagBehavior[] swigValues = ModuleFlagBehavior.class.getEnumConstants();
     if (swigValue < swigValues.length && swigValue >= 0 && swigValues[swigValue].swigValue == swigValue)
       return swigValues[swigValue];
-    for (TypeKind swigEnum : swigValues)
+    for (ModuleFlagBehavior swigEnum : swigValues)
       if (swigEnum.swigValue == swigValue)
         return swigEnum;
-    throw new IllegalArgumentException("No enum " + TypeKind.class + " with value " + swigValue);
+    throw new IllegalArgumentException("No enum " + ModuleFlagBehavior.class + " with value " + swigValue);
   }
 
   @SuppressWarnings("unused")
-  private TypeKind() {
+  private ModuleFlagBehavior() {
     this.swigValue = SwigNext.next++;
   }
 
   @SuppressWarnings("unused")
-  private TypeKind(int swigValue) {
+  private ModuleFlagBehavior(int swigValue) {
     this.swigValue = swigValue;
     SwigNext.next = swigValue+1;
   }
 
   @SuppressWarnings("unused")
-  private TypeKind(TypeKind swigEnum) {
+  private ModuleFlagBehavior(ModuleFlagBehavior swigEnum) {
     this.swigValue = swigEnum.swigValue;
     SwigNext.next = this.swigValue+1;
   }

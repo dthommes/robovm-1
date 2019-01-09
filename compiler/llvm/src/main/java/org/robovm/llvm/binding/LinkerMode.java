@@ -8,52 +8,37 @@
 
 package org.robovm.llvm.binding;
 
-public enum TypeKind {
-  VoidTypeKind,
-  HalfTypeKind,
-  FloatTypeKind,
-  DoubleTypeKind,
-  X86_FP80TypeKind,
-  FP128TypeKind,
-  PPC_FP128TypeKind,
-  LabelTypeKind,
-  IntegerTypeKind,
-  FunctionTypeKind,
-  StructTypeKind,
-  ArrayTypeKind,
-  PointerTypeKind,
-  VectorTypeKind,
-  MetadataTypeKind,
-  X86_MMXTypeKind,
-  TokenTypeKind;
+public enum LinkerMode {
+  LinkerDestroySource(0),
+  LinkerPreserveSource_Removed(1);
 
   public final int swigValue() {
     return swigValue;
   }
 
-  public static TypeKind swigToEnum(int swigValue) {
-    TypeKind[] swigValues = TypeKind.class.getEnumConstants();
+  public static LinkerMode swigToEnum(int swigValue) {
+    LinkerMode[] swigValues = LinkerMode.class.getEnumConstants();
     if (swigValue < swigValues.length && swigValue >= 0 && swigValues[swigValue].swigValue == swigValue)
       return swigValues[swigValue];
-    for (TypeKind swigEnum : swigValues)
+    for (LinkerMode swigEnum : swigValues)
       if (swigEnum.swigValue == swigValue)
         return swigEnum;
-    throw new IllegalArgumentException("No enum " + TypeKind.class + " with value " + swigValue);
+    throw new IllegalArgumentException("No enum " + LinkerMode.class + " with value " + swigValue);
   }
 
   @SuppressWarnings("unused")
-  private TypeKind() {
+  private LinkerMode() {
     this.swigValue = SwigNext.next++;
   }
 
   @SuppressWarnings("unused")
-  private TypeKind(int swigValue) {
+  private LinkerMode(int swigValue) {
     this.swigValue = swigValue;
     SwigNext.next = swigValue+1;
   }
 
   @SuppressWarnings("unused")
-  private TypeKind(TypeKind swigEnum) {
+  private LinkerMode(LinkerMode swigEnum) {
     this.swigValue = swigEnum.swigValue;
     SwigNext.next = this.swigValue+1;
   }
