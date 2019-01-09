@@ -8,6 +8,7 @@
 #include <llvm-c/Transforms/PassManagerBuilder.h>
 #include <llvm-c/Transforms/Scalar.h>
 #include <llvm-c/Transforms/Vectorize.h>
+#include <llvm-c/Transforms/Utils.h>
 #include <llvm-c/Target.h>
 #include <llvm-c/TargetMachine.h>
 #include <llvm-c/Linker.h>
@@ -44,6 +45,10 @@ REF_CLASS(LLVMRelocationIteratorRef, RelocationIteratorRef)
 REF_CLASS(LLVMSectionIteratorRef, SectionIteratorRef)
 REF_CLASS(LLVMSymbolIteratorRef, SymbolIteratorRef)
 REF_CLASS(LLVMTargetOptionsRef, TargetOptionsRef)
+REF_CLASS(LLVMAttributeRef, AttributeRef)
+REF_CLASS(LLVMMetadataRef, MetadataRef)
+REF_CLASS(LLVMModuleFlagEntry*, ModuleFlagEntry)
+
 
 //
 // Registering container classes that will be used to receive value by pointer
@@ -54,6 +59,7 @@ OUT_CLASS(LLVMModuleProviderRef, ModuleProviderRefOut)
 OUT_CLASS(LLVMTargetRef, TargetRefOut)
 OUT_CLASS(jint, IntOut)
 OUT_CLASS(size_t, SizeTOut)
+OUT_CLASS(LLVMAttributeRef, AttributeRefOut)
 
 // wrap char* -> charp otherwise macro fails
 %{typedef char* charp;%}; typedef char* charp;
@@ -79,6 +85,7 @@ OUT_ARG(IntOut, int* OutSize)
 OUT_ARG(IntOut, LLVMBool *losesInfo)
 OUT_ARG(SizeTOut, size_t* out)
 OUT_ARG(LongArrayOut, uint64_t **Out)
+OUT_ARG(AttributeRefOut, LLVMAttributeRef *Attrs)
 
 //
 // registering wrappers for arrays
@@ -198,11 +205,18 @@ REF_PTR(void*, IntOut)
 %ignore LLVMContextSetDiagnosticHandler;
 %ignore LLVMContextSetYieldCallback;
 
+//
+%ignore LLVMContextGetDiagnosticHandler;
+
 // ignore command line and UIs
 %ignore LLVMParseCommandLineOptions;
 
-
-
+// ignore failed constants
+%ignore INT64_MAX;
+%ignore INT64_MIN;
+%ignore UINT64_MAX;
+%ignore LLVMAttributeReturnIndex;
+%ignore LLVMAttributeFunctionIndex;
 
 %include "llvm-c/Core.h"
 %include "llvm-c/BitReader.h"
@@ -212,6 +226,7 @@ REF_PTR(void*, IntOut)
 %include "llvm-c/Transforms/PassManagerBuilder.h"
 %include "llvm-c/Transforms/Scalar.h"
 %include "llvm-c/Transforms/Vectorize.h"
+%include <llvm-c/Transforms/Utils.h>
 %include "llvm-c/Target.h"
 %include "llvm-c/TargetMachine.h"
 %include "llvm-c/Linker.h"
