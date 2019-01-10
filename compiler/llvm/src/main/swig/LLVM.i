@@ -59,7 +59,6 @@ OUT_CLASS(LLVMModuleProviderRef, ModuleProviderRefOut)
 OUT_CLASS(LLVMTargetRef, TargetRefOut)
 OUT_CLASS(jint, IntOut)
 OUT_CLASS(size_t, SizeTOut)
-OUT_CLASS(LLVMAttributeRef, AttributeRefOut)
 
 // wrap char* -> charp otherwise macro fails
 %{typedef char* charp;%}; typedef char* charp;
@@ -85,7 +84,6 @@ OUT_ARG(IntOut, int* OutSize)
 OUT_ARG(IntOut, LLVMBool *losesInfo)
 OUT_ARG(SizeTOut, size_t* out)
 OUT_ARG(LongArrayOut, uint64_t **Out)
-OUT_ARG(AttributeRefOut, LLVMAttributeRef *Attrs)
 
 //
 // registering wrappers for arrays
@@ -95,12 +93,14 @@ ARRAY_CLASS(LLVMBasicBlockRef, BasicBlockRefArray)
 ARRAY_CLASS(LLVMValueRef, ValueRefArray)
 ARRAY_CLASS(jlong, LongArray)
 ARRAY_CLASS(jint, IntArray)
+ARRAY_CLASS(LLVMAttributeRef, AttributeArray)
 
 ARRAY_ARG(TypeRefArray, LLVMTypeRef *)
 ARRAY_ARG(BasicBlockRefArray, LLVMBasicBlockRef *)
 ARRAY_ARG(ValueRefArray, LLVMValueRef *)
 ARRAY_ARG(LongArray, jlong Words[])
 ARRAY_ARG(IntArray, unsigned *IdxList)
+ARRAY_ARG(AttributeArray, LLVMAttributeRef *Attrs)
 
 //
 // register special cases to be turned into arrays (see LLVMCommon)
@@ -114,6 +114,9 @@ ARRAY_ARG(IntArray, unsigned *IdxList)
 %apply (char *STRING, size_t STRINGSIZE) {(const char *Name, unsigned SLen)};
 %apply (char *STRING, size_t STRINGSIZE) {(const char *Str, unsigned Length)};
 %apply (char *STRING, size_t STRINGSIZE) {(const char *Str, unsigned SLen)};
+%apply (char *STRING, size_t STRINGSIZE) {(const char *Name, size_t SLen)};
+%apply (char *STRING, size_t STRINGSIZE) {(const char *V, unsigned VLength)};
+%apply (char *STRING, size_t STRINGSIZE) {(const char *K, unsigned KLength)};
 
 //
 // register out classes to be used for generic pointers

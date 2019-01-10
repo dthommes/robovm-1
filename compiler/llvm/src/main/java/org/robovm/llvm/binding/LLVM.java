@@ -64,8 +64,8 @@ public class LLVM implements LLVMConstants {
     return LLVMJNI.GetMDKindID(Name);
   }
 
-  public static int GetEnumAttributeKindForName(String Name, long SLen) {
-    return LLVMJNI.GetEnumAttributeKindForName(Name, SLen);
+  public static int GetEnumAttributeKindForName(String Name) {
+    return LLVMJNI.GetEnumAttributeKindForName(Name);
   }
 
   public static int GetLastEnumAttributeKind() {
@@ -85,8 +85,8 @@ public class LLVM implements LLVMConstants {
     return LLVMJNI.GetEnumAttributeValue(AttributeRef.getCPtr(A), A);
   }
 
-  public static AttributeRef CreateStringAttribute(ContextRef C, String K, int KLength, String V, int VLength) {
-    long cPtr = LLVMJNI.CreateStringAttribute(ContextRef.getCPtr(C), C, K, KLength, V, VLength);
+  public static AttributeRef CreateStringAttribute(ContextRef C, String K, String V) {
+    long cPtr = LLVMJNI.CreateStringAttribute(ContextRef.getCPtr(C), C, K, V);
     return (cPtr == 0) ? null : new AttributeRef(cPtr, false);
   }
 
@@ -1723,8 +1723,8 @@ public class LLVM implements LLVMConstants {
     return LLVMJNI.GetAttributeCountAtIndex(ValueRef.getCPtr(F), F, Idx);
   }
 
-  public static void GetAttributesAtIndex(ValueRef F, int Idx, AttributeRefOut Attrs) {
-    LLVMJNI.GetAttributesAtIndex(ValueRef.getCPtr(F), F, Idx, AttributeRefOut.getCPtr(Attrs), Attrs);
+  public static void GetAttributesAtIndex(ValueRef F, int Idx, AttributeArray Attrs) {
+    LLVMJNI.GetAttributesAtIndex(ValueRef.getCPtr(F), F, Idx, AttributeArray.getCPtr(Attrs), Attrs);
   }
 
   public static AttributeRef GetEnumAttributeAtIndex(ValueRef F, int Idx, int KindID) {
@@ -2017,8 +2017,8 @@ public class LLVM implements LLVMConstants {
     return LLVMJNI.GetCallSiteAttributeCount(ValueRef.getCPtr(C), C, Idx);
   }
 
-  public static void GetCallSiteAttributes(ValueRef C, int Idx, AttributeRefOut Attrs) {
-    LLVMJNI.GetCallSiteAttributes(ValueRef.getCPtr(C), C, Idx, AttributeRefOut.getCPtr(Attrs), Attrs);
+  public static void GetCallSiteAttributes(ValueRef C, int Idx, AttributeArray Attrs) {
+    LLVMJNI.GetCallSiteAttributes(ValueRef.getCPtr(C), C, Idx, AttributeArray.getCPtr(Attrs), Attrs);
   }
 
   public static AttributeRef GetCallSiteEnumAttribute(ValueRef C, int Idx, int KindID) {

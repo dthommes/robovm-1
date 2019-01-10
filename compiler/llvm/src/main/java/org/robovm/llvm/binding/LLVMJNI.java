@@ -27,9 +27,6 @@ public class LLVMJNI {
   public final static native long SizeTOut_value_get(long jarg1, SizeTOut jarg1_);
   public final static native long new_SizeTOut();
   public final static native void delete_SizeTOut(long jarg1);
-  public final static native long AttributeRefOut_value_get(long jarg1, AttributeRefOut jarg1_);
-  public final static native long new_AttributeRefOut();
-  public final static native void delete_AttributeRefOut(long jarg1);
   public final static native String StringOut_value_get(long jarg1, StringOut jarg1_);
   public final static native long new_StringOut();
   public final static native void delete_StringOut(long jarg1);
@@ -66,6 +63,12 @@ public class LLVMJNI {
   public final static native void delete_IntArray(long jarg1);
   public final static native int IntArray_get(long jarg1, IntArray jarg1_, int jarg2);
   public final static native void IntArray_set(long jarg1, IntArray jarg1_, int jarg2, int jarg3);
+  public final static native void AttributeArray_value_set(long jarg1, AttributeArray jarg1_, long jarg2, AttributeRef jarg2_);
+  public final static native long AttributeArray_value_get(long jarg1, AttributeArray jarg1_);
+  public final static native long new_AttributeArray(int jarg1);
+  public final static native void delete_AttributeArray(long jarg1);
+  public final static native long AttributeArray_get(long jarg1, AttributeArray jarg1_, int jarg2);
+  public final static native void AttributeArray_set(long jarg1, AttributeArray jarg1_, int jarg2, long jarg3, AttributeRef jarg3_);
   public final static native void EnablePrettyStackTrace();
   public final static native void InitializeCore(long jarg1, PassRegistryRef jarg1_);
   public final static native void Shutdown();
@@ -79,12 +82,12 @@ public class LLVMJNI {
   public final static native int GetDiagInfoSeverity(long jarg1, DiagnosticInfoRef jarg1_);
   public final static native int GetMDKindIDInContext(long jarg1, ContextRef jarg1_, String jarg2);
   public final static native int GetMDKindID(String jarg1);
-  public final static native int GetEnumAttributeKindForName(String jarg1, long jarg2);
+  public final static native int GetEnumAttributeKindForName(String jarg1);
   public final static native int GetLastEnumAttributeKind();
   public final static native long CreateEnumAttribute(long jarg1, ContextRef jarg1_, int jarg2, long jarg3);
   public final static native int GetEnumAttributeKind(long jarg1, AttributeRef jarg1_);
   public final static native long GetEnumAttributeValue(long jarg1, AttributeRef jarg1_);
-  public final static native long CreateStringAttribute(long jarg1, ContextRef jarg1_, String jarg2, int jarg3, String jarg4, int jarg5);
+  public final static native long CreateStringAttribute(long jarg1, ContextRef jarg1_, String jarg2, String jarg4);
   public final static native String GetStringAttributeKind(long jarg1, AttributeRef jarg1_, long jarg2, IntOut jarg2_);
   public final static native String GetStringAttributeValue(long jarg1, AttributeRef jarg1_, long jarg2, IntOut jarg2_);
   public final static native boolean IsEnumAttribute(long jarg1, AttributeRef jarg1_);
@@ -432,7 +435,7 @@ public class LLVMJNI {
   public final static native void SetGC(long jarg1, ValueRef jarg1_, String jarg2);
   public final static native void AddAttributeAtIndex(long jarg1, ValueRef jarg1_, int jarg2, long jarg3, AttributeRef jarg3_);
   public final static native int GetAttributeCountAtIndex(long jarg1, ValueRef jarg1_, int jarg2);
-  public final static native void GetAttributesAtIndex(long jarg1, ValueRef jarg1_, int jarg2, long jarg3, AttributeRefOut jarg3_);
+  public final static native void GetAttributesAtIndex(long jarg1, ValueRef jarg1_, int jarg2, long jarg3, AttributeArray jarg3_);
   public final static native long GetEnumAttributeAtIndex(long jarg1, ValueRef jarg1_, int jarg2, int jarg3);
   public final static native long GetStringAttributeAtIndex(long jarg1, ValueRef jarg1_, int jarg2, String jarg3, int jarg4);
   public final static native void RemoveEnumAttributeAtIndex(long jarg1, ValueRef jarg1_, int jarg2, int jarg3);
@@ -497,7 +500,7 @@ public class LLVMJNI {
   public final static native void SetInstrParamAlignment(long jarg1, ValueRef jarg1_, int jarg2, int jarg3);
   public final static native void AddCallSiteAttribute(long jarg1, ValueRef jarg1_, int jarg2, long jarg3, AttributeRef jarg3_);
   public final static native int GetCallSiteAttributeCount(long jarg1, ValueRef jarg1_, int jarg2);
-  public final static native void GetCallSiteAttributes(long jarg1, ValueRef jarg1_, int jarg2, long jarg3, AttributeRefOut jarg3_);
+  public final static native void GetCallSiteAttributes(long jarg1, ValueRef jarg1_, int jarg2, long jarg3, AttributeArray jarg3_);
   public final static native long GetCallSiteEnumAttribute(long jarg1, ValueRef jarg1_, int jarg2, int jarg3);
   public final static native long GetCallSiteStringAttribute(long jarg1, ValueRef jarg1_, int jarg2, String jarg3, int jarg4);
   public final static native void RemoveCallSiteEnumAttribute(long jarg1, ValueRef jarg1_, int jarg2, int jarg3);

@@ -8,5 +8,6 @@ mkdir -p "$JAVAOUT"
 mkdir -p "$COUT"
 swig -includeall -I"$BASE/src/main/swig/include-stub" -I"$BASE/src/main/swig/include" -outdir "$JAVAOUT" -o "$COUT"/LLVM_wrap.c -java -package org.robovm.llvm.binding -fakeversion 2.0.4 "$BASE/src/main/swig/LLVM.i"
 # fix permission
-chmod 644 "$JAVAOUT/*"
+chmod -R 644 "$JAVAOUT/"
+chmod 744 "$JAVAOUT"
 chmod 644 "$COUT"/LLVM_wrap.c

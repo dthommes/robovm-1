@@ -8,16 +8,16 @@
 
 package org.robovm.llvm.binding;
 
-public class AttributeRefOut {
+public class AttributeArray {
   private transient long swigCPtr;
   protected transient boolean swigCMemOwn;
 
-  protected AttributeRefOut(long cPtr, boolean cMemoryOwn) {
+  protected AttributeArray(long cPtr, boolean cMemoryOwn) {
     swigCMemOwn = cMemoryOwn;
     swigCPtr = cPtr;
   }
 
-  protected static long getCPtr(AttributeRefOut obj) {
+  protected static long getCPtr(AttributeArray obj) {
     return (obj == null) ? 0 : obj.swigCPtr;
   }
 
@@ -29,19 +29,32 @@ public class AttributeRefOut {
     if (swigCPtr != 0) {
       if (swigCMemOwn) {
         swigCMemOwn = false;
-        LLVMJNI.delete_AttributeRefOut(swigCPtr);
+        LLVMJNI.delete_AttributeArray(swigCPtr);
       }
       swigCPtr = 0;
     }
   }
 
+  public void setValue(AttributeRef value) {
+    LLVMJNI.AttributeArray_value_set(swigCPtr, this, AttributeRef.getCPtr(value), value);
+  }
+
   public AttributeRef getValue() {
-    long cPtr = LLVMJNI.AttributeRefOut_value_get(swigCPtr, this);
+    long cPtr = LLVMJNI.AttributeArray_value_get(swigCPtr, this);
     return (cPtr == 0) ? null : new AttributeRef(cPtr, false);
   }
 
-  public AttributeRefOut() {
-    this(LLVMJNI.new_AttributeRefOut(), true);
+  public AttributeArray(int nelements) {
+    this(LLVMJNI.new_AttributeArray(nelements), true);
+  }
+
+  public AttributeRef get(int index) {
+    long cPtr = LLVMJNI.AttributeArray_get(swigCPtr, this, index);
+    return (cPtr == 0) ? null : new AttributeRef(cPtr, false);
+  }
+
+  public void set(int index, AttributeRef value) {
+    LLVMJNI.AttributeArray_set(swigCPtr, this, index, AttributeRef.getCPtr(value), value);
   }
 
 }
