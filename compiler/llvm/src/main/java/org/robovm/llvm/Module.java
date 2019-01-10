@@ -84,8 +84,9 @@ public class Module implements AutoCloseable {
     
     public void link(Module other) {
         StringOut errorMessage = new StringOut();
-        if (LLVM.LinkModules(getRef(), other.getRef(), 0, errorMessage)) {
-            throw new LlvmException(errorMessage.getValue().trim());
+        if (LLVM.LinkModules2(getRef(), other.getRef())) {
+//            throw new LlvmException(errorMessage.getValue().trim());
+            throw new LlvmException("FIXME: LLVM.LinkModules2 failed!");
         }
     }
     

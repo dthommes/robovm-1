@@ -16,10 +16,6 @@
  */
 package org.robovm.llvm;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.robovm.llvm.binding.Attribute;
 import org.robovm.llvm.binding.LLVM;
 import org.robovm.llvm.binding.Linkage;
 import org.robovm.llvm.binding.ValueRef;
@@ -49,23 +45,12 @@ public class Function {
     public void setLinkage(Linkage linkage) {
         LLVM.SetLinkage(getRef(), linkage);
     }
-    
-    public Attribute[] getAttributes() {
-        int mask = LLVM.GetFunctionAttr(getRef());
-        List<Attribute> result = new ArrayList<>();
-        for (Attribute a : Attribute.values()) {
-            if ((a.swigValue() & mask) != 0) {
-                result.add(a);
-            }
-        }
-        return result.toArray(new Attribute[result.size()]);
-    }
-    
-    public void addAttribute(Attribute attribute) {
-        LLVM.AddFunctionAttr(getRef(), attribute.swigValue());
+
+    public void addAttribute(Context ctx, Attribute attribute) {
+        attribute.addToFunction(ctx.getRef(), getRef());
     }
 
-    public void removeAttribute(Attribute attribute) {
-        LLVM.RemoveFunctionAttr(getRef(), attribute.swigValue());
+    public void removeAttribute(Context ctx, Attribute attribute) {
+        attribute.removeFromFunction(ctx.getRef(), getRef());
     }
 }

@@ -65,10 +65,6 @@ public class PassManager implements AutoCloseable {
         checkDisposed();
         LLVM.AddBasicAliasAnalysisPass(ref);
     }
-    public void addBBVectorizePass() {
-        checkDisposed();
-        LLVM.AddBBVectorizePass(ref);
-    }
     public void addCFGSimplificationPass() {
         checkDisposed();
         LLVM.AddCFGSimplificationPass(ref);

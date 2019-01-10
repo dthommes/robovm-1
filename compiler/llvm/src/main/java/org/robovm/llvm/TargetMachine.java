@@ -59,7 +59,7 @@ public class TargetMachine implements AutoCloseable {
     
     public DataLayout getDataLayout() {
         checkDisposed();
-        return new DataLayout(LLVM.GetTargetMachineData(ref));
+        return new DataLayout(LLVM.CreateTargetDataLayout(ref));
     }
     
     public TargetOptions getOptions() {

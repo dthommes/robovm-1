@@ -80,7 +80,7 @@ import org.robovm.llvm.PassManagerBuilder;
 import org.robovm.llvm.Symbol;
 import org.robovm.llvm.Target;
 import org.robovm.llvm.TargetMachine;
-import org.robovm.llvm.binding.Attribute;
+import org.robovm.llvm.Attribute;
 import org.robovm.llvm.binding.CodeGenFileType;
 import org.robovm.llvm.binding.CodeGenOptLevel;
 import org.robovm.llvm.binding.RelocMode;
@@ -374,8 +374,8 @@ public class ClassCompiler {
                                 if (Symbols.isCallbackInnerCSymbol(name)) {
                                     // TODO: We should also always inline the bridge functions but for some reason
                                     // that makes the RoboVM tests hang indefinitely.
-                                    f2.removeAttribute(Attribute.NoInlineAttribute);
-                                    f2.addAttribute(Attribute.AlwaysInlineAttribute);
+                                    f2.removeAttribute(context, Attribute.EnumAttr.NoInlineAttr);
+                                    f2.addAttribute(context, Attribute.EnumAttr.AlwaysInlineAttr);
                                 }
                             }
                         }
