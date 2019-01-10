@@ -437,9 +437,9 @@ public class LLVMJNI {
   public final static native int GetAttributeCountAtIndex(long jarg1, ValueRef jarg1_, int jarg2);
   public final static native void GetAttributesAtIndex(long jarg1, ValueRef jarg1_, int jarg2, long jarg3, AttributeArray jarg3_);
   public final static native long GetEnumAttributeAtIndex(long jarg1, ValueRef jarg1_, int jarg2, int jarg3);
-  public final static native long GetStringAttributeAtIndex(long jarg1, ValueRef jarg1_, int jarg2, String jarg3, int jarg4);
+  public final static native long GetStringAttributeAtIndex(long jarg1, ValueRef jarg1_, int jarg2, String jarg3);
   public final static native void RemoveEnumAttributeAtIndex(long jarg1, ValueRef jarg1_, int jarg2, int jarg3);
-  public final static native void RemoveStringAttributeAtIndex(long jarg1, ValueRef jarg1_, int jarg2, String jarg3, int jarg4);
+  public final static native void RemoveStringAttributeAtIndex(long jarg1, ValueRef jarg1_, int jarg2, String jarg3);
   public final static native void AddTargetDependentFunctionAttr(long jarg1, ValueRef jarg1_, String jarg2, String jarg3);
   public final static native int CountParams(long jarg1, ValueRef jarg1_);
   public final static native void GetParams(long jarg1, ValueRef jarg1_, long jarg2, ValueRefArray jarg2_);
@@ -502,9 +502,9 @@ public class LLVMJNI {
   public final static native int GetCallSiteAttributeCount(long jarg1, ValueRef jarg1_, int jarg2);
   public final static native void GetCallSiteAttributes(long jarg1, ValueRef jarg1_, int jarg2, long jarg3, AttributeArray jarg3_);
   public final static native long GetCallSiteEnumAttribute(long jarg1, ValueRef jarg1_, int jarg2, int jarg3);
-  public final static native long GetCallSiteStringAttribute(long jarg1, ValueRef jarg1_, int jarg2, String jarg3, int jarg4);
+  public final static native long GetCallSiteStringAttribute(long jarg1, ValueRef jarg1_, int jarg2, String jarg3);
   public final static native void RemoveCallSiteEnumAttribute(long jarg1, ValueRef jarg1_, int jarg2, int jarg3);
-  public final static native void RemoveCallSiteStringAttribute(long jarg1, ValueRef jarg1_, int jarg2, String jarg3, int jarg4);
+  public final static native void RemoveCallSiteStringAttribute(long jarg1, ValueRef jarg1_, int jarg2, String jarg3);
   public final static native long GetCalledValue(long jarg1, ValueRef jarg1_);
   public final static native boolean IsTailCall(long jarg1, ValueRef jarg1_);
   public final static native void SetTailCall(long jarg1, ValueRef jarg1_, boolean jarg2);

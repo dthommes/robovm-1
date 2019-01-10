@@ -1732,8 +1732,8 @@ public class LLVM implements LLVMConstants {
     return (cPtr == 0) ? null : new AttributeRef(cPtr, false);
   }
 
-  public static AttributeRef GetStringAttributeAtIndex(ValueRef F, int Idx, String K, int KLen) {
-    long cPtr = LLVMJNI.GetStringAttributeAtIndex(ValueRef.getCPtr(F), F, Idx, K, KLen);
+  public static AttributeRef GetStringAttributeAtIndex(ValueRef F, int Idx, String K) {
+    long cPtr = LLVMJNI.GetStringAttributeAtIndex(ValueRef.getCPtr(F), F, Idx, K);
     return (cPtr == 0) ? null : new AttributeRef(cPtr, false);
   }
 
@@ -1741,8 +1741,8 @@ public class LLVM implements LLVMConstants {
     LLVMJNI.RemoveEnumAttributeAtIndex(ValueRef.getCPtr(F), F, Idx, KindID);
   }
 
-  public static void RemoveStringAttributeAtIndex(ValueRef F, int Idx, String K, int KLen) {
-    LLVMJNI.RemoveStringAttributeAtIndex(ValueRef.getCPtr(F), F, Idx, K, KLen);
+  public static void RemoveStringAttributeAtIndex(ValueRef F, int Idx, String K) {
+    LLVMJNI.RemoveStringAttributeAtIndex(ValueRef.getCPtr(F), F, Idx, K);
   }
 
   public static void AddTargetDependentFunctionAttr(ValueRef Fn, String A, String V) {
@@ -2026,8 +2026,8 @@ public class LLVM implements LLVMConstants {
     return (cPtr == 0) ? null : new AttributeRef(cPtr, false);
   }
 
-  public static AttributeRef GetCallSiteStringAttribute(ValueRef C, int Idx, String K, int KLen) {
-    long cPtr = LLVMJNI.GetCallSiteStringAttribute(ValueRef.getCPtr(C), C, Idx, K, KLen);
+  public static AttributeRef GetCallSiteStringAttribute(ValueRef C, int Idx, String K) {
+    long cPtr = LLVMJNI.GetCallSiteStringAttribute(ValueRef.getCPtr(C), C, Idx, K);
     return (cPtr == 0) ? null : new AttributeRef(cPtr, false);
   }
 
@@ -2035,8 +2035,8 @@ public class LLVM implements LLVMConstants {
     LLVMJNI.RemoveCallSiteEnumAttribute(ValueRef.getCPtr(C), C, Idx, KindID);
   }
 
-  public static void RemoveCallSiteStringAttribute(ValueRef C, int Idx, String K, int KLen) {
-    LLVMJNI.RemoveCallSiteStringAttribute(ValueRef.getCPtr(C), C, Idx, K, KLen);
+  public static void RemoveCallSiteStringAttribute(ValueRef C, int Idx, String K) {
+    LLVMJNI.RemoveCallSiteStringAttribute(ValueRef.getCPtr(C), C, Idx, K);
   }
 
   public static ValueRef GetCalledValue(ValueRef Instr) {

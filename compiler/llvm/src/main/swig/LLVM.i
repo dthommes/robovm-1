@@ -117,6 +117,7 @@ ARRAY_ARG(AttributeArray, LLVMAttributeRef *Attrs)
 %apply (char *STRING, size_t STRINGSIZE) {(const char *Name, size_t SLen)};
 %apply (char *STRING, size_t STRINGSIZE) {(const char *V, unsigned VLength)};
 %apply (char *STRING, size_t STRINGSIZE) {(const char *K, unsigned KLength)};
+%apply (char *STRING, size_t STRINGSIZE) {(const char *K, unsigned KLen)};
 
 //
 // register out classes to be used for generic pointers

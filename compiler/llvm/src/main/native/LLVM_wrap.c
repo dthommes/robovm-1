@@ -7314,7 +7314,7 @@ SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetEnumAttributeAt
 }
 
 
-SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetStringAttributeAtIndex(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jstring jarg3, jint jarg4) {
+SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetStringAttributeAtIndex(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jstring jarg3) {
   jlong jresult = 0 ;
   LLVMValueRef arg1 = (LLVMValueRef) 0 ;
   LLVMAttributeIndex arg2 ;
@@ -7327,15 +7327,20 @@ SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetStringAttribute
   (void)jarg1_;
   arg1 = *(LLVMValueRef *)&jarg1; 
   arg2 = (LLVMAttributeIndex)jarg2; 
-  arg3 = 0;
-  if (jarg3) {
-    arg3 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg3, 0);
+  {
+    if (!jarg3) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, NULL);
+      return 0;
+    }
+    arg3 = (char *) (*jenv)->GetStringUTFChars(jenv, jarg3, NULL);
     if (!arg3) return 0;
+    arg4 = strlen(arg3);
   }
-  arg4 = (unsigned int)jarg4; 
   result = (LLVMAttributeRef)LLVMGetStringAttributeAtIndex(arg1,arg2,(char const *)arg3,arg4);
   *(LLVMAttributeRef *)&jresult = result; 
-  if (arg3) (*jenv)->ReleaseStringUTFChars(jenv, jarg3, (const char *)arg3);
+  {
+    (*jenv)->ReleaseStringUTFChars(jenv, jarg3, arg3);
+  }
   return jresult;
 }
 
@@ -7355,7 +7360,7 @@ SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_RemoveEnumAttribute
 }
 
 
-SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_RemoveStringAttributeAtIndex(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jstring jarg3, jint jarg4) {
+SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_RemoveStringAttributeAtIndex(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jstring jarg3) {
   LLVMValueRef arg1 = (LLVMValueRef) 0 ;
   LLVMAttributeIndex arg2 ;
   char *arg3 = (char *) 0 ;
@@ -7366,14 +7371,19 @@ SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_RemoveStringAttribu
   (void)jarg1_;
   arg1 = *(LLVMValueRef *)&jarg1; 
   arg2 = (LLVMAttributeIndex)jarg2; 
-  arg3 = 0;
-  if (jarg3) {
-    arg3 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg3, 0);
+  {
+    if (!jarg3) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, NULL);
+      return ;
+    }
+    arg3 = (char *) (*jenv)->GetStringUTFChars(jenv, jarg3, NULL);
     if (!arg3) return ;
+    arg4 = strlen(arg3);
   }
-  arg4 = (unsigned int)jarg4; 
   LLVMRemoveStringAttributeAtIndex(arg1,arg2,(char const *)arg3,arg4);
-  if (arg3) (*jenv)->ReleaseStringUTFChars(jenv, jarg3, (const char *)arg3);
+  {
+    (*jenv)->ReleaseStringUTFChars(jenv, jarg3, arg3);
+  }
 }
 
 
@@ -8377,7 +8387,7 @@ SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetCallSiteEnumAtt
 }
 
 
-SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetCallSiteStringAttribute(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jstring jarg3, jint jarg4) {
+SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetCallSiteStringAttribute(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jstring jarg3) {
   jlong jresult = 0 ;
   LLVMValueRef arg1 = (LLVMValueRef) 0 ;
   LLVMAttributeIndex arg2 ;
@@ -8390,15 +8400,20 @@ SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetCallSiteStringA
   (void)jarg1_;
   arg1 = *(LLVMValueRef *)&jarg1; 
   arg2 = (LLVMAttributeIndex)jarg2; 
-  arg3 = 0;
-  if (jarg3) {
-    arg3 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg3, 0);
+  {
+    if (!jarg3) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, NULL);
+      return 0;
+    }
+    arg3 = (char *) (*jenv)->GetStringUTFChars(jenv, jarg3, NULL);
     if (!arg3) return 0;
+    arg4 = strlen(arg3);
   }
-  arg4 = (unsigned int)jarg4; 
   result = (LLVMAttributeRef)LLVMGetCallSiteStringAttribute(arg1,arg2,(char const *)arg3,arg4);
   *(LLVMAttributeRef *)&jresult = result; 
-  if (arg3) (*jenv)->ReleaseStringUTFChars(jenv, jarg3, (const char *)arg3);
+  {
+    (*jenv)->ReleaseStringUTFChars(jenv, jarg3, arg3);
+  }
   return jresult;
 }
 
@@ -8418,7 +8433,7 @@ SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_RemoveCallSiteEnumA
 }
 
 
-SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_RemoveCallSiteStringAttribute(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jstring jarg3, jint jarg4) {
+SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_RemoveCallSiteStringAttribute(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jint jarg2, jstring jarg3) {
   LLVMValueRef arg1 = (LLVMValueRef) 0 ;
   LLVMAttributeIndex arg2 ;
   char *arg3 = (char *) 0 ;
@@ -8429,14 +8444,19 @@ SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_RemoveCallSiteStrin
   (void)jarg1_;
   arg1 = *(LLVMValueRef *)&jarg1; 
   arg2 = (LLVMAttributeIndex)jarg2; 
-  arg3 = 0;
-  if (jarg3) {
-    arg3 = (char *)(*jenv)->GetStringUTFChars(jenv, jarg3, 0);
+  {
+    if (!jarg3) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, NULL);
+      return ;
+    }
+    arg3 = (char *) (*jenv)->GetStringUTFChars(jenv, jarg3, NULL);
     if (!arg3) return ;
+    arg4 = strlen(arg3);
   }
-  arg4 = (unsigned int)jarg4; 
   LLVMRemoveCallSiteStringAttribute(arg1,arg2,(char const *)arg3,arg4);
-  if (arg3) (*jenv)->ReleaseStringUTFChars(jenv, jarg3, (const char *)arg3);
+  {
+    (*jenv)->ReleaseStringUTFChars(jenv, jarg3, arg3);
+  }
 }
 
 
