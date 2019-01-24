@@ -56,7 +56,7 @@ DEFINE_SIMPLE_CONVERSION_FUNCTIONS(TargetOptions, LLVMTargetOptionsRef)
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(PassManagerBuilder, LLVMPassManagerBuilderRef)
 
 inline OwningBinary<ObjectFile> *unwrap(LLVMObjectFileRef OF) {
-  return reinterpret_cast<OwningBinary<ObjectFile> *>(OF);
+    return reinterpret_cast<OwningBinary<ObjectFile> *>(OF);
 }
 
 inline raw_ostream& dump_u32(raw_ostream &os, uint32_t u32) {
@@ -70,84 +70,84 @@ inline raw_ostream& dump_u32(raw_ostream &os, uint32_t u32) {
 const char *llvmHostTriple = LLVM_HOST_TRIPLE;
 
 class raw_java_ostream : public raw_ostream {
-  JNIEnv *m_env;
-  jobject m_target;
-  uint64_t m_pos;
-
-  virtual void write_impl(const char *Ptr, size_t Size) {
-    JNIEnv *env = this->m_env;
-    if (env->ExceptionCheck()) return;
-
-    // The method id will not change during the time this library is
-    // loaded, so it can be cached.
-    static jmethodID mid = 0;
-    if (mid == 0) {
-      jclass clazz = env->FindClass("java/io/OutputStream");
-      if (env->ExceptionCheck())
-        return;
-
-      mid = env->GetMethodID(clazz, "write", "([B)V");
-      if (env->ExceptionCheck() || mid == 0)
-        return;
-
-      env->DeleteLocalRef(clazz);
+    JNIEnv *m_env;
+    jobject m_target;
+    uint64_t m_pos;
+    
+    virtual void write_impl(const char *Ptr, size_t Size) {
+        JNIEnv *env = this->m_env;
+        if (env->ExceptionCheck()) return;
+        
+        // The method id will not change during the time this library is
+        // loaded, so it can be cached.
+        static jmethodID mid = 0;
+        if (mid == 0) {
+            jclass clazz = env->FindClass("java/io/OutputStream");
+            if (env->ExceptionCheck())
+                return;
+            
+            mid = env->GetMethodID(clazz, "write", "([B)V");
+            if (env->ExceptionCheck() || mid == 0)
+                return;
+            
+            env->DeleteLocalRef(clazz);
+        }
+        
+        // convert the data to a Java byte array
+        jbyteArray data = env->NewByteArray((jsize) Size);
+        if (env->ExceptionCheck())
+            return;
+        
+        env->SetByteArrayRegion(data, 0, (jsize) Size, (const jbyte *) Ptr);
+        if (env->ExceptionCheck())
+            return;
+        
+        // write the data
+        env->CallObjectMethod(this->m_target, mid, data);
+        if (env->ExceptionCheck())
+            return;
+        
+        env->DeleteLocalRef(data);
+        
+        m_pos += Size;
     }
-
-    // convert the data to a Java byte array
-    jbyteArray data = env->NewByteArray((jsize) Size);
-    if (env->ExceptionCheck())
-      return;
-
-    env->SetByteArrayRegion(data, 0, (jsize) Size, (const jbyte *) Ptr);
-    if (env->ExceptionCheck())
-      return;
-
-    // write the data
-    env->CallObjectMethod(this->m_target, mid, data);
-    if (env->ExceptionCheck())
-      return;
-
-    env->DeleteLocalRef(data);
-
-    m_pos += Size;
-  }
-  virtual uint64_t current_pos() const { return m_pos; }
+    virtual uint64_t current_pos() const { return m_pos; }
 public:
-  explicit raw_java_ostream(JNIEnv *env, jobject target) : m_env(env), m_target(target), m_pos(0) {}
-  ~raw_java_ostream() {}
+    explicit raw_java_ostream(JNIEnv *env, jobject target) : m_env(env), m_target(target), m_pos(0) {}
+    ~raw_java_ostream() {}
 };
 
 void *AllocOutputStreamWrapper(JNIEnv *env, jobject jOutputStream) {
-  return new raw_java_ostream(env, jOutputStream);
+    return new raw_java_ostream(env, jOutputStream);
 }
 void FreeOutputStreamWrapper(void *p) {
-  delete (raw_java_ostream*) p;
+    delete (raw_java_ostream*) p;
 }
 
 void LLVMPassManagerBuilderSetDisableTailCalls(LLVMPassManagerBuilderRef PMB,
-                                            LLVMBool Value) {
-  PassManagerBuilder *Builder = unwrap(PMB);
-  Builder->DisableTailCalls = Value;
+                                               LLVMBool Value) {
+    PassManagerBuilder *Builder = unwrap(PMB);
+    Builder->DisableTailCalls = Value;
 }
 
 void LLVMPassManagerBuilderUseAlwaysInliner(LLVMPassManagerBuilderRef PMB, LLVMBool InsertLifetime) {
-  PassManagerBuilder *Builder = unwrap(PMB);
-  Builder->Inliner = createAlwaysInlinerPass(InsertLifetime);
+    PassManagerBuilder *Builder = unwrap(PMB);
+    Builder->Inliner = createAlwaysInlinerPass(InsertLifetime);
 }
 
 LLVMBool LLVMParseIR(LLVMMemoryBufferRef MemBuf,
-                          LLVMModuleRef *OutModule, char **OutMessage) {
-  return LLVMParseIRInContext(wrap(&getGlobalContext()), MemBuf, OutModule, OutMessage);
+                     LLVMModuleRef *OutModule, char **OutMessage) {
+    return LLVMParseIRInContext(wrap(&getGlobalContext()), MemBuf, OutModule, OutMessage);
 }
 
 LLVMTargetRef LLVMLookupTarget(const char *Triple, char **ErrorMessage) {
-  std::string Error;
-  const Target *TheTarget = TargetRegistry::lookupTarget(std::string(Triple), Error);
-  if (!TheTarget) {
-    *ErrorMessage = strdup(Error.c_str());
-    return NULL;
-  }
-  return wrap(TheTarget);
+    std::string Error;
+    const Target *TheTarget = TargetRegistry::lookupTarget(std::string(Triple), Error);
+    if (!TheTarget) {
+        *ErrorMessage = strdup(Error.c_str());
+        return NULL;
+    }
+    return wrap(TheTarget);
 }
 
 //Reloc::Model getRelocationModel() const;
@@ -241,165 +241,165 @@ LLVMFPOpFusionMode LLVMTargetOptionsGetAllowFPOpFusion(LLVMTargetOptionsRef O) {
 void LLVMTargetOptionsSetAllowFPOpFusion(LLVMTargetOptionsRef O, LLVMFPOpFusionMode V) { unwrap(O)->AllowFPOpFusion = (FPOpFusion::FPOpFusionMode) V; }
 
 static void assembleDiagHandler(const SMDiagnostic &Diag, void *Context) {
-  raw_string_ostream *OS = (raw_string_ostream*) Context;
-  Diag.print(0, *OS, false);
+    raw_string_ostream *OS = (raw_string_ostream*) Context;
+    Diag.print(0, *OS, false);
 }
 
 int LLVMTargetMachineAssembleToOutputStream(LLVMTargetMachineRef TM, LLVMMemoryBufferRef Mem, void *JOStream, LLVMBool RelaxAll, LLVMBool NoExecStack, char **ErrorMessage) {
-  *ErrorMessage = NULL;
-
+    *ErrorMessage = NULL;
+    
 #if !defined(WIN32) && !defined(_WIN32)
-  locale_t loc = newlocale(LC_ALL_MASK, "C", 0);
-  locale_t oldLoc = uselocale(loc);
+    locale_t loc = newlocale(LC_ALL_MASK, "C", 0);
+    locale_t oldLoc = uselocale(loc);
 #endif
-
-  TargetMachine *TheTargetMachine = unwrap(TM);
-  const Target *TheTarget = &(TheTargetMachine->getTarget());
-
-  std::string TripleName = TheTargetMachine->getTargetTriple().str();
-  std::string MCPU = TheTargetMachine->getTargetCPU().str();
-  std::string FeaturesStr = TheTargetMachine->getTargetFeatureString().str();
-  Reloc::Model RelocModel = TheTargetMachine->getRelocationModel();
-  CodeModel::Model CMModel = TheTargetMachine->getCodeModel();
-
-  std::unique_ptr<MemoryBuffer> Buffer(unwrap(Mem));
-
-  std::string DiagStr;
-  raw_string_ostream DiagStream(DiagStr);
-  SourceMgr SrcMgr;
-  SrcMgr.setDiagHandler(assembleDiagHandler, &DiagStream);
-
-  // Tell SrcMgr about this buffer, which is what the parser will pick up.
-  SrcMgr.AddNewSourceBuffer(std::move(Buffer), SMLoc());
-
-  // Record the location of the include directories so that the lexer can find
-  // it later.
-//  SrcMgr.setIncludeDirs(IncludeDirs);
-
-  std::unique_ptr<MCRegisterInfo> MRI(TheTarget->createMCRegInfo(TripleName));
-  std::unique_ptr<MCAsmInfo> MAI(TheTarget->createMCAsmInfo(*MRI, TripleName));
-  std::unique_ptr<MCObjectFileInfo> MOFI(new MCObjectFileInfo());
-  MCContext Ctx(MAI.get(), MRI.get(), MOFI.get(), &SrcMgr);
-  MOFI->InitMCObjectFileInfo(TripleName, RelocModel, CMModel, Ctx);
-
-  std::unique_ptr<MCInstrInfo> MCII(TheTarget->createMCInstrInfo());
-  std::unique_ptr<MCSubtargetInfo> STI(TheTarget->createMCSubtargetInfo(TripleName, MCPU, FeaturesStr));
-
-  raw_java_ostream& Out = *((raw_java_ostream*) JOStream);
-
-  std::unique_ptr<MCStreamer> Str;
-  MCCodeEmitter *CE = TheTarget->createMCCodeEmitter(*MCII, *MRI, *STI, Ctx);
-  MCAsmBackend *MAB = TheTarget->createMCAsmBackend(*MRI, TripleName, MCPU);
-  Str.reset(TheTarget->createMCObjectStreamer(TripleName, Ctx, *MAB,
-                                              Out, CE, *STI, RelaxAll != 0));
-  if (NoExecStack != 0)
-    Str->InitSections(true);
-
-  MCTargetOptions MCOptions;
-  std::unique_ptr<MCAsmParser> Parser(createMCAsmParser(SrcMgr, Ctx, *Str, *MAI));
-  std::unique_ptr<MCTargetAsmParser> TAP(TheTarget->createMCAsmParser(*STI, *Parser, *MCII, MCOptions));
-  if (!TAP) {
-    *ErrorMessage = strdup("this target does not support assembly parsing");
-    goto done;
-  }
-
-  Parser->setTargetParser(*TAP.get());
-
-  if (Parser->Run(false)) {
-    *ErrorMessage = strdup(DiagStream.str().c_str());
-    goto done;
-  }
-  Out.flush();
-
+    
+    TargetMachine *TheTargetMachine = unwrap(TM);
+    const Target *TheTarget = &(TheTargetMachine->getTarget());
+    
+    std::string TripleName = TheTargetMachine->getTargetTriple().str();
+    std::string MCPU = TheTargetMachine->getTargetCPU().str();
+    std::string FeaturesStr = TheTargetMachine->getTargetFeatureString().str();
+    Reloc::Model RelocModel = TheTargetMachine->getRelocationModel();
+    CodeModel::Model CMModel = TheTargetMachine->getCodeModel();
+    
+    std::unique_ptr<MemoryBuffer> Buffer(unwrap(Mem));
+    
+    std::string DiagStr;
+    raw_string_ostream DiagStream(DiagStr);
+    SourceMgr SrcMgr;
+    SrcMgr.setDiagHandler(assembleDiagHandler, &DiagStream);
+    
+    // Tell SrcMgr about this buffer, which is what the parser will pick up.
+    SrcMgr.AddNewSourceBuffer(std::move(Buffer), SMLoc());
+    
+    // Record the location of the include directories so that the lexer can find
+    // it later.
+    //  SrcMgr.setIncludeDirs(IncludeDirs);
+    
+    std::unique_ptr<MCRegisterInfo> MRI(TheTarget->createMCRegInfo(TripleName));
+    std::unique_ptr<MCAsmInfo> MAI(TheTarget->createMCAsmInfo(*MRI, TripleName));
+    std::unique_ptr<MCObjectFileInfo> MOFI(new MCObjectFileInfo());
+    MCContext Ctx(MAI.get(), MRI.get(), MOFI.get(), &SrcMgr);
+    MOFI->InitMCObjectFileInfo(TripleName, RelocModel, CMModel, Ctx);
+    
+    std::unique_ptr<MCInstrInfo> MCII(TheTarget->createMCInstrInfo());
+    std::unique_ptr<MCSubtargetInfo> STI(TheTarget->createMCSubtargetInfo(TripleName, MCPU, FeaturesStr));
+    
+    raw_java_ostream& Out = *((raw_java_ostream*) JOStream);
+    
+    std::unique_ptr<MCStreamer> Str;
+    MCCodeEmitter *CE = TheTarget->createMCCodeEmitter(*MCII, *MRI, *STI, Ctx);
+    MCAsmBackend *MAB = TheTarget->createMCAsmBackend(*MRI, TripleName, MCPU);
+    Str.reset(TheTarget->createMCObjectStreamer(TripleName, Ctx, *MAB,
+                                                Out, CE, *STI, RelaxAll != 0));
+    if (NoExecStack != 0)
+        Str->InitSections(true);
+    
+    MCTargetOptions MCOptions;
+    std::unique_ptr<MCAsmParser> Parser(createMCAsmParser(SrcMgr, Ctx, *Str, *MAI));
+    std::unique_ptr<MCTargetAsmParser> TAP(TheTarget->createMCAsmParser(*STI, *Parser, *MCII, MCOptions));
+    if (!TAP) {
+        *ErrorMessage = strdup("this target does not support assembly parsing");
+        goto done;
+    }
+    
+    Parser->setTargetParser(*TAP.get());
+    
+    if (Parser->Run(false)) {
+        *ErrorMessage = strdup(DiagStream.str().c_str());
+        goto done;
+    }
+    Out.flush();
+    
 done:
 #if !defined(WIN32) && !defined(_WIN32)
-  uselocale(oldLoc);
-  freelocale(loc);
+    uselocale(oldLoc);
+    freelocale(loc);
 #endif
-  return *ErrorMessage ? 1 : 0;
+    return *ErrorMessage ? 1 : 0;
 }
 
 static LLVMBool LLVMTargetMachineEmit(LLVMTargetMachineRef T, LLVMModuleRef M,
-  formatted_raw_ostream &OS, LLVMCodeGenFileType codegen, char **ErrorMessage) {
-  TargetMachine* TM = unwrap(T);
-  Module* Mod = unwrap(M);
-
-  PassManager pass;
-
-  std::string error;
-
-  const DataLayout *td = TM->getSubtargetImpl()->getDataLayout();
-
-  if (!td) {
-    error = "No DataLayout in TargetMachine";
-    *ErrorMessage = strdup(error.c_str());
-    return true;
-  }
-  Mod->setDataLayout(td);
-  pass.add(new DataLayoutPass());
-
-  TargetMachine::CodeGenFileType ft;
-  switch (codegen) {
-    case LLVMAssemblyFile:
-      ft = TargetMachine::CGFT_AssemblyFile;
-      break;
-    default:
-      ft = TargetMachine::CGFT_ObjectFile;
-      break;
-  }
-  if (TM->addPassesToEmitFile(pass, OS, ft)) {
-    error = "TargetMachine can't emit a file of this type";
-    *ErrorMessage = strdup(error.c_str());
-    return true;
-  }
-
-  pass.run(*Mod);
-
-  OS.flush();
-  return false;
+                                      formatted_raw_ostream &OS, LLVMCodeGenFileType codegen, char **ErrorMessage) {
+    TargetMachine* TM = unwrap(T);
+    Module* Mod = unwrap(M);
+    
+    PassManager pass;
+    
+    std::string error;
+    
+    const DataLayout *td = TM->getSubtargetImpl()->getDataLayout();
+    
+    if (!td) {
+        error = "No DataLayout in TargetMachine";
+        *ErrorMessage = strdup(error.c_str());
+        return true;
+    }
+    Mod->setDataLayout(td);
+    pass.add(new DataLayoutPass());
+    
+    TargetMachine::CodeGenFileType ft;
+    switch (codegen) {
+        case LLVMAssemblyFile:
+            ft = TargetMachine::CGFT_AssemblyFile;
+            break;
+        default:
+            ft = TargetMachine::CGFT_ObjectFile;
+            break;
+    }
+    if (TM->addPassesToEmitFile(pass, OS, ft)) {
+        error = "TargetMachine can't emit a file of this type";
+        *ErrorMessage = strdup(error.c_str());
+        return true;
+    }
+    
+    pass.run(*Mod);
+    
+    OS.flush();
+    return false;
 }
 
 LLVMBool LLVMTargetMachineEmitToOutputStream(LLVMTargetMachineRef T, LLVMModuleRef M,
-  void *JOStream, LLVMCodeGenFileType codegen, char** ErrorMessage) {
-
+                                             void *JOStream, LLVMCodeGenFileType codegen, char** ErrorMessage) {
+    
 #if !defined(WIN32) && !defined(_WIN32)
-  locale_t loc = newlocale(LC_ALL_MASK, "C", 0);
-  locale_t oldLoc = uselocale(loc);
+    locale_t loc = newlocale(LC_ALL_MASK, "C", 0);
+    locale_t oldLoc = uselocale(loc);
 #endif
-
-  formatted_raw_ostream Out(*((raw_java_ostream*) JOStream));
-  bool Result = LLVMTargetMachineEmit(T, M, Out, codegen, ErrorMessage);
-  Out.flush();
-
+    
+    formatted_raw_ostream Out(*((raw_java_ostream*) JOStream));
+    bool Result = LLVMTargetMachineEmit(T, M, Out, codegen, ErrorMessage);
+    Out.flush();
+    
 #if !defined(WIN32) && !defined(_WIN32)
-  uselocale(oldLoc);
-  freelocale(loc);
+    uselocale(oldLoc);
+    freelocale(loc);
 #endif
-
-  return Result;
+    
+    return Result;
 }
 
 void LLVMGetLineInfoForAddressRange(LLVMObjectFileRef O, uint64_t Address, uint64_t Size, int* OutSize, uint64_t** Out) {
-  DIContext* ctx = DIContext::getDWARFContext(*(unwrap(O)->getBinary()));
-  DILineInfoTable lineTable = ctx->getLineInfoForAddressRange(Address, Size);
-  *OutSize = lineTable.size();
-  *Out = NULL;
-  if (lineTable.size() > 0) {
-    *Out = (uint64_t*) calloc(lineTable.size() * 2, sizeof(uint64_t));
-    for (int i = 0; i < lineTable.size(); i++) {
-      std::pair<uint64_t, DILineInfo> p = lineTable[i];
-      (*Out)[i * 2] = p.first;
-      (*Out)[i * 2 + 1] = p.second.Line;
+    DIContext* ctx = DIContext::getDWARFContext(*(unwrap(O)->getBinary()));
+    DILineInfoTable lineTable = ctx->getLineInfoForAddressRange(Address, Size);
+    *OutSize = lineTable.size();
+    *Out = NULL;
+    if (lineTable.size() > 0) {
+        *Out = (uint64_t*) calloc(lineTable.size() * 2, sizeof(uint64_t));
+        for (int i = 0; i < lineTable.size(); i++) {
+            std::pair<uint64_t, DILineInfo> p = lineTable[i];
+            (*Out)[i * 2] = p.first;
+            (*Out)[i * 2 + 1] = p.second.Line;
+        }
     }
-  }
 }
 
 size_t LLVMCopySectionContents(LLVMSectionIteratorRef SI, char* Dest, size_t DestSize) {
-  uint64_t SectionSize = LLVMGetSectionSize(SI);
-  size_t Size = SectionSize > DestSize ? DestSize : SectionSize;
-  const char* Contents = LLVMGetSectionContents(SI);
-  memcpy(Dest, Contents, (size_t) Size);
-  return Size;
+    uint64_t SectionSize = LLVMGetSectionSize(SI);
+    size_t Size = SectionSize > DestSize ? DestSize : SectionSize;
+    const char* Contents = LLVMGetSectionContents(SI);
+    memcpy(Dest, Contents, (size_t) Size);
+    return Size;
 }
 
 
@@ -414,25 +414,25 @@ static void LLVMInternalDumpDwarfSubroutineDebugData(DWARFCompileUnit *cu,  cons
             const char *name = entry->getAttributeValueAsString(cu, DW_AT_name, NULL);
             if (!name)
                 break;
-
+            
             DWARFFormValue value;
             if (!entry->getAttributeValue(cu, DW_AT_location, value))
                 break;
             Optional<ArrayRef<uint8_t>> data = value.getAsBlock();
             if (!data.hasValue())
                 break;
-
+            
             size_t len = data.getValue().size();
             StringRef strRef((const char *)data.getValue().data(), len);
             DataExtractor extractor(strRef, cu->getContext().isLittleEndian(), 0);
-
+            
             uint32_t offset = 0;
             uint8_t reg = extractor.getU8(&offset);
             int32_t reg_offset = (int32_t)extractor.getSLEB128(&offset);
-
+            
             // flags -- currently only if it is parameter
             uint8_t flags = entry->getTag() == DW_TAG_formal_parameter  ? 1 : 0;
-
+            
             // dump variable data
             dump_u32(os, strlen(name));
             os << name;
@@ -441,7 +441,7 @@ static void LLVMInternalDumpDwarfSubroutineDebugData(DWARFCompileUnit *cu,  cons
             dump_u32(os, reg_offset);
         } while (false);
     }
-
+    
     if (entry->hasChildren()) {
         LLVMInternalDumpDwarfSubroutineDebugData(cu, entry->getFirstChild(), os);
     }
@@ -454,17 +454,17 @@ void LLVMDumpDwarfDebugData(LLVMObjectFileRef o, void *JOStream) {
     raw_java_ostream& os = *((raw_java_ostream*) JOStream);
     DWARFContext * ctx = (DWARFContext *)DIContext::getDWARFContext(*(unwrap(o)->getBinary()));
     int cuNum = ctx->getNumCompileUnits();
-
+    
     for (int idx = 0; idx < cuNum; idx++) {
         DWARFCompileUnit *cu = ctx->getCompileUnitAtIndex(idx);
-
+        
         const DWARFDebugInfoEntryMinimal *entry = cu->getCompileUnitDIE(false);
         if (entry == NULL && entry->getTag() != DW_TAG_compile_unit)
             continue;
         entry = entry->getFirstChild();
         if (!entry)
             continue;
-
+        
         do {
             // expect subprogram
             if (entry->isSubprogramDIE()) {
@@ -474,24 +474,24 @@ void LLVMDumpDwarfDebugData(LLVMObjectFileRef o, void *JOStream) {
                     // starting subrotine block
                     dump_u32(os, (uint32_t)strlen(name));
                     os << name;
-
+                    
                     const DWARFDebugInfoEntryMinimal *routineEntry = entry->getFirstChild();
                     if (routineEntry)
                         LLVMInternalDumpDwarfSubroutineDebugData(cu, routineEntry, os);
-
+                    
                     // end of subrotine zero marker
                     dump_u32(os, 0);
                 }
             }
-
+            
             // check next level element
             entry = entry->getSibling();
         } while (entry);
-
+        
         // end of stream marker
         dump_u32(os, 0);
     }
-
+    
     os.flush();
 }
 

@@ -23,8 +23,7 @@ LLVMModuleRef ClangCompileFile(LLVMContextRef Context, char* Data, char* FileNam
     // The compiler invocation needs a DiagnosticsEngine so it can report problems
     IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
     DiagOpts->ShowCarets = false;
-    TextDiagnosticPrinter *DiagClient =
-        new TextDiagnosticPrinter(error_os, &*DiagOpts);
+    TextDiagnosticPrinter *DiagClient = new TextDiagnosticPrinter(error_os, &*DiagOpts);
 
     IntrusiveRefCntPtr<DiagnosticIDs> DiagID(new DiagnosticIDs());
     DiagnosticsEngine Diags(DiagID, &*DiagOpts, DiagClient);
@@ -42,7 +41,7 @@ LLVMModuleRef ClangCompileFile(LLVMContextRef Context, char* Data, char* FileNam
     // Create the compiler instance
     CompilerInstance Clang;
     Clang.setInvocation(CI.release());
-    
+
     // Create the compilers actual diagnostics engine.
     Clang.createDiagnostics(DiagClient, false);
     if (!Clang.hasDiagnostics())
@@ -58,6 +57,6 @@ LLVMModuleRef ClangCompileFile(LLVMContextRef Context, char* Data, char* FileNam
     }
 
     *ErrorMessage = strdup(error.c_str());
-    
+
     return wrap((*Act).takeModule().release());
 }
