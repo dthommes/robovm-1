@@ -3624,14 +3624,6 @@ public class LLVM implements LLVMConstants {
     return (cPtr == 0) ? null : new TargetRef(cPtr, false);
   }
 
-  public static boolean TargetMachineGetAsmVerbosityDefault(TargetMachineRef T) {
-    return LLVMJNI.TargetMachineGetAsmVerbosityDefault(TargetMachineRef.getCPtr(T), T);
-  }
-
-  public static void TargetMachineSetAsmVerbosityDefault(TargetMachineRef T, boolean Value) {
-    LLVMJNI.TargetMachineSetAsmVerbosityDefault(TargetMachineRef.getCPtr(T), T, Value);
-  }
-
   public static boolean TargetMachineGetDataSections(TargetMachineRef T) {
     return LLVMJNI.TargetMachineGetDataSections(TargetMachineRef.getCPtr(T), T);
   }
@@ -3659,22 +3651,6 @@ public class LLVM implements LLVMConstants {
 
   public static void TargetOptionsSetPrintMachineCode(TargetOptionsRef O, boolean V) {
     LLVMJNI.TargetOptionsSetPrintMachineCode(TargetOptionsRef.getCPtr(O), O, V);
-  }
-
-  public static boolean TargetOptionsGetNoFramePointerElim(TargetOptionsRef O) {
-    return LLVMJNI.TargetOptionsGetNoFramePointerElim(TargetOptionsRef.getCPtr(O), O);
-  }
-
-  public static void TargetOptionsSetNoFramePointerElim(TargetOptionsRef O, boolean V) {
-    LLVMJNI.TargetOptionsSetNoFramePointerElim(TargetOptionsRef.getCPtr(O), O, V);
-  }
-
-  public static boolean TargetOptionsGetLessPreciseFPMADOption(TargetOptionsRef O) {
-    return LLVMJNI.TargetOptionsGetLessPreciseFPMADOption(TargetOptionsRef.getCPtr(O), O);
-  }
-
-  public static void TargetOptionsSetLessPreciseFPMADOption(TargetOptionsRef O, boolean V) {
-    LLVMJNI.TargetOptionsSetLessPreciseFPMADOption(TargetOptionsRef.getCPtr(O), O, V);
   }
 
   public static boolean TargetOptionsGetUnsafeFPMath(TargetOptionsRef O) {
@@ -3709,14 +3685,6 @@ public class LLVM implements LLVMConstants {
     LLVMJNI.TargetOptionsSetHonorSignDependentRoundingFPMathOption(TargetOptionsRef.getCPtr(O), O, V);
   }
 
-  public static boolean TargetOptionsGetUseSoftFloat(TargetOptionsRef O) {
-    return LLVMJNI.TargetOptionsGetUseSoftFloat(TargetOptionsRef.getCPtr(O), O);
-  }
-
-  public static void TargetOptionsSetUseSoftFloat(TargetOptionsRef O, boolean V) {
-    LLVMJNI.TargetOptionsSetUseSoftFloat(TargetOptionsRef.getCPtr(O), O, V);
-  }
-
   public static boolean TargetOptionsGetNoZerosInBSS(TargetOptionsRef O) {
     return LLVMJNI.TargetOptionsGetNoZerosInBSS(TargetOptionsRef.getCPtr(O), O);
   }
@@ -3725,44 +3693,12 @@ public class LLVM implements LLVMConstants {
     LLVMJNI.TargetOptionsSetNoZerosInBSS(TargetOptionsRef.getCPtr(O), O, V);
   }
 
-  public static boolean TargetOptionsGetJITEmitDebugInfo(TargetOptionsRef O) {
-    return LLVMJNI.TargetOptionsGetJITEmitDebugInfo(TargetOptionsRef.getCPtr(O), O);
-  }
-
-  public static void TargetOptionsSetJITEmitDebugInfo(TargetOptionsRef O, boolean V) {
-    LLVMJNI.TargetOptionsSetJITEmitDebugInfo(TargetOptionsRef.getCPtr(O), O, V);
-  }
-
-  public static boolean TargetOptionsGetJITEmitDebugInfoToDisk(TargetOptionsRef O) {
-    return LLVMJNI.TargetOptionsGetJITEmitDebugInfoToDisk(TargetOptionsRef.getCPtr(O), O);
-  }
-
-  public static void TargetOptionsSetJITEmitDebugInfoToDisk(TargetOptionsRef O, boolean V) {
-    LLVMJNI.TargetOptionsSetJITEmitDebugInfoToDisk(TargetOptionsRef.getCPtr(O), O, V);
-  }
-
   public static boolean TargetOptionsGetGuaranteedTailCallOpt(TargetOptionsRef O) {
     return LLVMJNI.TargetOptionsGetGuaranteedTailCallOpt(TargetOptionsRef.getCPtr(O), O);
   }
 
   public static void TargetOptionsSetGuaranteedTailCallOpt(TargetOptionsRef O, boolean V) {
     LLVMJNI.TargetOptionsSetGuaranteedTailCallOpt(TargetOptionsRef.getCPtr(O), O, V);
-  }
-
-  public static boolean TargetOptionsGetDisableTailCalls(TargetOptionsRef O) {
-    return LLVMJNI.TargetOptionsGetDisableTailCalls(TargetOptionsRef.getCPtr(O), O);
-  }
-
-  public static void TargetOptionsSetDisableTailCalls(TargetOptionsRef O, boolean V) {
-    LLVMJNI.TargetOptionsSetDisableTailCalls(TargetOptionsRef.getCPtr(O), O, V);
-  }
-
-  public static int TargetOptionsGetStackAlignmentOverride(TargetOptionsRef O) {
-    return LLVMJNI.TargetOptionsGetStackAlignmentOverride(TargetOptionsRef.getCPtr(O), O);
-  }
-
-  public static void TargetOptionsSetStackAlignmentOverride(TargetOptionsRef O, int V) {
-    LLVMJNI.TargetOptionsSetStackAlignmentOverride(TargetOptionsRef.getCPtr(O), O, V);
   }
 
   public static boolean TargetOptionsGetEnableFastISel(TargetOptionsRef O) {
@@ -3805,12 +3741,12 @@ public class LLVM implements LLVMConstants {
     LLVMJNI.TargetOptionsSetAllowFPOpFusion(TargetOptionsRef.getCPtr(O), O, V.swigValue());
   }
 
-  public static int TargetMachineAssembleToOutputStream(TargetMachineRef TM, MemoryBufferRef Mem, java.io.OutputStream OutputStream, boolean RelaxAll, boolean NoExecStack, StringOut ErrorMessage) {
-    return LLVMJNI.TargetMachineAssembleToOutputStream(TargetMachineRef.getCPtr(TM), TM, MemoryBufferRef.getCPtr(Mem), Mem, OutputStream, RelaxAll, NoExecStack, StringOut.getCPtr(ErrorMessage), ErrorMessage);
+  public static byte[] TargetMachineAssemble(TargetMachineRef TM, MemoryBufferRef Mem, boolean RelaxAll, boolean NoExecStack, StringOut ErrorMessage) {
+    return LLVMJNI.TargetMachineAssemble(TargetMachineRef.getCPtr(TM), TM, MemoryBufferRef.getCPtr(Mem), Mem, RelaxAll, NoExecStack, StringOut.getCPtr(ErrorMessage), ErrorMessage);
   }
 
-  public static boolean TargetMachineEmitToOutputStream(TargetMachineRef T, ModuleRef M, java.io.OutputStream OutputStream, CodeGenFileType codegen, StringOut ErrorMessage) {
-    return LLVMJNI.TargetMachineEmitToOutputStream(TargetMachineRef.getCPtr(T), T, ModuleRef.getCPtr(M), M, OutputStream, codegen.swigValue(), StringOut.getCPtr(ErrorMessage), ErrorMessage);
+  public static byte[] TargetMachineEmit(TargetMachineRef T, ModuleRef M, CodeGenFileType codegen, StringOut ErrorMessage) {
+    return LLVMJNI.TargetMachineEmit(TargetMachineRef.getCPtr(T), T, ModuleRef.getCPtr(M), M, codegen.swigValue(), StringOut.getCPtr(ErrorMessage), ErrorMessage);
   }
 
   public static void GetLineInfoForAddressRange(ObjectFileRef O, long Address, long Size, IntOut OutSize, LongArrayOut Out) {
@@ -3821,8 +3757,8 @@ public class LLVM implements LLVMConstants {
     return LLVMJNI.CopySectionContents(SectionIteratorRef.getCPtr(SI), SI, Dest);
   }
 
-  public static void DumpDwarfDebugData(ObjectFileRef o, java.io.OutputStream OutputStream) {
-    LLVMJNI.DumpDwarfDebugData(ObjectFileRef.getCPtr(o), o, OutputStream);
+  public static byte[] DumpDwarfDebugData(ObjectFileRef O) {
+    return LLVMJNI.DumpDwarfDebugData(ObjectFileRef.getCPtr(O), O);
   }
 
   public static ModuleRef ClangCompileFile(ContextRef Context, String Data, String FileName, String Triple, StringOut ErrorMessage) {

@@ -163,23 +163,8 @@ REF_PTR(void*, IntOut)
 %typemap(javadirectorin) enum LLVMAttribute "$jniinput"
 %typemap(javadirectorout) enum LLVMAttribute "$javacall"
 
-// Wrap output stream using own wrapper implementation
-%typemap(jtype) void *OutputStream "java.io.OutputStream"
-%typemap(jstype) void *OutputStream "java.io.OutputStream"
-%typemap(jni) void *OutputStream "jobject"
-%typemap(javain) void *OutputStream "$javainput"
-%typemap(in) void *OutputStream {
-  if (!$input) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, NULL);
-    return $null;
-  }
-  $1 = ($1_ltype) AllocOutputStreamWrapper(jenv, $input);
-  if (!$1) return $null;
-}
-%typemap(freearg) void *OutputStream {
-  FreeOutputStreamWrapper($1);
-}
-
+// remove jenv from parameter from java size, and use it in wrapper as it is available there
+%typemap(in, numinputs=0) JNIEnv *jenv %{$1 = jenv;%}
 
 //
 // Ignores
@@ -199,10 +184,6 @@ REF_PTR(void*, IntOut)
 // called on the same platform as the llvm/Config/llvm-config.h file was
 // generated for.
 %ignore LLVMInitializeNativeTarget;
-
-// ignore own helper methods
-%ignore AllocOutputStreamWrapper;
-%ignore FreeOutputStreamWrapper;
 
 %ignore LLVMInstallFatalErrorHandler;
 %ignore LLVMResetFatalErrorHandler;

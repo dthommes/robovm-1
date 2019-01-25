@@ -71,17 +71,17 @@ void LLVMTargetOptionsSetFloatABIType(LLVMTargetOptionsRef O, LLVMFloatABIType V
 LLVMFPOpFusionMode LLVMTargetOptionsGetAllowFPOpFusion(LLVMTargetOptionsRef O);
 void LLVMTargetOptionsSetAllowFPOpFusion(LLVMTargetOptionsRef O, LLVMFPOpFusionMode V);
 
-    int LLVMTargetMachineAssembleToOutputStream(LLVMTargetMachineRef TM, LLVMMemoryBufferRef Mem, llvm::raw_pwrite_stream &Out,
+jbyteArray LLVMTargetMachineAssemble(JNIEnv *jenv, LLVMTargetMachineRef TM, LLVMMemoryBufferRef Mem,
     LLVMBool RelaxAll, LLVMBool NoExecStack, char **ErrorMessage);
-LLVMBool LLVMTargetMachineEmitToOutputStream(LLVMTargetMachineRef T, LLVMModuleRef M,
-    llvm::raw_pwrite_stream &Out, LLVMCodeGenFileType codegen, char** ErrorMessage);
+jbyteArray LLVMTargetMachineEmit(JNIEnv *jenv, LLVMTargetMachineRef T, LLVMModuleRef M,
+    LLVMCodeGenFileType codegen, char** ErrorMessage);
 
 void LLVMGetLineInfoForAddressRange(LLVMObjectFileRef O, uint64_t Address, uint64_t Size, int* OutSize, uint64_t** Out);
 size_t LLVMCopySectionContents(LLVMSectionIteratorRef SI, char* Dest, size_t DestSize);
 
 
 // dumps DWARF debug information into output stream
-void LLVMDumpDwarfDebugDataToOutputStream(LLVMObjectFileRef O, llvm::raw_pwrite_stream& os);
+jbyteArray LLVMDumpDwarfDebugData(JNIEnv *jenv, LLVMObjectFileRef O);
 
 #ifdef __cplusplus
 }

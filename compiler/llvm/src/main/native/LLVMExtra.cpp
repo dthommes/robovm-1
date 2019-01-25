@@ -171,7 +171,21 @@ static void assembleDiagHandler(const SMDiagnostic &Diag, void *Context) {
     Diag.print(0, *OS, false);
 }
 
-int LLVMTargetMachineAssembleToOutputStream(LLVMTargetMachineRef TM, LLVMMemoryBufferRef Mem, raw_pwrite_stream &Out, LLVMBool RelaxAll, LLVMBool NoExecStack, char **ErrorMessage) {
+// helper to create byte[] from SmallVector
+static jbyteArray vectorToByteArray(JNIEnv *jenv, SmallVector<char, 0> &OutVector) {
+    jbyteArray data = jenv->NewByteArray((jsize) OutVector.size());
+    if (jenv->ExceptionCheck())
+        return NULL;
+    
+    jenv->SetByteArrayRegion(data, 0, (jsize) OutVector.size(), (const jbyte *) OutVector.data());
+    if (jenv->ExceptionCheck())
+        return NULL;
+    
+    return data;
+}
+
+
+static LLVMBool LLVMTargetMachineAssembleToOutputStream(LLVMTargetMachineRef TM, LLVMMemoryBufferRef Mem, raw_pwrite_stream &Out, LLVMBool RelaxAll, LLVMBool NoExecStack, char **ErrorMessage) {
     *ErrorMessage = NULL;
     
 #if !defined(WIN32) && !defined(_WIN32)
@@ -241,7 +255,22 @@ done:
     uselocale(oldLoc);
     freelocale(loc);
 #endif
-    return *ErrorMessage ? 1 : 0;
+    return *ErrorMessage ? true : false;
+}
+
+// wrapper that returns byte array
+jbyteArray LLVMTargetMachineAssemble(JNIEnv *jenv, LLVMTargetMachineRef TM, LLVMMemoryBufferRef Mem,
+                                     LLVMBool RelaxAll, LLVMBool NoExecStack, char **ErrorMessage) {
+    SmallVector<char, 0> OutVector;
+    std::unique_ptr<raw_svector_ostream> BOS = make_unique<raw_svector_ostream>(OutVector);
+    raw_pwrite_stream *Out = BOS.get();
+    
+    if (false == LLVMTargetMachineAssembleToOutputStream(TM, Mem, *Out, RelaxAll, NoExecStack, ErrorMessage)) {
+        return vectorToByteArray(jenv, OutVector);
+    }
+    
+    // failed
+    return NULL;
 }
 
 static LLVMBool LLVMTargetMachineEmit(LLVMTargetMachineRef T, LLVMModuleRef M,
@@ -273,7 +302,7 @@ static LLVMBool LLVMTargetMachineEmit(LLVMTargetMachineRef T, LLVMModuleRef M,
     return false;
 }
 
-LLVMBool LLVMTargetMachineEmitToOutputStream(LLVMTargetMachineRef T, LLVMModuleRef M,
+static LLVMBool LLVMTargetMachineEmitToOutputStream(LLVMTargetMachineRef T, LLVMModuleRef M,
                                              raw_pwrite_stream &Out, LLVMCodeGenFileType codegen, char** ErrorMessage) {
     
 #if !defined(WIN32) && !defined(_WIN32)
@@ -289,6 +318,21 @@ LLVMBool LLVMTargetMachineEmitToOutputStream(LLVMTargetMachineRef T, LLVMModuleR
 #endif
     
     return Result;
+}
+
+// wrapper that returns byte array
+jbyteArray LLVMTargetMachineEmit(JNIEnv *jenv, LLVMTargetMachineRef T, LLVMModuleRef M,
+                                 LLVMCodeGenFileType codegen, char** ErrorMessage) {
+    SmallVector<char, 0> OutVector;
+    std::unique_ptr<raw_svector_ostream> BOS = make_unique<raw_svector_ostream>(OutVector);
+    raw_pwrite_stream *Out = BOS.get();
+    
+    if (false == LLVMTargetMachineEmitToOutputStream(T, M, *Out, codegen, ErrorMessage)) {
+        return vectorToByteArray(jenv, OutVector);
+    }
+    
+    // failed
+    return NULL;
 }
 
 void LLVMGetLineInfoForAddressRange(LLVMObjectFileRef O, uint64_t Address, uint64_t Size, size_t* OutSize, uint64_t** Out) {
@@ -364,7 +408,7 @@ static void LLVMInternalDumpDwarfSubroutineDebugData(DWARFCompileUnit *cu,  DWAR
         LLVMInternalDumpDwarfSubroutineDebugData(cu, entry, os);
 }
 
-void LLVMDumpDwarfDebugDataToOutputStream(LLVMObjectFileRef O, raw_pwrite_stream& os) {
+static void LLVMDumpDwarfDebugDataToOutputStream(LLVMObjectFileRef O, raw_pwrite_stream& os) {
     std::unique_ptr<DWARFContext> ctx = DWARFContext::create(*(unwrap(O)->getBinary()));
     int cuNum = ctx->getNumCompileUnits();
     
@@ -406,4 +450,14 @@ void LLVMDumpDwarfDebugDataToOutputStream(LLVMObjectFileRef O, raw_pwrite_stream
     }
     
     os.flush();
+}
+
+// wrapper that returns byte array
+jbyteArray LLVMDumpDwarfDebugData(JNIEnv *jenv, LLVMObjectFileRef O) {
+    SmallVector<char, 0> OutVector;
+    std::unique_ptr<raw_svector_ostream> BOS = make_unique<raw_svector_ostream>(OutVector);
+    raw_pwrite_stream *Out = BOS.get();
+    
+    LLVMDumpDwarfDebugDataToOutputStream(O, *Out);
+    return vectorToByteArray(jenv, OutVector);
 }
