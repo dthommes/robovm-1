@@ -22,6 +22,12 @@ package org.robovm.compiler.llvm;
  */
 public enum FunctionAttribute {
 
-    noinline, optsize, alwaysinline, nounwind;
-    
-}
+    noinline, optsize, alwaysinline, nounwind, nofpelim;
+
+    @Override
+    public String toString() {
+        if (this == nofpelim)
+            return "no-frame-pointer-elim=true";
+        else
+            return name();
+    }}

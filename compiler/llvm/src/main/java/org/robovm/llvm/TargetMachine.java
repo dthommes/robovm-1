@@ -105,14 +105,16 @@ public class TargetMachine implements AutoCloseable {
         LLVM.TargetMachineSetFunctionSections(ref, value);
     }
     
-    public void emit(Module module, OutputStream out, CodeGenFileType fileType) {
+    public byte[] emit(Module module, CodeGenFileType fileType) {
         checkDisposed();
         module.checkDisposed();
         StringOut ErrorMessage = new StringOut();
-        if (LLVM.TargetMachineEmitToOutputStream(ref, module.getRef(), out, fileType, ErrorMessage)) {
-            // Returns true on failure!
+        byte[] res = LLVM.TargetMachineEmit(ref, module.getRef(), fileType, ErrorMessage);
+        if (res == null) {
             throw new LlvmException(ErrorMessage.getValue().trim());
         }
+
+        return res;
     }
 
     public void emit(Module module, File outFile, CodeGenFileType fileType) {
@@ -125,21 +127,23 @@ public class TargetMachine implements AutoCloseable {
         }
     }
 
-    public void assemble(byte[] asm, String filename, OutputStream out) {
+    public byte[] assemble(byte[] asm, String filename) {
         MemoryBufferRef memoryBufferRef = LLVM.CreateMemoryBufferWithMemoryRangeCopy(asm, filename);
         if (memoryBufferRef == null) {
             throw new LlvmException("Failed to create memory buffer");
         }
-        filename = filename == null ? "" : filename;
         StringOut errorMessage = new StringOut();
         // LLVMTargetMachineAssembleToOutputStream() takes ownership of the MemoryBuffer so there's no need for us
         // to dispose of it
-        if (LLVM.TargetMachineAssembleToOutputStream(ref, memoryBufferRef, out, false, false, errorMessage) != 0) {
+        byte[] res = LLVM.TargetMachineAssemble(ref, memoryBufferRef, false, false, errorMessage);
+        if (res == null) {
             String error = errorMessage.getValue() != null 
                     ? errorMessage.getValue().trim() 
                     : "Unknown error";
             throw new LlvmException(error);
         }
+
+        return res;
     }
     
     @Override

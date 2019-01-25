@@ -102,12 +102,11 @@ public class ObjectFile implements AutoCloseable {
      * @return debug information received from object file or null otherwise
      */
     public DebugObjectFileInfo getDebugInfo() {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        LLVM.DumpDwarfDebugData(getRef(), os);
-        if (os.size() == 0)
+        byte[] bytes = LLVM.DumpDwarfDebugData(getRef());
+        if (bytes.length == 0)
             return null;
 
-        ByteBuffer buffer = ByteBuffer.wrap(os.toByteArray(), 0, os.size());
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
         // read data

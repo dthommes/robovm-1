@@ -46,10 +46,11 @@ import soot.SootMethod;
  * to the function's attributes.
  */
 public class FunctionBuilder {
+    private static final FunctionAttribute[] DEFAULT_FUNCTION_ATTRIBUTES = {nofpelim};
     private FunctionType type;
     private String name;
     private Linkage linkage = null;
-    private List<FunctionAttribute> attributes = new ArrayList<FunctionAttribute>();
+    private List<FunctionAttribute> attributes = new ArrayList<>(Arrays.asList(DEFAULT_FUNCTION_ATTRIBUTES));
     private String section = null;
     private List<String> parameterNames = new ArrayList<String>();
     

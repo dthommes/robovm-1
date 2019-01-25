@@ -14891,6 +14891,34 @@ SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_LookupTarget(JNIEn
 }
 
 
+SWIGEXPORT jboolean JNICALL Java_org_robovm_llvm_binding_LLVMJNI_TargetMachineGetAsmVerbosityDefault(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
+  LLVMTargetMachineRef arg1 = (LLVMTargetMachineRef) 0 ;
+  LLVMBool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(LLVMTargetMachineRef *)&jarg1; 
+  result = LLVMTargetMachineGetAsmVerbosityDefault(arg1);
+  jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_TargetMachineSetAsmVerbosityDefault(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2) {
+  LLVMTargetMachineRef arg1 = (LLVMTargetMachineRef) 0 ;
+  LLVMBool arg2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(LLVMTargetMachineRef *)&jarg1; 
+  arg2 = jarg2; 
+  LLVMTargetMachineSetAsmVerbosityDefault(arg1,arg2);
+}
+
+
 SWIGEXPORT jboolean JNICALL Java_org_robovm_llvm_binding_LLVMJNI_TargetMachineGetDataSections(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jboolean jresult = 0 ;
   LLVMTargetMachineRef arg1 = (LLVMTargetMachineRef) 0 ;
@@ -15295,6 +15323,27 @@ SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_TargetOptionsSetAll
   arg1 = *(LLVMTargetOptionsRef *)&jarg1; 
   arg2 = (LLVMFPOpFusionMode)jarg2; 
   LLVMTargetOptionsSetAllowFPOpFusion(arg1,arg2);
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_org_robovm_llvm_binding_LLVMJNI_LinkModules(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jobject jarg2_, jlong jarg3, jobject jarg3_) {
+  jboolean jresult = 0 ;
+  LLVMModuleRef arg1 = (LLVMModuleRef) 0 ;
+  LLVMModuleRef arg2 = (LLVMModuleRef) 0 ;
+  char **arg3 = (char **) 0 ;
+  LLVMBool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  (void)jarg2_;
+  (void)jarg3_;
+  arg1 = *(LLVMModuleRef *)&jarg1; 
+  arg2 = *(LLVMModuleRef *)&jarg2; 
+  arg3 = *(char ***)&jarg3; 
+  result = LLVMLinkModules(arg1,arg2,arg3);
+  jresult = result; 
+  return jresult;
 }
 
 

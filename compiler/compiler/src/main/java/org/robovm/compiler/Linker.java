@@ -516,17 +516,19 @@ public class Linker {
                     targetMachine.setAsmVerbosityDefault(true);
                     targetMachine.setFunctionSections(true);
                     targetMachine.setDataSections(true);
-                    targetMachine.getOptions().setNoFramePointerElim(true);
+                    // targetMachine.getOptions().setNoFramePointerElim(true); dkimitsa: in LLVM 7 is is set at each function level
                     // NOTE: Doesn't have any effect on x86. See #503.
                     targetMachine.getOptions().setPositionIndependentExecutable(true);
                     if (config.isDumpIntermediates()) {
                         File linkerS = new File(config.getTmpDir(), "linker" + num + ".s");
-                        try (OutputStream outS = new BufferedOutputStream(new FileOutputStream(linkerS))) {
-                            targetMachine.emit(module, outS, CodeGenFileType.AssemblyFile);
+                        try (FileOutputStream outS = new FileOutputStream(linkerS)) {
+                            byte[] bytes = targetMachine.emit(module, CodeGenFileType.AssemblyFile);
+                            outS.write(bytes);
                         }
                     }
-                    try (OutputStream outO = new BufferedOutputStream(new FileOutputStream(linkerO))) {
-                        targetMachine.emit(module, outO, CodeGenFileType.ObjectFile);
+                    try (FileOutputStream outO = new FileOutputStream(linkerO)) {
+                        byte[] bytes = targetMachine.emit(module, CodeGenFileType.ObjectFile);
+                        outO.write(bytes);
                     }
                 }
             }

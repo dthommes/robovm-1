@@ -866,6 +866,8 @@ public class LLVMJNI {
   public final static native boolean ParseIR(long jarg1, MemoryBufferRef jarg1_, long jarg2, ModuleRefOut jarg2_, long jarg3, StringOut jarg3_);
   public final static native boolean ParseIRInContext(long jarg1, ContextRef jarg1_, long jarg2, MemoryBufferRef jarg2_, long jarg3, ModuleRefOut jarg3_, long jarg4, StringOut jarg4_);
   public final static native long LookupTarget(String jarg1, long jarg2, StringOut jarg2_);
+  public final static native boolean TargetMachineGetAsmVerbosityDefault(long jarg1, TargetMachineRef jarg1_);
+  public final static native void TargetMachineSetAsmVerbosityDefault(long jarg1, TargetMachineRef jarg1_, boolean jarg2);
   public final static native boolean TargetMachineGetDataSections(long jarg1, TargetMachineRef jarg1_);
   public final static native boolean TargetMachineGetFunctionSections(long jarg1, TargetMachineRef jarg1_);
   public final static native void TargetMachineSetDataSections(long jarg1, TargetMachineRef jarg1_, boolean jarg2);
@@ -895,6 +897,7 @@ public class LLVMJNI {
   public final static native void TargetOptionsSetFloatABIType(long jarg1, TargetOptionsRef jarg1_, int jarg2);
   public final static native int TargetOptionsGetAllowFPOpFusion(long jarg1, TargetOptionsRef jarg1_);
   public final static native void TargetOptionsSetAllowFPOpFusion(long jarg1, TargetOptionsRef jarg1_, int jarg2);
+  public final static native boolean LinkModules(long jarg1, ModuleRef jarg1_, long jarg2, ModuleRef jarg2_, long jarg3, StringOut jarg3_);
   public final static native byte[] TargetMachineAssemble(long jarg2, TargetMachineRef jarg2_, long jarg3, MemoryBufferRef jarg3_, boolean jarg4, boolean jarg5, long jarg6, StringOut jarg6_);
   public final static native byte[] TargetMachineEmit(long jarg2, TargetMachineRef jarg2_, long jarg3, ModuleRef jarg3_, int jarg4, long jarg5, StringOut jarg5_);
   public final static native void GetLineInfoForAddressRange(long jarg1, ObjectFileRef jarg1_, long jarg2, long jarg3, long jarg4, IntOut jarg4_, long jarg5, LongArrayOut jarg5_);

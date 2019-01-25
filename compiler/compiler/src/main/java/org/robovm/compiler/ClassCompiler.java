@@ -401,14 +401,12 @@ public class ClassCompiler {
                     targetMachine.setAsmVerbosityDefault(true);
                     targetMachine.setFunctionSections(true);
                     targetMachine.setDataSections(true);
-                    targetMachine.getOptions().setNoFramePointerElim(true);
+                    // targetMachine.getOptions().setNoFramePointerElim(true); dkimitsa: at LLVM7.0 it has to be done per function
                     targetMachine.getOptions().setPositionIndependentExecutable(!config.isDebug()); // NOTE: Doesn't have any effect on x86. See #503.
 
-                    ByteArrayOutputStream output = new ByteArrayOutputStream(256 * 1024);
-                    targetMachine.emit(module, output, CodeGenFileType.AssemblyFile);
+                    byte[] asm = targetMachine.emit(module, CodeGenFileType.AssemblyFile);
 
-                    byte[] asm = output.toByteArray();
-                    output.reset();
+                    ByteArrayOutputStream output = new ByteArrayOutputStream(256 * 1024);
                     patchAsmWithFunctionSizes(config, clazz, new ByteArrayInputStream(asm), output);
                     asm = output.toByteArray();
 
@@ -419,9 +417,8 @@ public class ClassCompiler {
                     }
 
                     oFile.getParentFile().mkdirs();
-                    ByteArrayOutputStream oFileBytes = new ByteArrayOutputStream();
-                    targetMachine.assemble(asm, clazz.getClassName(), oFileBytes);                                                                                               
-                    new HfsCompressor().compress(oFile, oFileBytes.toByteArray(), config);
+                    byte[] fileBytes = targetMachine.assemble(asm, clazz.getClassName());
+                    new HfsCompressor().compress(oFile, fileBytes, config);
 
                     ModuleBuilder linesMb;
                     ModuleBuilder debugInfoMb = null;
@@ -497,9 +494,8 @@ public class ClassCompiler {
             FileUtils.writeByteArrayToFile(llFile, data);
         }
         try (Module module = Module.parseIR(context, data, dataName)) {
-            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            targetMachine.emit(module, bytes, CodeGenFileType.ObjectFile);
-            new HfsCompressor().compress(oFile, bytes.toByteArray(), config);
+            byte[] bytes = targetMachine.emit(module, CodeGenFileType.ObjectFile);
+            new HfsCompressor().compress(oFile, bytes, config);
         }
 
     }

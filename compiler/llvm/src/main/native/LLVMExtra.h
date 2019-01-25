@@ -39,6 +39,8 @@ LLVMBool LLVMParseIRInContext(LLVMContextRef ContextRef,
 
 LLVMTargetRef LLVMLookupTarget(const char *Triple, char **ErrorMessage);
 
+LLVMBool LLVMTargetMachineGetAsmVerbosityDefault(LLVMTargetMachineRef T);
+void LLVMTargetMachineSetAsmVerbosityDefault(LLVMTargetMachineRef T, LLVMBool VerboseAsm);
 LLVMBool LLVMTargetMachineGetDataSections(LLVMTargetMachineRef T);
 LLVMBool LLVMTargetMachineGetFunctionSections(LLVMTargetMachineRef T);
 void LLVMTargetMachineSetDataSections(LLVMTargetMachineRef T, LLVMBool Value);
@@ -70,6 +72,7 @@ LLVMFloatABIType LLVMTargetOptionsGetFloatABIType(LLVMTargetOptionsRef O);
 void LLVMTargetOptionsSetFloatABIType(LLVMTargetOptionsRef O, LLVMFloatABIType V);
 LLVMFPOpFusionMode LLVMTargetOptionsGetAllowFPOpFusion(LLVMTargetOptionsRef O);
 void LLVMTargetOptionsSetAllowFPOpFusion(LLVMTargetOptionsRef O, LLVMFPOpFusionMode V);
+LLVMBool LLVMLinkModules(LLVMModuleRef Dest, LLVMModuleRef Src, char **OutMessage);
 
 jbyteArray LLVMTargetMachineAssemble(JNIEnv *jenv, LLVMTargetMachineRef TM, LLVMMemoryBufferRef Mem,
     LLVMBool RelaxAll, LLVMBool NoExecStack, char **ErrorMessage);

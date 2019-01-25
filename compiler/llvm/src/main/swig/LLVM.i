@@ -187,11 +187,10 @@ REF_PTR(void*, IntOut)
 
 %ignore LLVMInstallFatalErrorHandler;
 %ignore LLVMResetFatalErrorHandler;
+%ignore LLVMContextGetDiagnosticHandler;
 %ignore LLVMContextSetDiagnosticHandler;
 %ignore LLVMContextSetYieldCallback;
 
-//
-%ignore LLVMContextGetDiagnosticHandler;
 
 // ignore command line and UIs
 %ignore LLVMParseCommandLineOptions;

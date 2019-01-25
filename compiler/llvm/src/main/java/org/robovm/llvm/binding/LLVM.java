@@ -3624,6 +3624,14 @@ public class LLVM implements LLVMConstants {
     return (cPtr == 0) ? null : new TargetRef(cPtr, false);
   }
 
+  public static boolean TargetMachineGetAsmVerbosityDefault(TargetMachineRef T) {
+    return LLVMJNI.TargetMachineGetAsmVerbosityDefault(TargetMachineRef.getCPtr(T), T);
+  }
+
+  public static void TargetMachineSetAsmVerbosityDefault(TargetMachineRef T, boolean VerboseAsm) {
+    LLVMJNI.TargetMachineSetAsmVerbosityDefault(TargetMachineRef.getCPtr(T), T, VerboseAsm);
+  }
+
   public static boolean TargetMachineGetDataSections(TargetMachineRef T) {
     return LLVMJNI.TargetMachineGetDataSections(TargetMachineRef.getCPtr(T), T);
   }
@@ -3739,6 +3747,10 @@ public class LLVM implements LLVMConstants {
 
   public static void TargetOptionsSetAllowFPOpFusion(TargetOptionsRef O, FPOpFusionMode V) {
     LLVMJNI.TargetOptionsSetAllowFPOpFusion(TargetOptionsRef.getCPtr(O), O, V.swigValue());
+  }
+
+  public static boolean LinkModules(ModuleRef Dest, ModuleRef Src, StringOut OutMessage) {
+    return LLVMJNI.LinkModules(ModuleRef.getCPtr(Dest), Dest, ModuleRef.getCPtr(Src), Src, StringOut.getCPtr(OutMessage), OutMessage);
   }
 
   public static byte[] TargetMachineAssemble(TargetMachineRef TM, MemoryBufferRef Mem, boolean RelaxAll, boolean NoExecStack, StringOut ErrorMessage) {

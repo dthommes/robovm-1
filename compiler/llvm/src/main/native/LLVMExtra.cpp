@@ -2,6 +2,7 @@
 #include <llvm-c/Object.h>
 #include <llvm-c/TargetMachine.h>
 #include <llvm-c/IRReader.h>
+#include <llvm-c/Linker.h>
 #include <llvm/DebugInfo/DWARF/DWARFContext.h>
 #include <llvm/DebugInfo/DWARF/DWARFFormValue.h>
 #include <llvm/IRReader/IRReader.h>
@@ -102,6 +103,14 @@ LLVMTargetRef LLVMLookupTarget(const char *Triple, char **ErrorMessage) {
         return NULL;
     }
     return wrap(TheTarget);
+}
+
+LLVMBool LLVMTargetMachineGetAsmVerbosityDefault(LLVMTargetMachineRef T) {
+    return unwrap(T)->Options.MCOptions.AsmVerbose;
+}
+
+void LLVMTargetMachineSetAsmVerbosityDefault(LLVMTargetMachineRef T, LLVMBool VerboseAsm) {
+    unwrap(T)->Options.MCOptions.AsmVerbose = VerboseAsm;
 }
 
 LLVMBool LLVMTargetMachineGetDataSections(LLVMTargetMachineRef T) {
@@ -460,4 +469,32 @@ jbyteArray LLVMDumpDwarfDebugData(JNIEnv *jenv, LLVMObjectFileRef O) {
     
     LLVMDumpDwarfDebugDataToOutputStream(O, *Out);
     return vectorToByteArray(jenv, OutVector);
+}
+
+
+static void linkModulesDiagnosticHandler(LLVMDiagnosticInfoRef DI, void *C) {
+    auto *Err = reinterpret_cast<std::string *>(C);
+    char *CErr = LLVMGetDiagInfoDescription(DI);
+    *Err = CErr;
+    LLVMDisposeMessage(CErr);
+}
+
+
+// Emulates old LLVMLinkModules by using LLVMLinkModules2 + DiagnosticHandler to receive error message
+LLVMBool LLVMLinkModules(LLVMModuleRef Dest, LLVMModuleRef Src, char **OutMessage) {
+    // Symbol clash between two modules
+    Module *m = unwrap(Dest);
+    LLVMContext &Ctx = m->getContext();
+    std::string Error;
+    auto oldHandler = LLVMContextGetDiagnosticHandler(wrap(&Ctx));
+    void* oldHandlerCtx = LLVMContextGetDiagnosticContext(wrap(&Ctx));
+    LLVMContextSetDiagnosticHandler(wrap(&Ctx), linkModulesDiagnosticHandler, &Error);
+    
+    LLVMBool Result = LLVMLinkModules2(Dest, Src);
+    *OutMessage = strdup(Error.c_str());
+    
+    // restore old handler
+    LLVMContextSetDiagnosticHandler(wrap(&Ctx), oldHandler, oldHandlerCtx);
+
+    return Result;
 }

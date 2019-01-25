@@ -16,12 +16,10 @@
  */
 package org.robovm.llvm;
 
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayOutputStream;
-
 import org.junit.Test;
 import org.robovm.llvm.binding.CodeGenFileType;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests {@link TargetMachine}.
@@ -33,9 +31,8 @@ public class TargetMachineTest {
         try (Context context = new Context()) {
             try (TargetMachine tm = Target.getTarget("thumb").createTargetMachine("thumbv7-unknown-ios")) {
                 Module module = Module.parseIR(context, "define external i32 @foo() {\n ret i32 5\n }\n", "foo.c");
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                tm.emit(module, out, CodeGenFileType.AssemblyFile);
-                String asm = new String(out.toByteArray(), "utf-8");
+                byte[] data = tm.emit(module, CodeGenFileType.AssemblyFile);
+                String asm = new String(data, "utf-8");
                 assertTrue(asm.contains("_foo"));
             }
         }
@@ -46,12 +43,10 @@ public class TargetMachineTest {
         try (Context context = new Context()) {
             try (TargetMachine tm = Target.getTarget("thumb").createTargetMachine("thumbv7-unknown-ios")) {
                 Module module = Module.parseIR(context, "define private i32 @foo() {\n ret i32 5\n }\n", "foo.c");
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                tm.emit(module, out, CodeGenFileType.AssemblyFile);
-                String asm = new String(out.toByteArray(), "utf-8");
-                out = new ByteArrayOutputStream();
-                tm.assemble(asm.getBytes(), "foo.s", out);
-                byte[] data = out.toByteArray();
+                byte[] data;
+                data = tm.emit(module, CodeGenFileType.AssemblyFile);
+                String asm = new String(data, "utf-8");
+                data = tm.assemble(asm.getBytes(), "foo.s");
                 assertTrue(data.length > 0);
             }
         }
