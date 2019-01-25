@@ -1,0 +1,17 @@
+Index: include/clang-c/Platform.h
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- include/clang-c/Platform.h	(revision 4519e2637fcc4bf6e3049a0a80e6a5e7b97667cb)
++++ include/clang-c/Platform.h	(date 1548427904000)
+@@ -26,7 +26,8 @@
+     #define CINDEX_LINKAGE __declspec(dllimport)
+   #endif
+ #else
+-  #define CINDEX_LINKAGE
++  // otherwise it will be not able to link due all functions are hidden by default
++  #define CINDEX_LINKAGE __attribute__ ((visibility ("default")))
+ #endif
+ 
+ #ifdef __GNUC__

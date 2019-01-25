@@ -48,6 +48,9 @@ if (WINDOWS)
   # here is the target environment located
   SET(CMAKE_FIND_ROOT_PATH /usr/${MINGW_VARIANT})
 
+  # set system name only in real cross-compilation otherwise LLVM will consider generic case as cross compile and will fail
+  SET(TENTATIVE_CMAKE_SYSTEM_NAME "-DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}")
+  SET(TENTATIVE_CMAKE_RC_COMPILER "-DCMAKE_RC_COMPILER=${CMAKE_RC_COMPILER}")
   SET(TENTATIVE_WIN32_FLAGS "-DWIN32=true" "-DCROSS_TOOLCHAIN_FLAGS_NATIVE=-DCMAKE_TOOLCHAIN_FILE=${CMAKE_SOURCE_DIR}/host_linux.cmake")
 
   # to override rdynamics
@@ -156,11 +159,11 @@ ExternalProject_Add(extllvm
   GIT_TAG RELEASE_70
   LIST_SEPARATOR ^^
   CONFIGURE_COMMAND cmake -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS}
-                          -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
+                          ${TENTATIVE_CMAKE_SYSTEM_NAME}
                           ${TENTATIVE_WIN32_FLAGS}
                           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                          -DCMAKE_RC_COMPILER=${CMAKE_RC_COMPILER}
+                          ${TENTATIVE_CMAKE_RC_COMPILER}
                           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                           -DBUILD_SHARED_LIBS=OFF
                           "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/llvm"
@@ -178,8 +181,7 @@ ExternalProject_Add(extllvm
                           -DLLVM_INCLUDE_DOCS=OFF
                           -DCLANG_BUILD_TOOLS=OFF
                           ../extllvm/
-  #do not patch for now as patches are not ready for 70
-  #PATCH_COMMAND bash -c "rm -rf tools/clang && cp -r ../../../extclang-prefix/src/extclang/ tools/clang/ && ${CMAKE_SOURCE_DIR}/patches/apply-patches"
+  PATCH_COMMAND bash -c "rm -rf tools/clang && cp -r ../../../extclang-prefix/src/extclang/ tools/clang/"
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_CXX_FLAGS}")
