@@ -64,8 +64,8 @@ LLVMBool LLVMTargetOptionsGetGuaranteedTailCallOpt(LLVMTargetOptionsRef O);
 void LLVMTargetOptionsSetGuaranteedTailCallOpt(LLVMTargetOptionsRef O, LLVMBool V);
 LLVMBool LLVMTargetOptionsGetEnableFastISel(LLVMTargetOptionsRef O);
 void LLVMTargetOptionsSetEnableFastISel(LLVMTargetOptionsRef O, LLVMBool V);
-LLVMBool LLVMTargetOptionsGetPositionIndependentExecutable(LLVMTargetOptionsRef O);
-void LLVMTargetOptionsSetPositionIndependentExecutable(LLVMTargetOptionsRef O, LLVMBool V);
+LLVMBool LLVMModuleGetPositionIndependentExecutable(LLVMModuleRef M);
+void LLVMModuleSetPositionIndependentExecutable(LLVMModuleRef M, LLVMBool V);
 LLVMBool LLVMTargetOptionsGetUseInitArray(LLVMTargetOptionsRef O);
 void LLVMTargetOptionsSetUseInitArray(LLVMTargetOptionsRef O, LLVMBool V);
 LLVMFloatABIType LLVMTargetOptionsGetFloatABIType(LLVMTargetOptionsRef O);
@@ -79,7 +79,7 @@ jbyteArray LLVMTargetMachineAssemble(JNIEnv *jenv, LLVMTargetMachineRef TM, LLVM
 jbyteArray LLVMTargetMachineEmit(JNIEnv *jenv, LLVMTargetMachineRef T, LLVMModuleRef M,
     LLVMCodeGenFileType codegen, char** ErrorMessage);
 
-void LLVMGetLineInfoForAddressRange(LLVMObjectFileRef O, uint64_t Address, uint64_t Size, int* OutSize, uint64_t** Out);
+void LLVMGetLineInfoForAddressRange(LLVMObjectFileRef O, uint64_t Address, uint64_t Size, size_t* OutSize, uint64_t** Out);
 size_t LLVMCopySectionContents(LLVMSectionIteratorRef SI, char* Dest, size_t DestSize);
 
 

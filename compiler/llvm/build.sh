@@ -5,7 +5,7 @@ BASE=$(cd $(dirname $0); pwd -P)
 SUPORTED_TARGETS=("macosx-x86_64" "linux-x86_64" "linux-x86" "windows-x86_64" "windows-x86")
 CLEAN=0
 POSTCLEAN=0
-WORKERS=1
+WORKERS=8
 SUFFIX=llvm
 CMAKE_INSTALL_DIR=
 
@@ -100,7 +100,7 @@ for T in ${TARGETS[@]}; do
     # there is no override in install location, so just
     rm -rf "$BASE/binaries/$OS/$ARCH"
   fi
-  bash -c "cd '$BASE/target.${SUFFIX}/build/$T'; cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOS=$OS -DARCH=$ARCH $CMAKE_PARAMS $CMAKE_INSTALL_DIR '$BASE'; $MAKE install/strip"
+  bash -c "cd '$BASE/target.${SUFFIX}/build/$T'; cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOS=$OS -DARCH=$ARCH $CMAKE_PARAMS $CMAKE_INSTALL_DIR '$BASE'; $MAKE -j $WORKERS install/strip"
   R=$?
   if [[ $R != 0 ]]; then
     echo "$T build failed"

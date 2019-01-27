@@ -392,6 +392,8 @@ public class ClassCompiler {
                     module.writeBitcode(bcFile);
                 }
 
+                module.setPositionIndependentExecutable(!config.isDebug()); // NOTE: Doesn't have any effect on x86. See #503.
+
                 String triple = config.getTriple();
                 Target target = Target.lookupTarget(triple);
                 try (TargetMachine targetMachine = target.createTargetMachine(triple,
@@ -402,7 +404,6 @@ public class ClassCompiler {
                     targetMachine.setFunctionSections(true);
                     targetMachine.setDataSections(true);
                     // targetMachine.getOptions().setNoFramePointerElim(true); dkimitsa: at LLVM7.0 it has to be done per function
-                    targetMachine.getOptions().setPositionIndependentExecutable(!config.isDebug()); // NOTE: Doesn't have any effect on x86. See #503.
 
                     byte[] asm = targetMachine.emit(module, CodeGenFileType.AssemblyFile);
 

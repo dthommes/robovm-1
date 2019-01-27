@@ -15214,31 +15214,31 @@ SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_TargetOptionsSetEna
 }
 
 
-SWIGEXPORT jboolean JNICALL Java_org_robovm_llvm_binding_LLVMJNI_TargetOptionsGetPositionIndependentExecutable(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT jboolean JNICALL Java_org_robovm_llvm_binding_LLVMJNI_ModuleGetPositionIndependentExecutable(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jboolean jresult = 0 ;
-  LLVMTargetOptionsRef arg1 = (LLVMTargetOptionsRef) 0 ;
+  LLVMModuleRef arg1 = (LLVMModuleRef) 0 ;
   LLVMBool result;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(LLVMTargetOptionsRef *)&jarg1; 
-  result = LLVMTargetOptionsGetPositionIndependentExecutable(arg1);
+  arg1 = *(LLVMModuleRef *)&jarg1; 
+  result = LLVMModuleGetPositionIndependentExecutable(arg1);
   jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_TargetOptionsSetPositionIndependentExecutable(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2) {
-  LLVMTargetOptionsRef arg1 = (LLVMTargetOptionsRef) 0 ;
+SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_ModuleSetPositionIndependentExecutable(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jboolean jarg2) {
+  LLVMModuleRef arg1 = (LLVMModuleRef) 0 ;
   LLVMBool arg2 ;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
-  arg1 = *(LLVMTargetOptionsRef *)&jarg1; 
+  arg1 = *(LLVMModuleRef *)&jarg1; 
   arg2 = jarg2; 
-  LLVMTargetOptionsSetPositionIndependentExecutable(arg1,arg2);
+  LLVMModuleSetPositionIndependentExecutable(arg1,arg2);
 }
 
 
@@ -15403,7 +15403,7 @@ SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetLineInfoForAddre
   LLVMObjectFileRef arg1 = (LLVMObjectFileRef) 0 ;
   uint64_t arg2 ;
   uint64_t arg3 ;
-  int *arg4 = (int *) 0 ;
+  size_t *arg4 = (size_t *) 0 ;
   uint64_t **arg5 = (uint64_t **) 0 ;
   
   (void)jenv;
@@ -15414,7 +15414,7 @@ SWIGEXPORT void JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetLineInfoForAddre
   arg1 = *(LLVMObjectFileRef *)&jarg1; 
   arg2 = jarg2; 
   arg3 = jarg3; 
-  arg4 = *(int **)&jarg4; 
+  arg4 = *(size_t **)&jarg4; 
   arg5 = *(uint64_t ***)&jarg5; 
   LLVMGetLineInfoForAddressRange(arg1,arg2,arg3,arg4,arg5);
 }

@@ -122,7 +122,7 @@ endif()
 
 ExternalProject_Add(extclang
   GIT_REPOSITORY ${CLANG_GIT_PATH}
-  GIT_TAG RELEASE_70
+  GIT_TAG release_70
   UPDATE_COMMAND ""
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
@@ -156,7 +156,7 @@ endif()
 ExternalProject_Add(extllvm
   DEPENDS extclang
   GIT_REPOSITORY ${LLVM_GIT_PATH}
-  GIT_TAG RELEASE_70
+  GIT_TAG release_70
   LIST_SEPARATOR ^^
   CONFIGURE_COMMAND cmake -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS}
                           ${TENTATIVE_CMAKE_SYSTEM_NAME}
@@ -181,7 +181,7 @@ ExternalProject_Add(extllvm
                           -DLLVM_INCLUDE_DOCS=OFF
                           -DCLANG_BUILD_TOOLS=OFF
                           ../extllvm/
-  PATCH_COMMAND bash -c "rm -rf tools/clang && cp -r ../../../extclang-prefix/src/extclang/ tools/clang/"
+  PATCH_COMMAND bash -c "rm -rf tools/clang && cp -r ../../../extclang-prefix/src/extclang/ tools/clang/ && ${CMAKE_SOURCE_DIR}/patches/apply-patches"
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_CXX_FLAGS}")
@@ -194,20 +194,18 @@ endif()
 add_definitions(-D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS)
 include_directories(${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2} ${CMAKE_BINARY_DIR}/llvm/include)
 
-# This was generated using 'llvm-config --libs core bitreader bitwriter irreader ipo arm x86 aarch64 debuginfo linker option instrumentation objcarcopts'
+# This was generated using 'llvm-config --libs core coroutines bitreader bitwriter irreader ipo arm x86 aarch64 linker option instrumentation objcarcopts coverage debuginfodwarf passes lto'
 set(LLVM_LIBS
-  -lLLVMObjCARCOpts -lLLVMInstrumentation -lLLVMOption -lLLVMLinker
-  -lLLVMDebugInfo -lLLVMAArch64Disassembler -lLLVMAArch64CodeGen
-  -lLLVMAArch64AsmParser -lLLVMAArch64Desc -lLLVMAArch64Info
-  -lLLVMAArch64AsmPrinter -lLLVMAArch64Utils -lLLVMX86Disassembler
-  -lLLVMX86AsmParser -lLLVMX86CodeGen -lLLVMX86Desc -lLLVMX86Info
-  -lLLVMX86AsmPrinter -lLLVMX86Utils -lLLVMARMDisassembler -lLLVMARMCodeGen
-  -lLLVMSelectionDAG -lLLVMAsmPrinter -lLLVMCodeGen -lLLVMARMAsmParser
-  -lLLVMARMDesc -lLLVMMCDisassembler -lLLVMARMInfo -lLLVMARMAsmPrinter
-  -lLLVMipo -lLLVMVectorize -lLLVMScalarOpts -lLLVMProfileData -lLLVMObject
-  -lLLVMMCParser -lLLVMInstCombine -lLLVMTransformUtils -lLLVMipa
-  -lLLVMAnalysis -lLLVMTarget -lLLVMMC -lLLVMIRReader -lLLVMAsmParser
-  -lLLVMBitWriter -lLLVMBitReader -lLLVMCore -lLLVMSupport
+  -lLLVMLTO -lLLVMPasses -lLLVMDebugInfoDWARF -lLLVMCoverage -lLLVMObjCARCOpts -lLLVMOption
+   -lLLVMAArch64Disassembler -lLLVMAArch64CodeGen -lLLVMAArch64AsmParser -lLLVMAArch64Desc
+   -lLLVMAArch64Info -lLLVMAArch64AsmPrinter -lLLVMAArch64Utils -lLLVMX86Disassembler -lLLVMX86AsmParser
+   -lLLVMX86CodeGen -lLLVMX86Desc -lLLVMX86Info -lLLVMX86AsmPrinter -lLLVMX86Utils -lLLVMARMDisassembler
+   -lLLVMARMCodeGen -lLLVMGlobalISel -lLLVMSelectionDAG -lLLVMAsmPrinter -lLLVMCodeGen -lLLVMTarget
+   -lLLVMARMAsmParser -lLLVMARMDesc -lLLVMMCDisassembler -lLLVMARMInfo -lLLVMARMAsmPrinter -lLLVMARMUtils
+   -lLLVMCoroutines -lLLVMipo -lLLVMInstrumentation -lLLVMVectorize -lLLVMScalarOpts -lLLVMLinker -lLLVMIRReader
+   -lLLVMAsmParser -lLLVMInstCombine -lLLVMBitWriter -lLLVMAggressiveInstCombine -lLLVMTransformUtils
+   -lLLVMAnalysis -lLLVMProfileData -lLLVMObject -lLLVMMCParser -lLLVMMC -lLLVMDebugInfoCodeView
+   -lLLVMDebugInfoMSF -lLLVMBitReader -lLLVMCore -lLLVMBinaryFormat -lLLVMSupport -lLLVMDemangle
 )
 # Required clang libs
 if(LINUX)

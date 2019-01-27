@@ -95,14 +95,6 @@ public class TargetOptions {
         LLVM.TargetOptionsSetEnableFastISel(ref, value);
     }
 
-    public boolean getPositionIndependentExecutable() {
-        return LLVM.TargetOptionsGetPositionIndependentExecutable(ref);
-    }
-
-    public void setPositionIndependentExecutable(boolean value) {
-        LLVM.TargetOptionsSetPositionIndependentExecutable(ref, value);
-    }
-
     public boolean getUseInitArray() {
         return LLVM.TargetOptionsGetUseInitArray(ref);
     }

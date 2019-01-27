@@ -889,8 +889,8 @@ public class LLVMJNI {
   public final static native void TargetOptionsSetGuaranteedTailCallOpt(long jarg1, TargetOptionsRef jarg1_, boolean jarg2);
   public final static native boolean TargetOptionsGetEnableFastISel(long jarg1, TargetOptionsRef jarg1_);
   public final static native void TargetOptionsSetEnableFastISel(long jarg1, TargetOptionsRef jarg1_, boolean jarg2);
-  public final static native boolean TargetOptionsGetPositionIndependentExecutable(long jarg1, TargetOptionsRef jarg1_);
-  public final static native void TargetOptionsSetPositionIndependentExecutable(long jarg1, TargetOptionsRef jarg1_, boolean jarg2);
+  public final static native boolean ModuleGetPositionIndependentExecutable(long jarg1, ModuleRef jarg1_);
+  public final static native void ModuleSetPositionIndependentExecutable(long jarg1, ModuleRef jarg1_, boolean jarg2);
   public final static native boolean TargetOptionsGetUseInitArray(long jarg1, TargetOptionsRef jarg1_);
   public final static native void TargetOptionsSetUseInitArray(long jarg1, TargetOptionsRef jarg1_, boolean jarg2);
   public final static native int TargetOptionsGetFloatABIType(long jarg1, TargetOptionsRef jarg1_);

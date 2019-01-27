@@ -3717,12 +3717,12 @@ public class LLVM implements LLVMConstants {
     LLVMJNI.TargetOptionsSetEnableFastISel(TargetOptionsRef.getCPtr(O), O, V);
   }
 
-  public static boolean TargetOptionsGetPositionIndependentExecutable(TargetOptionsRef O) {
-    return LLVMJNI.TargetOptionsGetPositionIndependentExecutable(TargetOptionsRef.getCPtr(O), O);
+  public static boolean ModuleGetPositionIndependentExecutable(ModuleRef M) {
+    return LLVMJNI.ModuleGetPositionIndependentExecutable(ModuleRef.getCPtr(M), M);
   }
 
-  public static void TargetOptionsSetPositionIndependentExecutable(TargetOptionsRef O, boolean V) {
-    LLVMJNI.TargetOptionsSetPositionIndependentExecutable(TargetOptionsRef.getCPtr(O), O, V);
+  public static void ModuleSetPositionIndependentExecutable(ModuleRef M, boolean V) {
+    LLVMJNI.ModuleSetPositionIndependentExecutable(ModuleRef.getCPtr(M), M, V);
   }
 
   public static boolean TargetOptionsGetUseInitArray(TargetOptionsRef O) {

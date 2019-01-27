@@ -151,4 +151,8 @@ public class Module implements AutoCloseable {
         }
         throw new LlvmException(errorMessage.getValue().trim());
     }
+
+    public void setPositionIndependentExecutable(boolean V) {
+        LLVM.ModuleSetPositionIndependentExecutable(ref, V);
+    }
 }

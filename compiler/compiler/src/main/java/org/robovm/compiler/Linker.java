@@ -509,6 +509,9 @@ public class Linker {
                     module.writeBitcode(linkerBc);
                 }
 
+                // NOTE: Doesn't have any effect on x86. See #503.
+                module.setPositionIndependentExecutable(true);
+
                 String triple = config.getTriple();
                 Target target = Target.lookupTarget(triple);
                 try (TargetMachine targetMachine = target.createTargetMachine(
@@ -517,8 +520,6 @@ public class Linker {
                     targetMachine.setFunctionSections(true);
                     targetMachine.setDataSections(true);
                     // targetMachine.getOptions().setNoFramePointerElim(true); dkimitsa: in LLVM 7 is is set at each function level
-                    // NOTE: Doesn't have any effect on x86. See #503.
-                    targetMachine.getOptions().setPositionIndependentExecutable(true);
                     if (config.isDumpIntermediates()) {
                         File linkerS = new File(config.getTmpDir(), "linker" + num + ".s");
                         try (FileOutputStream outS = new FileOutputStream(linkerS)) {

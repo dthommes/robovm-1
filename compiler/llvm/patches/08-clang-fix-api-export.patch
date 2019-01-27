@@ -1,11 +1,8 @@
-Index: include/clang-c/Platform.h
-IDEA additional info:
-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
-<+>UTF-8
-===================================================================
---- include/clang-c/Platform.h	(revision 4519e2637fcc4bf6e3049a0a80e6a5e7b97667cb)
-+++ include/clang-c/Platform.h	(date 1548427904000)
-@@ -26,7 +26,8 @@
+diff --git a/tools/clang/include/clang-c/Platform.h b/tools/clang/include/clang-c/Platform.h
+index 5284b533253..0243307fa07 100644
+--- a/tools/clang/include/clang-c/Platform.h
++++ b/tools/clang/include/clang-c/Platform.h
+@@ -26,7 +26,8 @@ extern "C" {
      #define CINDEX_LINKAGE __declspec(dllimport)
    #endif
  #else
