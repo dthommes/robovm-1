@@ -520,6 +520,8 @@ public class Linker {
                     targetMachine.setFunctionSections(true);
                     targetMachine.setDataSections(true);
                     // targetMachine.getOptions().setNoFramePointerElim(true); dkimitsa: in LLVM 7 is is set at each function level
+                    module.setDataLayout(targetMachine.getDataLayout());
+
                     if (config.isDumpIntermediates()) {
                         File linkerS = new File(config.getTmpDir(), "linker" + num + ".s");
                         try (FileOutputStream outS = new FileOutputStream(linkerS)) {

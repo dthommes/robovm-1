@@ -404,6 +404,7 @@ public class ClassCompiler {
                     targetMachine.setFunctionSections(true);
                     targetMachine.setDataSections(true);
                     // targetMachine.getOptions().setNoFramePointerElim(true); dkimitsa: at LLVM7.0 it has to be done per function
+                    module.setDataLayout(targetMachine.getDataLayout());
 
                     byte[] asm = targetMachine.emit(module, CodeGenFileType.AssemblyFile);
 
