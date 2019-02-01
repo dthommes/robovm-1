@@ -30,11 +30,12 @@ import org.robovm.llvm.binding.TargetMachineRef;
  */
 public class TargetMachine implements AutoCloseable {
     protected TargetMachineRef ref;
+    private DataLayout dataLayout;
 
     TargetMachine(TargetMachineRef ref) {
         this.ref = ref;
     }
-    
+
     protected final void checkDisposed() {
         if (ref == null) {
             throw new LlvmException("Already disposed");
@@ -57,9 +58,12 @@ public class TargetMachine implements AutoCloseable {
         return new Target(LLVM.GetTargetMachineTarget(ref));
     }
     
-    public DataLayout getDataLayout() {
+    public synchronized DataLayout getDataLayout() {
         checkDisposed();
-        return new DataLayout(LLVM.CreateTargetDataLayout(ref));
+        if (dataLayout == null) {
+            dataLayout = new DataLayout(LLVM.CreateTargetDataLayout(ref));
+        }
+        return dataLayout;
     }
     
     public TargetOptions getOptions() {
@@ -104,7 +108,7 @@ public class TargetMachine implements AutoCloseable {
     public void setFunctionSections(boolean value) {
         LLVM.TargetMachineSetFunctionSections(ref, value);
     }
-    
+
     public byte[] emit(Module module, CodeGenFileType fileType) {
         checkDisposed();
         module.checkDisposed();

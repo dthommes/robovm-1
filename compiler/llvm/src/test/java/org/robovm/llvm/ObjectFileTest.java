@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.robovm.llvm.binding.CodeGenFileType;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,8 +44,12 @@ public class ObjectFileTest {
         try (Context context = new Context()) {
             try (TargetMachine tm = Target.getTarget("x86").createTargetMachine("i386-unknown-macosx")) {
                 Module module = Module.parseIR(context, "define external i32 @foo() {\n ret i32 5\n }\n", "foo.c");
+                module.setDataLayout(tm.getDataLayout());
                 File oFile = File.createTempFile(getClass().getSimpleName(), ".o");
-                tm.emit(module, CodeGenFileType.ObjectFile);
+                try (FileOutputStream out = new FileOutputStream(oFile)) {
+                    byte[] bytes = tm.emit(module, CodeGenFileType.ObjectFile);
+                    out.write(bytes);
+                }
                 try (ObjectFile objectFile = ObjectFile.load(oFile)) {
                     List<Symbol> symbols = objectFile.getSymbols();
                     assertEquals(1, symbols.size());
@@ -61,8 +66,13 @@ public class ObjectFileTest {
         try (Context context = new Context()) {
             try (TargetMachine tm = Target.getTarget("x86").createTargetMachine("i386-unknown-macosx")) {
                 Module module = Module.parseIR(context, "define external i32 @foo() {\n ret i32 5\n }\n", "foo.c");
+                module.setDataLayout(tm.getDataLayout());
                 File oFile = File.createTempFile(getClass().getSimpleName(), ".o");
-                tm.emit(module, CodeGenFileType.ObjectFile);
+                try (FileOutputStream out = new FileOutputStream(oFile)) {
+                    byte[] bytes = tm.emit(module, CodeGenFileType.ObjectFile);
+                    out.write(bytes);
+                }
+
                 try (ObjectFile objectFile = ObjectFile.load(oFile)) {
                     TreeSet<String> sections = new TreeSet<>();
                     for (SectionIterator it = objectFile.getSectionIterator(); it.hasNext(); it.next()) {
@@ -99,6 +109,8 @@ public class ObjectFileTest {
         String cc = "gcc";
         String symbolPrefix = "";
         if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+            // on Mac obj files are mach-o ones and doesn't contain object size so it will not be able to
+            // perform test as debug API depends on size
             cc = "clang";
             symbolPrefix = "_";
         }
@@ -114,7 +126,7 @@ public class ObjectFileTest {
             .addArgument("-g")
             .addArgument("-c")
             .addArgument(cFile.getAbsolutePath()));
-        
+
         List<LineInfo> mainLineInfos = null;
         File oFile = new File(cFile.getParentFile(), cFile.getName().substring(0, cFile.getName().lastIndexOf('.')) + ".o");
         try (ObjectFile objectFile = ObjectFile.load(oFile)) {

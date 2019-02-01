@@ -86,6 +86,27 @@ size_t LLVMCopySectionContents(LLVMSectionIteratorRef SI, char* Dest, size_t Des
 // dumps DWARF debug information into output stream
 jbyteArray LLVMDumpDwarfDebugData(JNIEnv *jenv, LLVMObjectFileRef O);
 
+
+// need symbol flags for debug
+typedef  enum LLVMSymbolFlags {
+    SF_None = 0,
+    SF_Undefined = 1 << 0,      // Symbol is defined in another object file
+    SF_Global = 1 << 1,         // Global symbol
+    SF_Weak = 1 << 2,           // Weak symbol
+    SF_Absolute = 1 << 3,       // Absolute symbol
+    SF_Common = 1 << 4,         // Symbol has common linkage
+    SF_Indirect = 1 << 5,       // Symbol is an alias to another symbol
+    SF_Exported = 1 << 6,       // Symbol is visible to other DSOs
+    SF_FormatSpecific = 1 << 7, // Specific to the object file format
+                                 // (e.g. section symbols)
+    SF_Thumb = 1 << 8,          // Thumb symbol in a 32-bit ARM binary
+    SF_Hidden = 1 << 9,         // Symbol has hidden visibility
+    SF_Const = 1 << 10,         // Symbol value is constant
+    SF_Executable = 1 << 11,    // Symbol points to an executable section                                // (IR only)
+} LLVMSymbolFlags;
+
+uint32_t LLVMGetSymbolFlags(LLVMSymbolIteratorRef SI);
+
 #ifdef __cplusplus
 }
 #endif

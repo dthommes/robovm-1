@@ -16,14 +16,7 @@
  */
 package org.robovm.llvm;
 
-import org.robovm.llvm.binding.IntOut;
-import org.robovm.llvm.binding.LLVM;
-import org.robovm.llvm.binding.LongArray;
-import org.robovm.llvm.binding.LongArrayOut;
-import org.robovm.llvm.binding.MemoryBufferRefOut;
-import org.robovm.llvm.binding.ObjectFileRef;
-import org.robovm.llvm.binding.StringOut;
-import org.robovm.llvm.binding.SymbolIteratorRef;
+import org.robovm.llvm.binding.*;
 import org.robovm.llvm.debuginfo.DebugMethodInfo;
 import org.robovm.llvm.debuginfo.DebugObjectFileInfo;
 import org.robovm.llvm.debuginfo.DebugVariableInfo;
@@ -65,7 +58,8 @@ public class ObjectFile implements AutoCloseable {
         while (!LLVM.IsSymbolIteratorAtEnd(getRef(), it)) {
             String name = LLVM.GetSymbolName(it);
             long address = LLVM.GetSymbolAddress(it);
-            long size = LLVM.GetSymbolSize(it);
+            long flags = LLVM.GetSymbolFlags(it);
+            long size = (flags & SymbolFlags.SF_Common.swigValue()) != 0 ? LLVM.GetSymbolSize(it) : 0;
             result.add(new Symbol(name, address, size));
             LLVM.MoveToNextSymbol(it);
         }
@@ -222,7 +216,7 @@ public class ObjectFile implements AutoCloseable {
         }
         ObjectFileRef ref = LLVM.CreateObjectFile(memBufOut.getValue());
         if (ref == null) {
-            throw new LlvmException("Failed to create memory buffer from " + file.getAbsolutePath());
+            throw new LlvmException("Failed to create object file " + file.getAbsolutePath());
         }
         return new ObjectFile(file, ref);
     }

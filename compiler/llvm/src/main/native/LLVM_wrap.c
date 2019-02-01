@@ -15466,6 +15466,21 @@ SWIGEXPORT jbyteArray JNICALL Java_org_robovm_llvm_binding_LLVMJNI_DumpDwarfDebu
 }
 
 
+SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetSymbolFlags(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jlong jresult = 0 ;
+  LLVMSymbolIteratorRef arg1 = (LLVMSymbolIteratorRef) 0 ;
+  uint32_t result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(LLVMSymbolIteratorRef *)&jarg1; 
+  result = LLVMGetSymbolFlags(arg1);
+  jresult = result; 
+  return jresult;
+}
+
+
 SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_ClangCompileFile(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jstring jarg2, jstring jarg3, jstring jarg4, jlong jarg5, jobject jarg5_) {
   jlong jresult = 0 ;
   LLVMContextRef arg1 = (LLVMContextRef) 0 ;

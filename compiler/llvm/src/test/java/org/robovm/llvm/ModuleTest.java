@@ -58,7 +58,7 @@ public class ModuleTest {
     @Test
     public void testParseClangFile() throws Exception {
         String c = 
-                "extern void printf(const char*, ...);\n" +
+                "extern int printf(const char*, ...);\n" +
                 "int main() {\n" +
                 "    printf(\"Hello world!\");\n" +
                 "}\n";

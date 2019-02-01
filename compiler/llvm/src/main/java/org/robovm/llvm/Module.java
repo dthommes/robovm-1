@@ -155,4 +155,8 @@ public class Module implements AutoCloseable {
     public void setPositionIndependentExecutable(boolean V) {
         LLVM.ModuleSetPositionIndependentExecutable(ref, V);
     }
+
+    public void setDataLayout(DataLayout dataLayout) {
+        LLVM.SetModuleDataLayout(ref, dataLayout.ref);
+    }
 }

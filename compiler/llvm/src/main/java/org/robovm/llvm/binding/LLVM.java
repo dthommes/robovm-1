@@ -3773,6 +3773,10 @@ public class LLVM implements LLVMConstants {
     return LLVMJNI.DumpDwarfDebugData(ObjectFileRef.getCPtr(O), O);
   }
 
+  public static long GetSymbolFlags(SymbolIteratorRef SI) {
+    return LLVMJNI.GetSymbolFlags(SymbolIteratorRef.getCPtr(SI), SI);
+  }
+
   public static ModuleRef ClangCompileFile(ContextRef Context, String Data, String FileName, String Triple, StringOut ErrorMessage) {
     long cPtr = LLVMJNI.ClangCompileFile(ContextRef.getCPtr(Context), Context, Data, FileName, Triple, StringOut.getCPtr(ErrorMessage), ErrorMessage);
     return (cPtr == 0) ? null : new ModuleRef(cPtr, false);

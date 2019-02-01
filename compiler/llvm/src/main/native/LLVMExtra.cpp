@@ -63,6 +63,11 @@ inline OwningBinary<ObjectFile> *unwrap(LLVMObjectFileRef OF) {
     return reinterpret_cast<OwningBinary<ObjectFile> *>(OF);
 }
 
+inline symbol_iterator *unwrap(LLVMSymbolIteratorRef SI) {
+    return reinterpret_cast<symbol_iterator*>(SI);
+}
+
+
 // as it was removed in 3.9, check https://reviews.llvm.org/D19094
 static LLVMContext &getGlobalContext() {
     static LLVMContext MyGlobalContext;
@@ -497,4 +502,8 @@ LLVMBool LLVMLinkModules(LLVMModuleRef Dest, LLVMModuleRef Src, char **OutMessag
     LLVMContextSetDiagnosticHandler(wrap(&Ctx), oldHandler, oldHandlerCtx);
 
     return Result;
+}
+
+uint32_t LLVMGetSymbolFlags(LLVMSymbolIteratorRef SI) {
+    return (*unwrap(SI))->getObject()->getSymbolFlags((*unwrap(SI))->getRawDataRefImpl());
 }

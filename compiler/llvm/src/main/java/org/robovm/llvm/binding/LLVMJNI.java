@@ -903,6 +903,7 @@ public class LLVMJNI {
   public final static native void GetLineInfoForAddressRange(long jarg1, ObjectFileRef jarg1_, long jarg2, long jarg3, long jarg4, IntOut jarg4_, long jarg5, LongArrayOut jarg5_);
   public final static native long CopySectionContents(long jarg1, SectionIteratorRef jarg1_, byte[] jarg2);
   public final static native byte[] DumpDwarfDebugData(long jarg2, ObjectFileRef jarg2_);
+  public final static native long GetSymbolFlags(long jarg1, SymbolIteratorRef jarg1_);
   public final static native long ClangCompileFile(long jarg1, ContextRef jarg1_, String jarg2, String jarg3, String jarg4, long jarg5, StringOut jarg5_);
 
   static {

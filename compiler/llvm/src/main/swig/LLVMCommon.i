@@ -11,6 +11,7 @@ SWIG_JAVABODY_METHODS(protected, protected, SWIGTYPE)
 typedef jboolean LLVMBool; // this is otherwise LLVMBool will be translated to int
 typedef jbyte uint8_t;     // defining these as header where these are included not added to run
 typedef jlong uint64_t;    //
+typedef jlong uint32_t;    //
 // otherwise it will go into long
 %typemap(jstype) unsigned "int"
 %typemap(jtype) unsigned "int"

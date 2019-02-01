@@ -31,6 +31,7 @@ public class TargetMachineTest {
         try (Context context = new Context()) {
             try (TargetMachine tm = Target.getTarget("thumb").createTargetMachine("thumbv7-unknown-ios")) {
                 Module module = Module.parseIR(context, "define external i32 @foo() {\n ret i32 5\n }\n", "foo.c");
+                module.setDataLayout(tm.getDataLayout());
                 byte[] data = tm.emit(module, CodeGenFileType.AssemblyFile);
                 String asm = new String(data, "utf-8");
                 assertTrue(asm.contains("_foo"));
@@ -43,8 +44,8 @@ public class TargetMachineTest {
         try (Context context = new Context()) {
             try (TargetMachine tm = Target.getTarget("thumb").createTargetMachine("thumbv7-unknown-ios")) {
                 Module module = Module.parseIR(context, "define private i32 @foo() {\n ret i32 5\n }\n", "foo.c");
-                byte[] data;
-                data = tm.emit(module, CodeGenFileType.AssemblyFile);
+                module.setDataLayout(tm.getDataLayout());
+                byte[] data = tm.emit(module, CodeGenFileType.AssemblyFile);
                 String asm = new String(data, "utf-8");
                 data = tm.assemble(asm.getBytes(), "foo.s");
                 assertTrue(data.length > 0);
