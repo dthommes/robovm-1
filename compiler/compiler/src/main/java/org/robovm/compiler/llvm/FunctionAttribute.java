@@ -27,7 +27,7 @@ public enum FunctionAttribute {
     @Override
     public String toString() {
         if (this == nofpelim)
-            return "no-frame-pointer-elim=true";
+            return "\"no-frame-pointer-elim\"=\"true\"";
         else
             return name();
     }}

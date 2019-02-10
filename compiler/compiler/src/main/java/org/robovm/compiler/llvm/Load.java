@@ -53,7 +53,10 @@ public class Load extends UnaryOpInstruction {
         if (ordering != null) {
             sb.append("atomic ");
         }
-        sb.append(op.getType());
+        PointerType pointerType = (PointerType) op.getType();
+        sb.append(pointerType.getBase());
+        sb.append(", ");
+        sb.append(pointerType);
         sb.append(" ");
         sb.append(op);
         if (ordering != null) {

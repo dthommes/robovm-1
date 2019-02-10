@@ -58,7 +58,10 @@ public class Alias {
             sb.append(' ');
         }
         sb.append("alias ");
-        sb.append(value.getType());
+        PointerType pointerType = (PointerType) value.getType();
+        sb.append(pointerType.getBase());
+        sb.append(", ");
+        sb.append(pointerType);
         sb.append(' ');
         sb.append(value);
         return sb.toString();
