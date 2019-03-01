@@ -18,22 +18,12 @@ package org.robovm.compiler.llvm.debug.dwarf;
 import org.robovm.compiler.ModuleBuilder;
 import org.robovm.compiler.llvm.NamedMetadata;
 
-/**
- * Compile unit metadata
- */
-public class DICompileUnit extends NamedMetadata<DISpecializedMetadata> {
-    public enum DebugEmissionKind implements DwarfConst.DwarfConstEnum {
-        NoDebug,
-        FullDebug,
-        LineTablesOnly
-    }
+public class DIBasicType extends NamedMetadata<DISpecializedMetadata> {
 
-    public DICompileUnit(ModuleBuilder mb, DIFile file, boolean optimized, String producer, DebugEmissionKind emissionKind) {
-        super(mb, new DISpecializedMetadata("DICompileUnit", true)
-                .put("language", DwarfConst.SourceLanguage.DW_LANG_Java)
-                .put("file", file)
-                .put("producer", producer)
-                .put("isOptimized", optimized)
-                .put("emissionKind", emissionKind));
+    public DIBasicType(ModuleBuilder mb, String name, int size, DwarfConst.TypeKind encoding) {
+        super(mb, new DISpecializedMetadata("DIBasicType")
+                .put("name", name)
+                .put("size", size)
+                .put("encoding", encoding));
     }
 }

@@ -20,10 +20,10 @@ package org.robovm.compiler.llvm;
  * {@link Metadata} used to attach debug info to instructions.
  */
 public class DebugMetadata extends Metadata {
-    private final MetadataNode value;
+    private final NamedMetadata.Ref value;
 
-    public DebugMetadata(MetadataNode value) {
-        this.value = value;
+    public DebugMetadata(NamedMetadata metadata) {
+        this.value = metadata.ref();
     }
 
     @Override

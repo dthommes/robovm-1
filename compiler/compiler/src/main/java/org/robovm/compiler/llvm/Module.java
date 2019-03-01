@@ -38,13 +38,13 @@ public class Module {
     private final Collection<UserType> types;
     private final Collection<String> asm;
     private final Collection<NamedMetadata> namedMetadata;
-    private final Collection<UnnamedMetadata> unnamedMetadata;
+    private final Collection<NamedMetadata> unnamedMetadata;
 
     public Module(Collection<URL> includes, Collection<UserType> types,
             Collection<Global> globals, Collection<Alias> aliases,
             Collection<FunctionDeclaration> functionDeclarations, Collection<String> asm,
             Collection<Function> functions, Collection<NamedMetadata> namedMetadata,
-            Collection<UnnamedMetadata> unnamedMetadata) {
+            Collection<NamedMetadata> unnamedMetadata) {
         
         this.includes = includes;
         this.types = types;
@@ -109,8 +109,8 @@ public class Module {
             writer.write("\n");
         }
         writer.write("\n");
-        for (UnnamedMetadata md : unnamedMetadata) {
-            writer.write(md.getDefinition());
+        for (NamedMetadata md : unnamedMetadata) {
+            writer.write(md.toString());
             writer.write("\n");
         }
     }

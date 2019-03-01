@@ -19,21 +19,11 @@ import org.robovm.compiler.ModuleBuilder;
 import org.robovm.compiler.llvm.NamedMetadata;
 
 /**
- * Compile unit metadata
+ * metadata for Subroutine type, dummy value is used
  */
-public class DICompileUnit extends NamedMetadata<DISpecializedMetadata> {
-    public enum DebugEmissionKind implements DwarfConst.DwarfConstEnum {
-        NoDebug,
-        FullDebug,
-        LineTablesOnly
-    }
-
-    public DICompileUnit(ModuleBuilder mb, DIFile file, boolean optimized, String producer, DebugEmissionKind emissionKind) {
-        super(mb, new DISpecializedMetadata("DICompileUnit", true)
-                .put("language", DwarfConst.SourceLanguage.DW_LANG_Java)
-                .put("file", file)
-                .put("producer", producer)
-                .put("isOptimized", optimized)
-                .put("emissionKind", emissionKind));
+public class DISubroutineType extends NamedMetadata<DISpecializedMetadata> {
+    public DISubroutineType(ModuleBuilder mb, NamedMetadata<DIMetadataValueList> types) {
+        super(mb, new DISpecializedMetadata("DISubroutineType")
+                .put("types", types));
     }
 }

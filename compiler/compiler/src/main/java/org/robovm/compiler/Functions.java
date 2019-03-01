@@ -159,7 +159,7 @@ public class Functions {
     public static final FunctionRef POP_NATIVE_FRAME = new FunctionRef("popNativeFrame", new FunctionType(VOID, ENV_PTR));
     public static final FunctionRef GETPC = new FunctionRef("getpc", new FunctionType(I8_PTR));
 
-    public static final FunctionRef LLVM_DBG_DECLARE = new FunctionRef("llvm.dbg.declare", new FunctionType(VOID, METADATA, METADATA));
+    public static final FunctionRef LLVM_DBG_DECLARE = new FunctionRef("llvm.dbg.declare", new FunctionType(VOID, METADATA, METADATA, METADATA));
 
     public static FunctionRef getArrayLoad(soot.Type sootType) {
         if (sootType.equals(soot.BooleanType.v())) {

@@ -38,6 +38,7 @@ public class Function {
     private final Map<Label, BasicBlock> basicBlockMap = new HashMap<Label, BasicBlock>();
     private final List<BasicBlock> basicBlockList = new ArrayList<BasicBlock>();
     private final Map<String, Variable> variablesMap = new HashMap<String, Variable>();
+    private DebugMetadata debugMetadata; // not final as will be set after function creation
     
     private int counter = 0;
     private final String[] parameterNames;
@@ -177,7 +178,11 @@ public class Function {
         sig += ")";
         return sig;
     }
-    
+
+    public void setDebugMetadata(DebugMetadata metadata) {
+        this.debugMetadata = metadata;
+    }
+
     public void write(Writer writer) throws IOException {
         Type returnType = type.getReturnType();
         Type[] parameterTypes = type.getParameterTypes();
@@ -213,6 +218,9 @@ public class Function {
                 writer.write(' ');
                 writer.write(attr.toString());
             }
+        }
+        if (debugMetadata != null) {
+            writer.write(" " + debugMetadata);
         }
         if (section != null) {
             writer.write(" section \"");

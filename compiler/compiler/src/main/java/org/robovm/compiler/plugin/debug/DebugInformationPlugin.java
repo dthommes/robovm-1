@@ -19,6 +19,7 @@ import org.robovm.compiler.Annotations;
 import org.robovm.compiler.Functions;
 import org.robovm.compiler.ModuleBuilder;
 import org.robovm.compiler.Symbols;
+import org.robovm.compiler.Version;
 import org.robovm.compiler.clazz.Clazz;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.llvm.Alloca;
@@ -33,24 +34,23 @@ import org.robovm.compiler.llvm.Global;
 import org.robovm.compiler.llvm.Instruction;
 import org.robovm.compiler.llvm.IntegerConstant;
 import org.robovm.compiler.llvm.Linkage;
-import org.robovm.compiler.llvm.MetadataString;
 import org.robovm.compiler.llvm.MetadataValue;
+import org.robovm.compiler.llvm.debug.dwarf.DIMetadataValueList;
+import org.robovm.compiler.llvm.NamedMetadata;
 import org.robovm.compiler.llvm.PointerType;
 import org.robovm.compiler.llvm.Type;
 import org.robovm.compiler.llvm.Value;
 import org.robovm.compiler.llvm.Variable;
 import org.robovm.compiler.llvm.VariableRef;
 import org.robovm.compiler.llvm.ZeroInitializer;
-import org.robovm.compiler.llvm.debug.dwarf.DIBaseItem;
+import org.robovm.compiler.llvm.debug.dwarf.DIBasicType;
 import org.robovm.compiler.llvm.debug.dwarf.DICompileUnit;
-import org.robovm.compiler.llvm.debug.dwarf.DICompositeType;
-import org.robovm.compiler.llvm.debug.dwarf.DIDerivedType;
-import org.robovm.compiler.llvm.debug.dwarf.DIFileDescriptor;
-import org.robovm.compiler.llvm.debug.dwarf.DIItemList;
-import org.robovm.compiler.llvm.debug.dwarf.DILineNumber;
+import org.robovm.compiler.llvm.debug.dwarf.DIFile;
+import org.robovm.compiler.llvm.debug.dwarf.DILocation;
 import org.robovm.compiler.llvm.debug.dwarf.DILocalVariable;
-import org.robovm.compiler.llvm.debug.dwarf.DIMutableItemList;
+import org.robovm.compiler.llvm.debug.dwarf.DILocalVariableList;
 import org.robovm.compiler.llvm.debug.dwarf.DISubprogram;
+import org.robovm.compiler.llvm.debug.dwarf.DISubroutineType;
 import org.robovm.compiler.llvm.debug.dwarf.DwarfConst;
 import org.robovm.compiler.plugin.AbstractCompilerPlugin;
 import org.robovm.compiler.plugin.PluginArgument;
@@ -85,10 +85,10 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
 
 
     public DebugInformationPlugin() {
-	}
+    }
 
     public PluginArguments getArguments() {
-    	return new PluginArguments("debug", Collections.<PluginArgument>emptyList());
+        return new PluginArguments("debug", Collections.<PluginArgument>emptyList());
     }
 
     @Override
@@ -117,23 +117,29 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
 
     @Override
     public void beforeClass(Config config, Clazz clazz, ModuleBuilder mb) throws IOException {
-    	super.beforeClass(config, clazz, mb);
+        super.beforeClass(config, clazz, mb);
 
+        String producer = "RoboVM " + Version.getVersion();
         ClassDataBundle classBundle = clazz.getAttachment(ClassDataBundle.class);
-        classBundle.diFile = new DIItemList(mb, v(getDwarfSourceFile(clazz)), v(getDwarfSourceFilePath(clazz)));
-        classBundle.diFileDescriptor = new DIFileDescriptor(mb, classBundle.diFile);
-        classBundle.diMethods = new DIMutableItemList<>(mb);
-        classBundle.diCompileUnit = new DICompileUnit(mb, "llvm.dbg.cu", classBundle.diFile, classBundle.diMethods);
-        DIItemList dwarfVersion =  new DIItemList(v(2), v("Dwarf Version"), v(2));
-        DIItemList debugInfoVersion = new DIItemList(v(2), v("Debug Info Version"), v(2));
-        classBundle.flags = new DIItemList(mb, "llvm.module.flags", dwarfVersion.get(), debugInfoVersion.get());
+        // diFile and diCompileUnit
+        classBundle.diFile = new DIFile(mb, getDwarfSourceFile(clazz), getDwarfSourceFilePath(clazz));
+        classBundle.diCompileUnit =  new DICompileUnit(mb, classBundle.diFile, !config.isDebug(), producer,
+                        config.isDebug() ? DICompileUnit.DebugEmissionKind.FullDebug : DICompileUnit.DebugEmissionKind.LineTablesOnly);
+
+        //noinspection unused
+        NamedMetadata dwarfCompileUnit = NamedMetadata.withNamedTuple(mb, "llvm.dbg.cu", classBundle.diCompileUnit);
+
+        // module flags
+        NamedMetadata dwarfVersion = NamedMetadata.withTuple(mb, DwarfConst.ModuleFlagBehavior.Warning.raw,
+                "Dwarf Version", DwarfConst.LLVMConstants.DWARF_VERSION);
+        NamedMetadata debugInfoVersion = NamedMetadata.withTuple(mb,DwarfConst.ModuleFlagBehavior.Warning.raw,
+                "Debug Info Version", DwarfConst.LLVMConstants.DEBUG_INFO_VERSION);
+        classBundle.flags = NamedMetadata.withNamedTuple(mb, "llvm.module.flags", dwarfVersion, debugInfoVersion);
+        // llvm.ident
+        //noinspection unused
+        NamedMetadata ident = NamedMetadata.withNamedTuple(mb, "lllvm.ident", NamedMetadata.withTuple(mb, producer));
 
         if (config.isDebug()) {
-            // create dummy variable type
-            // today this information is not required as everything is received on java level
-            classBundle.dummyJavaVariableType = new DIDerivedType(mb, DwarfConst.Tag.TAG_pointer_type,
-                    "DummyType", 0, 32, 32, classBundle.diFile, null);
-
             // create a list where method inforation will be saved
             classBundle.methods = new ArrayList<>();
 
@@ -166,20 +172,6 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
         if (entryBlock.getInstructions().size() == 1) {
             return;
         }
-
-        // fill subroutine type
-        DICompositeType diSubprogramType = new DICompositeType(mb);
-        diSubprogramType.setTypeTag(DwarfConst.Tag.TAG_subroutine_type);
-        diSubprogramType.setFile(classBundle.diFile);
-        diSubprogramType.setFileContext(classBundle.diFileDescriptor);
-        // skip other fields for now as not required for line numbers
-
-        DISubprogram diSubprogram = new DISubprogram(mb);
-        diSubprogram.setSubrotineType(diSubprogramType);
-        diSubprogram.setSignature(function.getName());
-        diSubprogram.setFile(classBundle.diFile);
-        diSubprogram.setFileContext(classBundle.diFileDescriptor);
-        diSubprogram.setLlvmFunction(function.ref());
 
         // build unit to line map
         Map<Unit, Integer> unitToLine = new HashMap<>();
@@ -222,7 +214,6 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
                             int currentLineNumber = lineNumObj;
                             methodLineNumber = Math.min(methodLineNumber, currentLineNumber);
                             methodEndLineNumber = Math.max(methodEndLineNumber, currentLineNumber);
-                            instruction.addMetadata((new DILineNumber(currentLineNumber, 0, diSubprogram)).get());
                             instructionToLineNo.put(instruction, lineNumObj);
                         }
                     }
@@ -265,15 +256,30 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
             }
         }
 
-        classBundle.diMethods.add(diSubprogram);
         if (methodLineNumber == Integer.MAX_VALUE) {
             // there was no debug information for this method
             // it will be not possible to resolve variables, just return
             return;
         }
 
-        diSubprogram.setScopeLineNo(methodLineNumber);
-        diSubprogram.setDefLineNo(methodLineNumber);
+        // forward definition for variables
+        DILocalVariableList diVariableList = new DILocalVariableList(mb);
+
+        // forward definition for subprogram
+        DISubprogram diSubprogram = new DISubprogram(mb, function.ref().toString(), classBundle.diFile,
+                methodLineNumber, classBundle.getDummySubprogramType(mb), classBundle.diCompileUnit,
+                diVariableList);
+
+        // add debug information to function attributes
+        function.setDebugMetadata(diSubprogram.toDebugMetadata());
+
+        // attach debug line number information to each instruction that is in map
+        for (Map.Entry<Instruction, Integer> e : instructionToLineNo.entrySet()) {
+            Instruction instruction = e.getKey();
+            int lineNo = e.getValue();
+            instruction.addMetadata(new DILocation(mb, lineNo, 0, diSubprogram).toDebugMetadata());
+        }
+
 
         if (!includeDebuggerInfo) {
             return;
@@ -322,7 +328,7 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
             ConstantBitcast bpTableRef = new ConstantBitcast(bpTable.ref(), Type.I8_PTR);
             for (Map.Entry<Integer, Instruction> e : hookInstructionLines.entrySet()) {
                 int lineNo = e.getKey();
-                injectHookInstrumented(diSubprogram, lineNo, lineNo - methodLineNumber, function, bpTableRef, e.getValue());
+                injectHookInstrumented(mb, diSubprogram, lineNo, lineNo - methodLineNumber, function, bpTableRef, e.getValue());
             }
         }
 
@@ -344,7 +350,6 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
         // build local variable list
         int variableIdx = 1;
         List<VariableDataBundle> variables = new ArrayList<>();
-        DIMutableItemList<DILocalVariable> diVariableList = new DIMutableItemList<>(mb);
 
         // insert variables
         for (LocalVariable var : method.getActiveBody().getLocalVariables()) {
@@ -389,7 +394,7 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
             // add llvm.dbg.declare call
             DILocalVariable diLocalVariable = new DILocalVariable(mb, dwarfName, varStartLine, argIdx,
                     classBundle.diFile, diSubprogram,
-                    classBundle.dummyJavaVariableType);
+                    classBundle.getDummyJavaVariableType(mb));
 
             // get instruction to work with
             Instruction instr = unitToInstruction.get(var.getStartUnit());
@@ -397,15 +402,13 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
             // right after alloca
             Call call = new Call(Functions.LLVM_DBG_DECLARE,
                     new MetadataValue(new VariableRef(alloca.getResult().getName(), new PointerType(alloca.getResult().getType()))),
-                    diLocalVariable.get());
-            call.addMetadata((new DILineNumber(varStartLine, 0, diSubprogram)).get());
+                    diLocalVariable.ref(), new MetadataValue(new NamedMetadata.Ref("DIExpression()")));
+            call.addMetadata((new DILocation(mb, varStartLine, 0, diSubprogram)).toDebugMetadata());
             instr.getBasicBlock().insertBefore(instr, call);
 
             // save variable to the list
             diVariableList.add(diLocalVariable);
         }
-
-        diSubprogram.setVariables(diVariableList);
 
         // sort variables by index to make sure arguments pop to top
         Collections.sort(variables, new Comparator<VariableDataBundle>() {
@@ -433,7 +436,7 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
             if (debugInfo != null) {
                 // now it is a task to combine it with data received during compilation
                 List<DebugMethodInfo> methods = new ArrayList<>();
-                for (MethodDataBundle methodBundle :  classBundle.methods) {
+                for (MethodDataBundle methodBundle : classBundle.methods) {
                     DebugMethodInfo dbgMethodInfo = debugInfo.methodBySignature(methodBundle.signature);
                     if (dbgMethodInfo == null) {
                         config.getLogger().warn("Failed to get debug information for method %s in class %s",
@@ -444,7 +447,7 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
                     // get variables
                     List<DebugVariableInfo> variables = new ArrayList<>();
                     for (VariableDataBundle variableBudnle : methodBundle.variables) {
-                        DebugVariableInfo dbgVariableInfo =  dbgMethodInfo.variableByName(variableBudnle.dwarfName);
+                        DebugVariableInfo dbgVariableInfo = dbgMethodInfo.variableByName(variableBudnle.dwarfName);
                         if (dbgVariableInfo == null) {
                             config.getLogger().warn("Failed to get debug information for variable %s in method %s in class %s",
                                     variableBudnle.name, methodBundle.signature, clazz.getClassName());
@@ -461,7 +464,7 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
                     if (methodName.startsWith("[J]" + clazz.getClassName() + "."))
                         methodName = methodName.substring(clazz.getClassName().length() + 4);
                     // save method
-                    methods.add(new DebugMethodInfo(methodName,  variables.toArray(new DebugVariableInfo[0]),
+                    methods.add(new DebugMethodInfo(methodName, variables.toArray(new DebugVariableInfo[0]),
                             methodBundle.startLine, methodBundle.finalLine));
                 }
 
@@ -480,8 +483,10 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
         clazz.removeAttachement(classBundle);
     }
 
-    /** injects calls to _bcHookInstrumented to allow breakpoints/step by step debugging */
-    private void injectHookInstrumented(DISubprogram diSubprogram, int lineNo, int lineNumberOffset, Function function, Constant bpTableRef, Instruction instruction) {
+    /**
+     * injects calls to _bcHookInstrumented to allow breakpoints/step by step debugging
+     */
+    private void injectHookInstrumented(ModuleBuilder mb, DISubprogram diSubprogram, int lineNo, int lineNumberOffset, Function function, Constant bpTableRef, Instruction instruction) {
         BasicBlock block = instruction.getBasicBlock();
         // prepare a call to following function:
         // void _bcHookInstrumented(DebugEnv* debugEnv, jint lineNumber, jint lineNumberOffset, jbyte* bptable, void* pc)
@@ -498,13 +503,15 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
         block.insertBefore(instruction, bcHookInstrumented);
 
         // attach line number metadata otherwise stack entry will have previous line number index
-        bcHookInstrumented.addMetadata((new DILineNumber(lineNo, 0, diSubprogram)).get());
+        bcHookInstrumented.addMetadata((new DILocation(mb, lineNo, 0, diSubprogram)).toDebugMetadata());
     }
 
-    /** Simple file name resolution to be included as Dwarf debug entry, for LineNumbers there is no need in absolute file location, just in name */
+    /**
+     * Simple file name resolution to be included as Dwarf debug entry, for LineNumbers there is no need in absolute file location, just in name
+     */
     private String getDwarfSourceFile(Clazz clazz) {
-    	String sourceFile;
-    	String ext = ".java";
+        String sourceFile;
+        String ext = ".java";
         String className = clazz.getInternalName();
         // create source file name from class internal name to preserve full path to inner classes and
         // lambdas as it is required for dsymutils fix
@@ -522,10 +529,12 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
         else
             sourceFile = className + ext;
 
-    	return sourceFile;
-	}
+        return sourceFile;
+    }
 
-    /** Simple source file path resolution */
+    /**
+     * Simple source file path resolution
+     */
     private String getDwarfSourceFilePath(Clazz clazz) {
         String sourcePath = clazz.getPath().toString();
         if (!sourcePath.endsWith("/"))
@@ -541,7 +550,9 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
         return sourcePath;
     }
 
-    /** picks real source file name, will be used with JDWP ReferenceType(2).SourceFile(7) command */
+    /**
+     * picks real source file name, will be used with JDWP ReferenceType(2).SourceFile(7) command
+     */
     private String getJdwpSourceFile(Clazz clazz) {
         String sourceFile;
         // create source file name from class internal name to preserve full path to inner classes and
@@ -569,25 +580,50 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
     /**
      * data bundle that contains debug information for class
      */
-	private static class ClassDataBundle {
-        DIBaseItem diFile;
-        DIBaseItem diFileDescriptor;
-        DIMutableItemList<DISubprogram> diMethods;
-        DIBaseItem diCompileUnit;
-        DIBaseItem flags;
+    private static class ClassDataBundle {
+        DICompileUnit diCompileUnit;
+        DIFile diFile;
+        NamedMetadata flags;
 
         // information for debugger
 
         // basic type definitions (required for debugger purpose)
-        // variable location information -- nobody cares (e.g. there is no debuger that relies on this data)
+        // variable location information -- nobody cares (e.g. there is no debugger that relies on this data)
         // if future it shall be fixed
-        DIBaseItem dummyJavaVariableType;
+        private DIBasicType dummyJavaVariableType;
+
+        // empty metadata -- to reuse where required
+        private NamedMetadata<DIMetadataValueList> emptyMetadata;
+
+        // basic subprogramType definition, will define just empty
+        private DISubroutineType dummySubprogramType;
 
         // debug information for methods
         List<MethodDataBundle> methods;
 
         // method signatures before compilation starts
         Set<String> methodsBeforeCompile;
+
+        DIBasicType getDummyJavaVariableType(ModuleBuilder mb) {
+            if (dummyJavaVariableType == null) {
+                dummyJavaVariableType = new DIBasicType(mb, "DummyType", 32, DwarfConst.TypeKind.DW_ATE_address);
+            }
+            return dummyJavaVariableType;
+        }
+
+        NamedMetadata<DIMetadataValueList> getEmptyMetadata(ModuleBuilder mb) {
+            if (emptyMetadata == null) {
+                emptyMetadata = new NamedMetadata<>(mb, new DIMetadataValueList());
+            }
+            return emptyMetadata;
+        }
+
+        DISubroutineType getDummySubprogramType(ModuleBuilder mb) {
+            if (dummySubprogramType == null) {
+                dummySubprogramType = new DISubroutineType(mb, getEmptyMetadata(mb));
+            }
+            return dummySubprogramType;
+        }
     }
 
     /**
@@ -595,7 +631,7 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
      */
     private static class VariableDataBundle {
         final int codeIndex;
-	    final String name;
+        final String name;
         final String dwarfName;
         final String typeSignature;
         final int startLine;
@@ -627,12 +663,4 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
             this.variables = variables;
         }
     }
-
-	private IntegerConstant v(int i) {
-    	return new IntegerConstant(i);
-	}
-
-	private MetadataString v(String s) {
-    	return new MetadataString(s);
-	}
 }

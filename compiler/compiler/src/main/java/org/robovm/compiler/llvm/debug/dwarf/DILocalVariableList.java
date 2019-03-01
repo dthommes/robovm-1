@@ -16,15 +16,15 @@
 package org.robovm.compiler.llvm.debug.dwarf;
 
 import org.robovm.compiler.ModuleBuilder;
+import org.robovm.compiler.llvm.NamedMetadata;
 
-/** file descriptor metadata */
-public class DIFileDescriptor extends DIItemList {
-    public DIFileDescriptor(ModuleBuilder builder, DIBaseItem file) {
-        // follows following structure
-        // DIHeader(
-        //    i32       ;; Tag = 41 (DW_TAG_file_type)
-        //  ),
-        //  metadata  ;; Source directory (including trailing slash) & file pair
-        super(builder, (new DIHeader()).add(DwarfConst.Tag.TAG_file_type), file.get());
+public class DILocalVariableList extends NamedMetadata<DIMetadataValueList> {
+
+    public DILocalVariableList(ModuleBuilder mb) {
+        super(mb, new DIMetadataValueList());
+    }
+
+    public void add(DILocalVariable v) {
+        node.add(v.ref());
     }
 }

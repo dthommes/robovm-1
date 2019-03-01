@@ -43,6 +43,12 @@ public class StringConstant extends Constant {
         return sb.toString();
     }
 
+    public static String escape(String s) {
+        StringBuilder sb = new StringBuilder();
+        escape(sb, s.getBytes());
+        return sb.toString();
+    }
+
     static void escape(StringBuilder sb, byte[] bytes) {
         for (int i = 0; i < bytes.length; i++) {
             int b = bytes[i] & 0xff;

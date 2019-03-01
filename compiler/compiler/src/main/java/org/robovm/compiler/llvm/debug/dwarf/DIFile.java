@@ -15,19 +15,17 @@
  */
 package org.robovm.compiler.llvm.debug.dwarf;
 
-public class DILineNumber extends DIBaseItem {
-    private final int lineNo;
-    private final int colNo;
-    private final DIBaseItem block;
+import org.robovm.compiler.ModuleBuilder;
+import org.robovm.compiler.llvm.NamedMetadata;
 
-    public DILineNumber(int lineNo, int colNo, DIBaseItem block) {
-        this.lineNo = lineNo;
-        this.colNo = colNo;
-        this.block = block;
-    }
-
-    @Override
-    public String toString() {
-        return "!dbg !{i32 " + lineNo + ", i32 " + colNo + ", " + block.get() + ", null}";
+/**
+ * DIFile nodes represent files. The filename: can include slashes.
+ * nb: checksumkind and checksum are not implemented
+ */
+public class DIFile extends NamedMetadata<DISpecializedMetadata> {
+    public DIFile(ModuleBuilder mb, String filename, String directory) {
+        super(mb, new DISpecializedMetadata("DIFile")
+                .put("filename", filename)
+                .put("directory", directory));
     }
 }

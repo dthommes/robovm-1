@@ -16,8 +16,19 @@
  */
 package org.robovm.compiler;
 
-import static org.robovm.compiler.Strings.*;
-import static org.robovm.compiler.llvm.Type.*;
+import org.robovm.compiler.llvm.Alias;
+import org.robovm.compiler.llvm.Constant;
+import org.robovm.compiler.llvm.ConstantGetelementptr;
+import org.robovm.compiler.llvm.Function;
+import org.robovm.compiler.llvm.FunctionDeclaration;
+import org.robovm.compiler.llvm.Global;
+import org.robovm.compiler.llvm.GlobalRef;
+import org.robovm.compiler.llvm.Linkage;
+import org.robovm.compiler.llvm.Module;
+import org.robovm.compiler.llvm.NamedMetadata;
+import org.robovm.compiler.llvm.NullConstant;
+import org.robovm.compiler.llvm.StringConstant;
+import org.robovm.compiler.llvm.UserType;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -28,21 +39,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.robovm.compiler.llvm.Alias;
-import org.robovm.compiler.llvm.Constant;
-import org.robovm.compiler.llvm.ConstantGetelementptr;
-import org.robovm.compiler.llvm.Function;
-import org.robovm.compiler.llvm.FunctionDeclaration;
-import org.robovm.compiler.llvm.Global;
-import org.robovm.compiler.llvm.GlobalRef;
-import org.robovm.compiler.llvm.Linkage;
-import org.robovm.compiler.llvm.Metadata;
-import org.robovm.compiler.llvm.Module;
-import org.robovm.compiler.llvm.NamedMetadata;
-import org.robovm.compiler.llvm.NullConstant;
-import org.robovm.compiler.llvm.StringConstant;
-import org.robovm.compiler.llvm.UnnamedMetadata;
-import org.robovm.compiler.llvm.UserType;
+import static org.robovm.compiler.Strings.getStringVarName;
+import static org.robovm.compiler.Strings.stringToModifiedUtf8Z;
+import static org.robovm.compiler.llvm.Type.I8_PTR;
 
 /**
  *
@@ -57,7 +56,7 @@ public class ModuleBuilder {
     private final List<UserType> types = new ArrayList<UserType>();
     private final List<String> asm = new ArrayList<String>();
     private final Map<String, NamedMetadata> namedMetadata = new TreeMap<>();
-    private final Map<Integer, UnnamedMetadata> unnamedMetadata = new TreeMap<>();
+    private final Map<Integer, NamedMetadata> unnamedMetadata = new TreeMap<>();
     private final Set<String> symbols = new HashSet<String>();
     private int counter = 0;
     private Map<String, Global> strings = new HashMap<String, Global>();;
@@ -99,21 +98,18 @@ public class ModuleBuilder {
         throw new IllegalArgumentException("Global with name " + name + " not found");
     }
     
-    public void addNamedMetadata(NamedMetadata md) {
-        if (namedMetadata.containsKey(md.getName())) {
-            throw new IllegalArgumentException("Named metadata " + md.getName() + " already defined");
+    public String registerNamedMetadata(NamedMetadata md, String name) {
+        if (namedMetadata.containsKey(name)) {
+            throw new IllegalArgumentException("Named metadata " + name + " already defined");
         }
-        namedMetadata.put(md.getName(), md);
+        namedMetadata.put(name, md);
+        return name;
     }
 
-    public UnnamedMetadata newUnnamedMetadata() {
-        return newUnnamedMetadata(null);
-    }
-    
-    public UnnamedMetadata newUnnamedMetadata(Metadata value) {
-        UnnamedMetadata md = new UnnamedMetadata(unnamedMetadata.size(), value);
-        unnamedMetadata.put(md.getIndex(), md);
-        return md;
+    public String registerNamedMetadata(NamedMetadata md) {
+        int idx = unnamedMetadata.size();
+        unnamedMetadata.put(idx, md);
+        return String.valueOf(idx);
     }
 
     public Global newGlobal(Constant value) {

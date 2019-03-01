@@ -16,37 +16,107 @@
  */
 package org.robovm.compiler.llvm;
 
+import org.robovm.compiler.ModuleBuilder;
+import org.robovm.compiler.llvm.debug.dwarf.DIMetadataValueList;
+
+import java.util.Objects;
+
 /**
  *
  * @version $Id$
  */
-public class NamedMetadata {
+public class NamedMetadata<T extends Metadata> extends Metadata{
     private final String name;
-    private final UnnamedMetadata[] values;
+    protected T node;
 
-    public NamedMetadata(String name, UnnamedMetadata ... values) {
-        this.name = name;
-        this.values = values;
+    public NamedMetadata(ModuleBuilder mb, String name, T node) {
+        this.name = mb.registerNamedMetadata(this, name);
+        this.node = node;
+    }
+
+    /**
+     * auto assign index name
+     */
+    public NamedMetadata(ModuleBuilder mb, T node) {
+        this.name = mb.registerNamedMetadata(this);
+        this.node = node;
     }
 
     public String getName() {
         return name;
     }
-    
+
+    public Ref ref() {
+        return new Ref(this);
+    }
+
+    private NamedMetadata<T> setNode(T node) {
+        this.node = node;
+        return this;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append('!');
         sb.append(name);
         sb.append(" = ");
-        sb.append("!{");
-        for (int i = 0; i < values.length; i++) {
-            if (i > 0) {
-                sb.append(", ");
-            }
-            sb.append(values[i]);
-        }
-        sb.append('}');
+        sb.append(node);
         return sb.toString();
+    }
+
+    public static NamedMetadata<DIMetadataValueList> withNamedTuple(ModuleBuilder mb, String name, Object ...values) {
+        // create metadata with empty node to allow it having lower index that its children
+        NamedMetadata<DIMetadataValueList> metadata;
+        if (name == null)
+            metadata =  new NamedMetadata<>(mb, null);
+        else
+            metadata =  new NamedMetadata<>(mb, name, null);
+
+        DIMetadataValueList node = new DIMetadataValueList();
+        node.add(values);
+        return metadata.setNode(node);
+    }
+
+    public static NamedMetadata withTuple(ModuleBuilder mb, Object ...values) {
+        return withNamedTuple(mb, null, values);
+    }
+
+
+    public static class Ref extends Metadata {
+        private final String name;
+
+        public Ref(NamedMetadata metadata) {
+            this.name = metadata.getName();
+        }
+
+        public Ref(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            Ref other = (Ref) obj;
+            return name.equals(other.name);
+        }
+
+        @Override
+        public String toString() {
+            return "!" + name;
+        }
     }
 }
