@@ -267,7 +267,7 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
         // DILocalVariableList diVariableList = new DILocalVariableList(mb);
 
         // forward definition for subprogram
-        DISubprogram diSubprogram = new DISubprogram(mb, function.ref().toString(), classBundle.diFile,
+        DISubprogram diSubprogram = new DISubprogram(mb, function.ref().getName(), classBundle.diFile,
                 methodLineNumber, classBundle.getDummySubprogramType(mb), classBundle.diCompileUnit,
                 null /*diVariableList*/);
 
