@@ -263,21 +263,25 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
         }
 
         // forward definition for variables
-        DILocalVariableList diVariableList = new DILocalVariableList(mb);
+        // FIXME: seems locals list is not supported in DISubprogram, don't add it for now
+        // DILocalVariableList diVariableList = new DILocalVariableList(mb);
 
         // forward definition for subprogram
         DISubprogram diSubprogram = new DISubprogram(mb, function.ref().toString(), classBundle.diFile,
                 methodLineNumber, classBundle.getDummySubprogramType(mb), classBundle.diCompileUnit,
-                diVariableList);
+                null /*diVariableList*/);
 
         // add debug information to function attributes
         function.setDebugMetadata(diSubprogram.toDebugMetadata());
+
+        // use cache to re-use same DILocation for same line/col
+        LocationCache diLocationCache = new LocationCache(mb, diSubprogram);
 
         // attach debug line number information to each instruction that is in map
         for (Map.Entry<Instruction, Integer> e : instructionToLineNo.entrySet()) {
             Instruction instruction = e.getKey();
             int lineNo = e.getValue();
-            instruction.addMetadata(new DILocation(mb, lineNo, 0, diSubprogram).toDebugMetadata());
+            instruction.addMetadata(diLocationCache.get(lineNo, 0).toDebugMetadata());
         }
 
 
@@ -328,15 +332,15 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
             ConstantBitcast bpTableRef = new ConstantBitcast(bpTable.ref(), Type.I8_PTR);
             for (Map.Entry<Integer, Instruction> e : hookInstructionLines.entrySet()) {
                 int lineNo = e.getKey();
-                injectHookInstrumented(mb, diSubprogram, lineNo, lineNo - methodLineNumber, function, bpTableRef, e.getValue());
+                injectHookInstrumented(diLocationCache, lineNo, lineNo - methodLineNumber, function, bpTableRef, e.getValue());
             }
         }
 
         // build map of local index to argument no
         int firstArgNo;
         if (!method.isStatic()) {
-            // add map of this, as first argument, it always goes as index=0
-            varIndexToArgNo.put(0, 1);
+            // add map of 'this', as first argument, it always goes at slot=0
+            varIndexToArgNo.put(0, 2);
             // skip it in arg map
             firstArgNo = 3;
         } else {
@@ -389,12 +393,17 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
 
             // get arg idx if it is there
             Integer argIdxObj = varIndexToArgNo.get(var.getIndex());
-            int argIdx = argIdxObj != null ? argIdxObj : 0;
-
             // add llvm.dbg.declare call
-            DILocalVariable diLocalVariable = new DILocalVariable(mb, dwarfName, varStartLine, argIdx,
-                    classBundle.diFile, diSubprogram,
-                    classBundle.getDummyJavaVariableType(mb));
+            DILocalVariable diLocalVariable;
+            if (argIdxObj != null) {
+                // argument
+                diLocalVariable = new DILocalVariable(mb, dwarfName, varStartLine, argIdxObj,
+                        classBundle.diFile, diSubprogram, classBundle.getDummyJavaVariableType(mb));
+            } else {
+                // local
+                diLocalVariable = new DILocalVariable(mb, dwarfName, varStartLine, classBundle.diFile,
+                        diSubprogram, classBundle.getDummyJavaVariableType(mb));
+            }
 
             // get instruction to work with
             Instruction instr = unitToInstruction.get(var.getStartUnit());
@@ -403,11 +412,12 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
             Call call = new Call(Functions.LLVM_DBG_DECLARE,
                     new MetadataValue(new VariableRef(alloca.getResult().getName(), new PointerType(alloca.getResult().getType()))),
                     diLocalVariable.ref(), new MetadataValue(new NamedMetadata.Ref("DIExpression()")));
-            call.addMetadata((new DILocation(mb, varStartLine, 0, diSubprogram)).toDebugMetadata());
+            call.addMetadata((diLocationCache.get(varStartLine, 0)).toDebugMetadata());
             instr.getBasicBlock().insertBefore(instr, call);
 
             // save variable to the list
-            diVariableList.add(diLocalVariable);
+            // FIXME: it is not required for now, commenting out for now
+            // diVariableList.add(diLocalVariable);
         }
 
         // sort variables by index to make sure arguments pop to top
@@ -486,7 +496,7 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
     /**
      * injects calls to _bcHookInstrumented to allow breakpoints/step by step debugging
      */
-    private void injectHookInstrumented(ModuleBuilder mb, DISubprogram diSubprogram, int lineNo, int lineNumberOffset, Function function, Constant bpTableRef, Instruction instruction) {
+    private void injectHookInstrumented(LocationCache locationCache, int lineNo, int lineNumberOffset, Function function, Constant bpTableRef, Instruction instruction) {
         BasicBlock block = instruction.getBasicBlock();
         // prepare a call to following function:
         // void _bcHookInstrumented(DebugEnv* debugEnv, jint lineNumber, jint lineNumberOffset, jbyte* bptable, void* pc)
@@ -503,7 +513,7 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
         block.insertBefore(instruction, bcHookInstrumented);
 
         // attach line number metadata otherwise stack entry will have previous line number index
-        bcHookInstrumented.addMetadata((new DILocation(mb, lineNo, 0, diSubprogram)).toDebugMetadata());
+        bcHookInstrumented.addMetadata(locationCache.get(lineNo, 0).toDebugMetadata());
     }
 
     /**
@@ -661,6 +671,32 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
             this.startLine = startLine;
             this.finalLine = finalLine;
             this.variables = variables;
+        }
+    }
+
+    /**
+     * Used to minimize number for DILocation being created for same locations (e.g. with same line and cols)
+     */
+    private static class LocationCache {
+        final ModuleBuilder mb;
+        final DISubprogram scope;
+        final Map<Long, DILocation> cache = new HashMap<>();
+
+        LocationCache(ModuleBuilder mb, DISubprogram scope) {
+            this.mb = mb;
+            this.scope = scope;
+        }
+
+        DILocation get(int line, int col) {
+            long key = (long) line  << 32;
+            key += col;
+            DILocation loc = cache.get(key);
+            if (loc == null) {
+                loc = new DILocation(mb, line, col, scope);
+                cache.put(key, loc);
+            }
+
+            return loc;
         }
     }
 }
