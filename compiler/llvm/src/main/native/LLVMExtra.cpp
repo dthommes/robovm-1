@@ -429,14 +429,14 @@ static void LLVMDumpDwarfDebugDataToOutputStream(LLVMObjectFileRef O, raw_pwrite
     for (int idx = 0; idx < cuNum; idx++) {
         DWARFCompileUnit *cu = ctx->getCompileUnitAtIndex(idx);
         
-        DWARFDie entry = cu->getUnitDIE();
+        DWARFDie entry = cu->getUnitDIE(false);
         if (entry.getTag() != DW_TAG_compile_unit)
             continue;
         if (!entry.hasChildren())
             continue;
         
         entry = entry.getFirstChild();
-        do {
+        while (entry.isValid()) {
             // expect subprogram
             if (entry.isSubprogramDIE()) {
                 // dump subprogram name
@@ -457,7 +457,7 @@ static void LLVMDumpDwarfDebugDataToOutputStream(LLVMObjectFileRef O, raw_pwrite
             
             // check next level element
             entry = entry.getSibling();
-        } while (entry.isValid());
+        }
         
         // end of stream marker
         dump_u32(os, 0);
