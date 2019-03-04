@@ -15,12 +15,6 @@ using namespace std;
 using namespace llvm;
 using namespace clang;
 
-static void LLVMErrorHandler(void *UserData, const std::string &Message,
-                             bool GenCrashDiag) {
-    DiagnosticsEngine &Diags = *static_cast<DiagnosticsEngine*>(UserData);
-    Diags.Report(diag::err_fe_error_backend) << Message;
-}
-
 LLVMModuleRef ClangCompileFile(LLVMContextRef Context, char* Data, char* FileName, char* Triple, char **ErrorMessage)
 {
     std::string error;
@@ -53,10 +47,6 @@ LLVMModuleRef ClangCompileFile(LLVMContextRef Context, char* Data, char* FileNam
         *ErrorMessage = strdup("Error creating Diagnostics!");
         return NULL;
     }
-
-    // Set an error handler, so that any LLVM backend diagnostics go through our
-    // error handler.
-    llvm::install_fatal_error_handler(LLVMErrorHandler, static_cast<void*>(&Clang->getDiagnostics()));
 
     // Create and execute the frontend to generate an LLVM bitcode module.
     std::unique_ptr<CodeGenAction> Act(new EmitLLVMOnlyAction(unwrap(Context)));
