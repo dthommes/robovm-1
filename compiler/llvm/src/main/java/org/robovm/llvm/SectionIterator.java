@@ -49,6 +49,7 @@ public class SectionIterator implements AutoCloseable {
     }
     
     protected SectionIteratorRef getRef() {
+        checkDisposed();
         return ref;
     }
     

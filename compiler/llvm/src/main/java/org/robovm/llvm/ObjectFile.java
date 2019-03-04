@@ -105,8 +105,8 @@ public class ObjectFile implements AutoCloseable {
                 // it is common linkage, can add it directly to result as size is known
                 long size = LLVM.GetSymbolSize(it);
                 result.add(new Symbol(name, address, size));
-            } if ((flags & SymbolFlags.SF_Global.swigValue()) == 0) {
-                // symbol is not global, don't bother with it and assume its size 0
+            } if ((flags & SymbolFlags.SF_Global.swigValue()) == 0 || (flags & SymbolFlags.SF_Undefined.swigValue()) != 0) {
+                // symbol is not global or undefined, don't bother with it and assume its size 0
                 result.add(new Symbol(name, address, 0));
             } else {
                 // size is not known, add to sections for future resolution
