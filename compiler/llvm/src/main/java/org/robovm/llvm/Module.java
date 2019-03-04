@@ -33,6 +33,7 @@ import org.robovm.llvm.binding.ValueRef;
  */
 public class Module implements AutoCloseable {
     private ModuleRef ref;
+    private boolean externallyDisposed = false;
 
     private Module(ModuleRef moduleRef) {
         this.ref = moduleRef;
@@ -50,8 +51,21 @@ public class Module implements AutoCloseable {
     }
 
     public synchronized void dispose() {
-        LLVM.DisposeModule(getRef());
+        if (!externallyDisposed) {
+            LLVM.DisposeModule(getRef());
+            ref = null;
+        }
+    }
+
+    /**
+     * Mark object as disposed externally, this happens if object is destroyed inside
+     * LLVM. For example LLVMLinkModules2 destroys source module and ref doesn't point
+     * to any valid memory any more. A try to dispose it will cause GPF on zombie object
+     */
+    public synchronized void markExternallyDisposed() {
+        checkDisposed();
         ref = null;
+        externallyDisposed = true;
     }
 
     @Override
@@ -87,6 +101,8 @@ public class Module implements AutoCloseable {
         if (LLVM.LinkModules(getRef(), other.getRef(), errorMessage)) {
             throw new LlvmException(errorMessage.getValue().trim());
         }
+        // LLVMLinkModules2 destroys source module, so mark it as already disposed
+        other.markExternallyDisposed();
     }
     
     @Override
