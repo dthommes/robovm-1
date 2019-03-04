@@ -1,0 +1,13 @@
+diff --git a/cmake/modules/AddLLVM.cmake b/cmake/modules/AddLLVM.cmake
+index ce2057f803c..a76d3defaca 100644
+--- a/cmake/modules/AddLLVM.cmake
++++ b/cmake/modules/AddLLVM.cmake
+@@ -1043,7 +1043,7 @@ function(create_subdirectory_options project type)
+     if(IS_DIRECTORY "${dir}" AND EXISTS "${dir}/CMakeLists.txt")
+       canonicalize_tool_name(${dir} name)
+       option(${project}_${type}_${name}_BUILD
+-           "Whether to build ${name} as part of ${project}" On)
++           "Whether to build ${name} as part of ${project}" Off)
+       mark_as_advanced(${project}_${type}_${name}_BUILD)
+     endif()
+   endforeach()

@@ -81,10 +81,8 @@ message (STATUS "OS=${OS}")
 message (STATUS "ARCH=${ARCH}")
 message (STATUS "JNI_INCLUDE_DIRS=${JNI_INCLUDE_DIRS}")
 
-set(C_CXX_FLAGS "${C_CXX_FLAGS} -fvisibility=hidden -fdata-sections -ffunction-sections")
 if(MACOSX AND X86_64)
-  set(C_CXX_FLAGS "${C_CXX_FLAGS} -arch x86_64 -mmacosx-version-min=10.7")
-  set(LD_FLAGS "${LD_FLAGS} -arch x86_64 -mmacosx-version-min=10.7")
+  # nothing
 elseif(LINUX AND X86)
   set(C_CXX_FLAGS "${C_CXX_FLAGS} -m32")
   set(LD_FLAGS "${LD_FLAGS} -m64")
@@ -99,20 +97,7 @@ elseif(WINDOWS AND X86_64)
   set(LD_FLAGS "${LD_FLAGS} -m64")
 endif()
 
-if(MACOSX)
-  exec_program(xcode-select ARGS --print-path OUTPUT_VARIABLE XCODE_PATH)
-  set(SYSROOT "${XCODE_PATH}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk")
-  if(NOT IS_DIRECTORY ${SYSROOT})
-    set(SYSROOT "${XCODE_PATH}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
-  endif()
-  if(NOT IS_DIRECTORY ${SYSROOT})
-    message(FATAL_ERROR "No supported MacOSX SDK found")
-  endif()
-  set(C_CXX_FLAGS "${C_CXX_FLAGS} -isysroot ${SYSROOT}")
-endif()
-
-
-# allow to override repository for quiker checkouts on local builds
+# allow to override repository for quicker checkouts on local builds
 if(DEFINED ENV{ROBOVM_CLANG_GIT_PATH})
   set(CLANG_GIT_PATH "$ENV{ROBOVM_CLANG_GIT_PATH}")
   message (STATUS "Using custom clang.git @ ${CLANG_GIT_PATH}")
@@ -132,14 +117,7 @@ ExternalProject_Add(extclang
 
 
 set(LLVM_ARCHS "X86^^ARM^^AArch64")
-set(LLVM_C_FLAGS "${C_CXX_FLAGS} -fvisibility=hidden -fdata-sections -ffunction-sections")
-set(LLVM_CXX_FLAGS "${C_CXX_FLAGS} -fvisibility=hidden -fdata-sections -ffunction-sections")
-if (WINDOWS)
-  set(LLVM_CXX_FLAGS "${LLVM_CXX_FLAGS} -Wa,-mbig-obj")
-endif()
-if(MACOSX)
-  set(LLVM_CXX_FLAGS "${LLVM_CXX_FLAGS} -stdlib=libc++")
-endif()
+
 # allow to override repository for quiker checkouts on local builds
 if(DEFINED ENV{ROBOVM_LLVM_GIT_PATH})
   set(LLVM_GIT_PATH "$ENV{ROBOVM_LLVM_GIT_PATH}")
@@ -148,38 +126,23 @@ else()
   set(LLVM_GIT_PATH git://github.com/mobivm/llvm.git)
 endif()
 
-# optimization breaks code execution which caused NPE when working with ARM64 target
-if(NOT MACOSX)
-       set(TENTATIVE_DISABLE_OPT "-DCMAKE_CXX_FLAGS_RELEASE=-O0 -DNDEBUG")
-endif()
-
 ExternalProject_Add(extllvm
   DEPENDS extclang
   GIT_REPOSITORY ${LLVM_GIT_PATH}
   GIT_TAG release_70
   LIST_SEPARATOR ^^
-  CONFIGURE_COMMAND cmake -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS=${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS}
-                          ${TENTATIVE_CMAKE_SYSTEM_NAME}
-                          ${TENTATIVE_WIN32_FLAGS}
-                          -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                          -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                          ${TENTATIVE_CMAKE_RC_COMPILER}
-                          -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+  CONFIGURE_COMMAND cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                           -DBUILD_SHARED_LIBS=OFF
                           "-DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/llvm"
                           "-DLLVM_TARGETS_TO_BUILD=${LLVM_ARCHS}"
-                          "-DCMAKE_C_FLAGS=${LLVM_C_FLAGS}"
-                          "-DCMAKE_CXX_FLAGS=${LLVM_CXX_FLAGS}"
-                          ${TENTATIVE_DISABLE_OPT}
-                          -DLLVM_ENABLE_LIBCXX=YES
-                          -DLLVM_ENABLE_CXX1Y=YES
-                          -DLLVM_ENABLE_THREADS=YES
+                          -DLLVM_BUILD_TOOLS=OFF 
+                          -DLLVM_INCLUDE_EXAMPLES=OFF 
+                          -DLLVM_INCLUDE_TESTS=OFF 
+                          -DLLVM_INCLUDE_DOCS=OFF 
+                          -DLLVM_TOOL_CLANG_BUILD=ON 
+                          -DCLANG_BUILD_TOOLS=OFF 
+                          -DCLANG_TOOL_LIBCLANG_BUILD=ON 
                           -DLIBCLANG_BUILD_STATIC=YES
-                          -DLLVM_BUILD_TOOLS=OFF
-                          -DLLVM_INCLUDE_EXAMPLES=OFF
-                          -DLLVM_INCLUDE_TESTS=OFF
-                          -DLLVM_INCLUDE_DOCS=OFF
-                          -DCLANG_BUILD_TOOLS=OFF
                           ../extllvm/
   PATCH_COMMAND bash -c "rm -rf tools/clang && cp -r ../../../extclang-prefix/src/extclang/ tools/clang/ && ${CMAKE_SOURCE_DIR}/patches/apply-patches"
 )
@@ -191,7 +154,6 @@ if(MACOSX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
 
-add_definitions(-D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS)
 include_directories(${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2} ${CMAKE_BINARY_DIR}/llvm/include)
 
 # This was generated using 'llvm-config --libs core coroutines bitreader bitwriter irreader ipo arm x86 aarch64 linker option instrumentation objcarcopts coverage debuginfodwarf passes lto'
@@ -208,31 +170,13 @@ set(LLVM_LIBS
    -lLLVMDebugInfoMSF -lLLVMBitReader -lLLVMCore -lLLVMBinaryFormat -lLLVMSupport -lLLVMDemangle
 )
 # Required clang libs
-if(LINUX)
-  # With the GNU linker library order is important and some libraries have
-  # to be repeated in order to resolve all symbols properly.
-  set(LLVM_LIBS
+set(LLVM_LIBS
     -lclangBasic -lclangDriver -lclangFrontend -lclangCodeGen
     -lclangFrontend -lclangDriver -lclangParse -lclangSerialization
     -lclangSema -lclangEdit -lclangAnalysis -lclangAST -lclangLex
     -lclangBasic ${LLVM_LIBS}
-  )
-elseif(WINDOWS)
-  set(LLVM_LIBS
-    -lclangBasic -lclangDriver -lclangFrontend -lclangCodeGen
-    -lclangFrontend -lclangDriver -lclangParse -lclangSerialization
-    -lclangSema -lclangEdit -lclangAnalysis -lclangAST -lclangLex
-    -lclangBasic -ldbghelp ${LLVM_LIBS}
-  )
-elseif(MACOSX)
-  set(LLVM_LIBS ${LLVM_LIBS}
-    -lclangFrontend -lclangAST -lclangBasic -lclangLex -lclangSerialization
-    -lclangSema -lclangEdit -lclangCodeGen -lclangParse -lclangAnalysis
-    -lclangDriver
-  )
-endif()
+)
 
-# This was generated using 'llvm-config --ldflags'
 if(LINUX)
   set(LLVM_LDFLAGS
     -L"${CMAKE_BINARY_DIR}/llvm/lib"
