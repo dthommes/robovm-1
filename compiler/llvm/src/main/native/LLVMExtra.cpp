@@ -507,3 +507,11 @@ LLVMBool LLVMLinkModules(LLVMModuleRef Dest, LLVMModuleRef Src, char **OutMessag
 uint32_t LLVMGetSymbolFlags(LLVMSymbolIteratorRef SI) {
     return (*unwrap(SI))->getObject()->getSymbolFlags((*unwrap(SI))->getRawDataRefImpl());
 }
+
+LLVMBool LLVMIsMachOObjectFile(LLVMObjectFileRef objectFile) {
+    return unwrap(objectFile)->getBinary()->isMachO();
+}
+
+LLVMBool LLVMIsCOFFObjectFile(LLVMObjectFileRef objectFile) {
+    return unwrap(objectFile)->getBinary()->isCOFF();
+}

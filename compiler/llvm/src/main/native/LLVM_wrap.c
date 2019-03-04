@@ -15466,6 +15466,36 @@ SWIGEXPORT jbyteArray JNICALL Java_org_robovm_llvm_binding_LLVMJNI_DumpDwarfDebu
 }
 
 
+SWIGEXPORT jboolean JNICALL Java_org_robovm_llvm_binding_LLVMJNI_IsMachOObjectFile(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
+  LLVMObjectFileRef arg1 = (LLVMObjectFileRef) 0 ;
+  LLVMBool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(LLVMObjectFileRef *)&jarg1; 
+  result = LLVMIsMachOObjectFile(arg1);
+  jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jboolean JNICALL Java_org_robovm_llvm_binding_LLVMJNI_IsCOFFObjectFile(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
+  LLVMObjectFileRef arg1 = (LLVMObjectFileRef) 0 ;
+  LLVMBool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(LLVMObjectFileRef *)&jarg1; 
+  result = LLVMIsCOFFObjectFile(arg1);
+  jresult = result; 
+  return jresult;
+}
+
+
 SWIGEXPORT jlong JNICALL Java_org_robovm_llvm_binding_LLVMJNI_GetSymbolFlags(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   jlong jresult = 0 ;
   LLVMSymbolIteratorRef arg1 = (LLVMSymbolIteratorRef) 0 ;

@@ -109,8 +109,6 @@ public class ObjectFileTest {
         String cc = "gcc";
         String symbolPrefix = "";
         if (System.getProperty("os.name").toLowerCase().contains("mac")) {
-            // on Mac obj files are mach-o ones and doesn't contain object size so it will not be able to
-            // perform test as debug API depends on size
             cc = "clang";
             symbolPrefix = "_";
         }

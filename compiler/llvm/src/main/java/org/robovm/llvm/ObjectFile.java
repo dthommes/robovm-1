@@ -27,7 +27,10 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 
@@ -51,22 +54,96 @@ public class ObjectFile implements AutoCloseable {
         checkDisposed();
         return ref;
     }
-    
+
+    public boolean isMachO() {
+        return LLVM.IsMachOObjectFile(getRef());
+    }
+
+    public boolean isCOFF() {
+        return LLVM.IsCOFFObjectFile(getRef());
+    }
+
     public List<Symbol> getSymbols() {
+        if (isMachO() || isCOFF())
+            return getMachOSymbols();
+        else
+            return getSymbolsElf();
+    }
+
+    // returns symbols original way assuming that size information is available
+    private List<Symbol> getSymbolsElf() {
         List<Symbol> result = new ArrayList<>();
         SymbolIteratorRef it = LLVM.GetSymbols(getRef());
         while (!LLVM.IsSymbolIteratorAtEnd(getRef(), it)) {
             String name = LLVM.GetSymbolName(it);
             long address = LLVM.GetSymbolAddress(it);
-            long flags = LLVM.GetSymbolFlags(it);
-            long size = (flags & SymbolFlags.SF_Common.swigValue()) != 0 ? LLVM.GetSymbolSize(it) : 0;
+            long size = LLVM.GetSymbolSize(it);
             result.add(new Symbol(name, address, size));
             LLVM.MoveToNextSymbol(it);
         }
         LLVM.DisposeSymbolIterator(it);
         return result;
     }
-    
+
+    /**
+     * The version differs from getSymbols in the way that it has to calculate symbols size
+     * On MachO symbol size is available only for Common linked ones. So we have to finds
+     * out all symbols in section, sort it, and assume symbol size is a gap between two symbols
+     * LLVM stopped this way of size evaluation on MachO as there are possible side effects.
+     * Ref: http://llvm.org/viewvc/llvm-project?view=revision&revision=238028
+     */
+    private List<Symbol> getMachOSymbols() {
+        List<Symbol> result = new ArrayList<>();
+        SymbolIteratorRef it = LLVM.GetSymbols(getRef());
+        SectionIterator sectionIt = getSectionIterator();
+        Map<String, SectionInfo> unresolved = new HashMap<>();
+        while (!LLVM.IsSymbolIteratorAtEnd(getRef(), it)) {
+            String name = LLVM.GetSymbolName(it);
+            long address = LLVM.GetSymbolAddress(it);
+            long flags = LLVM.GetSymbolFlags(it);
+            if ((flags & SymbolFlags.SF_Common.swigValue()) != 0) {
+                // it is common linkage, can add it directly to result as size is known
+                long size = LLVM.GetSymbolSize(it);
+                result.add(new Symbol(name, address, size));
+            } if ((flags & SymbolFlags.SF_Global.swigValue()) == 0) {
+                // symbol is not global, don't bother with it and assume its size 0
+                result.add(new Symbol(name, address, 0));
+            } else {
+                // size is not known, add to sections for future resolution
+                sectionIt.moveToContainingSection(it);
+                String sectionName = sectionIt.getName();
+                SectionInfo sectionInfo = unresolved.get(sectionName);
+                if (sectionInfo == null) {
+                    sectionInfo = new SectionInfo(sectionIt.getAddress(), sectionIt.getSize());
+                    unresolved.put(sectionName, sectionInfo);
+                }
+                sectionInfo.symbols.add(new Symbol(name, address, -1));
+            }
+            LLVM.MoveToNextSymbol(it);
+        }
+        LLVM.DisposeSymbolIterator(it);
+        sectionIt.dispose();
+
+        // now process unresolved, sort each section and calculate symbol size as a gap between symbols
+        Comparator<Symbol> symbolComparator = Symbol.getAddressComparator();
+        for (SectionInfo sectionInfo : unresolved.values()) {
+            if (sectionInfo.symbols.size() > 1)
+                sectionInfo.symbols.sort(symbolComparator);
+            // move from first till excluding last
+            for (int idx = 0; idx < sectionInfo.symbols.size() - 1; idx++) {
+                Symbol raw = sectionInfo.symbols.get(idx);
+                Symbol next = sectionInfo.symbols.get(idx + 1);
+                result.add(new Symbol(raw.getName(), raw.getAddress(), next.getAddress() - raw.getAddress()));
+            }
+            // assume last symb last till end of section
+            Symbol last = sectionInfo.symbols.get(sectionInfo.symbols.size() - 1);
+            long size = (sectionInfo.addr + sectionInfo.size) - last.getAddress();
+            result.add(new Symbol(last.getName(), last.getAddress(), size));
+        }
+
+        return result;
+    }
+
     public SectionIterator getSectionIterator() {
         return new SectionIterator(this, LLVM.GetSections(getRef()));
     }
@@ -219,5 +296,16 @@ public class ObjectFile implements AutoCloseable {
             throw new LlvmException("Failed to create object file " + file.getAbsolutePath());
         }
         return new ObjectFile(file, ref);
+    }
+
+    private static class SectionInfo {
+        final long addr;
+        final long size;
+        final List<Symbol> symbols = new ArrayList<>();
+
+        SectionInfo(long addr, long size) {
+            this.addr = addr;
+            this.size = size;
+        }
     }
 }

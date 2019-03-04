@@ -18,6 +18,7 @@ package org.robovm.llvm;
 
 import org.robovm.llvm.binding.LLVM;
 import org.robovm.llvm.binding.SectionIteratorRef;
+import org.robovm.llvm.binding.SymbolIteratorRef;
 
 /**
  * 
@@ -66,7 +67,11 @@ public class SectionIterator implements AutoCloseable {
     public long copyContents(byte[] dest) {
         return LLVM.CopySectionContents(getRef(), dest);
     }
-    
+
+    public void moveToContainingSection(SymbolIteratorRef symRef) {
+        LLVM.MoveToContainingSection(getRef(), symRef);
+    }
+
     public void next() {
         LLVM.MoveToNextSection(getRef());
     }

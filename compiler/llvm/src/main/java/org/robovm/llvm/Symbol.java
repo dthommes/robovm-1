@@ -16,6 +16,8 @@
  */
 package org.robovm.llvm;
 
+import java.util.Comparator;
+
 /**
  * 
  */
@@ -45,5 +47,18 @@ public class Symbol {
     @Override
     public String toString() {
         return String.format("Symbol [name=%s, address=%s, size=%s]", name, address, size);
+    }
+
+    public static Comparator<Symbol> getAddressComparator() {
+        return new Comparator<Symbol>() {
+            @Override
+            public int compare(Symbol o1, Symbol o2) {
+                long diff = o1.getAddress() - o2.getAddress();
+                if (diff != 0)
+                    return diff < 0 ? -1 : 1;
+                else
+                    return 0;
+            }
+        };
     }
 }

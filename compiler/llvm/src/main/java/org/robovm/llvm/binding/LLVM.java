@@ -3773,6 +3773,14 @@ public class LLVM implements LLVMConstants {
     return LLVMJNI.DumpDwarfDebugData(ObjectFileRef.getCPtr(O), O);
   }
 
+  public static boolean IsMachOObjectFile(ObjectFileRef objectFile) {
+    return LLVMJNI.IsMachOObjectFile(ObjectFileRef.getCPtr(objectFile), objectFile);
+  }
+
+  public static boolean IsCOFFObjectFile(ObjectFileRef objectFile) {
+    return LLVMJNI.IsCOFFObjectFile(ObjectFileRef.getCPtr(objectFile), objectFile);
+  }
+
   public static long GetSymbolFlags(SymbolIteratorRef SI) {
     return LLVMJNI.GetSymbolFlags(SymbolIteratorRef.getCPtr(SI), SI);
   }

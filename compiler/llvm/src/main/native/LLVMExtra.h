@@ -86,6 +86,10 @@ size_t LLVMCopySectionContents(LLVMSectionIteratorRef SI, char* Dest, size_t Des
 // dumps DWARF debug information into output stream
 jbyteArray LLVMDumpDwarfDebugData(JNIEnv *jenv, LLVMObjectFileRef O);
 
+// type checkers of obj file
+LLVMBool LLVMIsMachOObjectFile(LLVMObjectFileRef objectFile);
+LLVMBool LLVMIsCOFFObjectFile(LLVMObjectFileRef objectFile);
+
 
 // need symbol flags for debug
 typedef  enum LLVMSymbolFlags {
