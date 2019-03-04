@@ -365,7 +365,6 @@ public class ClassCompiler {
                         sb.append(s);
                     }
                     try (Module m2 = Module.parseClangString(context, sb.toString(), clazz.getClassName() + ".c", config.getClangTriple())) {
-                        module.link(m2);
                         for (org.robovm.llvm.Function f1 : m2.getFunctions()) {
                             String name = f1.getName();
                             org.robovm.llvm.Function f2 = module.getFunctionByName(name);
@@ -379,6 +378,7 @@ public class ClassCompiler {
                                 }
                             }
                         }
+                        module.link(m2);
                     }
                 }
                 
