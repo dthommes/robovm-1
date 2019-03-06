@@ -499,6 +499,7 @@ public class ClassCompiler {
             FileUtils.writeByteArrayToFile(llFile, data);
         }
         try (Module module = Module.parseIR(context, data, dataName)) {
+            module.setDataLayout(targetMachine.getDataLayout());
             byte[] bytes = targetMachine.emit(module, CodeGenFileType.ObjectFile);
             new HfsCompressor().compress(oFile, bytes, config);
         }
