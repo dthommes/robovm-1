@@ -29,6 +29,8 @@ import org.robovm.compiler.llvm.NamedMetadata;
 import org.robovm.compiler.llvm.NullConstant;
 import org.robovm.compiler.llvm.StringConstant;
 import org.robovm.compiler.llvm.UserType;
+import org.robovm.compiler.llvm.VirtualAlias;
+import org.robovm.compiler.llvm.VirtualAliasRef;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -50,7 +52,8 @@ import static org.robovm.compiler.llvm.Type.I8_PTR;
 public class ModuleBuilder {
     private final List<URL> includes = new ArrayList<URL>();
     private final List<Global> globals = new ArrayList<Global>();
-    private final List<Alias> aliases = new ArrayList<Alias>();    
+    private final List<Alias> aliases = new ArrayList<Alias>();
+    private final List<VirtualAlias> virtualAliases = new ArrayList<VirtualAlias>();
     private final List<Function> functions = new ArrayList<Function>();
     private final List<FunctionDeclaration> functionDeclarations = new ArrayList<FunctionDeclaration>();
     private final List<UserType> types = new ArrayList<UserType>();
@@ -121,7 +124,28 @@ public class ModuleBuilder {
         addGlobal(global);
         return global;
     }
-    
+
+    public VirtualAlias newVirtualAlias(String name, Constant value) {
+        if (symbols.contains(name)) {
+            throw new IllegalArgumentException("Symbol " + name + " already defined");
+        }
+
+        VirtualAlias alias = new VirtualAlias(name, value);
+        virtualAliases.add(alias);
+        symbols.add(name);
+        return alias;
+    }
+
+    public VirtualAliasRef getVirtualAliasRef(String name) {
+        for (VirtualAlias a : virtualAliases) {
+            if (name.equals(a.getName())) {
+                return a.ref();
+            }
+        }
+        throw new IllegalArgumentException("Virtual Alias with name " + name + " not found");
+    }
+
+
     public void addAlias(Alias alias) {
         if (symbols.contains(alias.getName())) {
             throw new IllegalArgumentException("Symbol " + alias.getName() + " already defined");

@@ -1493,7 +1493,7 @@ public class ClassCompiler {
                 body.add(new GlobalRef(Symbols.globalValuePtrSymbol(m), I8_PTR));
             }
             if (hasCallbackAnnotation(m)) {
-                body.add(new AliasRef(Symbols.callbackPtrSymbol(m), I8_PTR));
+                body.add(mb.getVirtualAliasRef(Symbols.callbackPtrSymbol(m)));
             }
         }
         

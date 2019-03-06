@@ -166,16 +166,16 @@ public class CallbackMethodCompiler extends BroMethodCompiler {
                 }
                 callbackParamTypes[i] = t;
             }
-            moduleBuilder.addAlias(new Alias(Symbols.callbackPtrSymbol(method), 
-                    Linkage._private, new ConstantBitcast(callbackCWrapperRef, I8_PTR)));
+            moduleBuilder.newVirtualAlias(Symbols.callbackPtrSymbol(method),
+                    new ConstantBitcast(callbackCWrapperRef, I8_PTR));
             callbackFn = new FunctionBuilder(Symbols.callbackInnerCSymbol(method), 
                     new FunctionType(callbackRetType, callbackParamTypes)).build();
             nativeFnType = callbackCWrapperRef.getType();
         } else {
             FunctionType callbackFnType = getCallbackFunctionType(method, false);
             callbackFn = FunctionBuilder.callback(method, callbackFnType);
-            moduleBuilder.addAlias(new Alias(Symbols.callbackPtrSymbol(method), 
-                    Linkage._private, new ConstantBitcast(callbackFn.ref(), I8_PTR)));
+            moduleBuilder.newVirtualAlias(Symbols.callbackPtrSymbol(method),
+                    new ConstantBitcast(callbackFn.ref(), I8_PTR));
             nativeFnType = callbackFnType;
         }
 
