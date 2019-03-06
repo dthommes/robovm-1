@@ -367,9 +367,12 @@ public class ClassCompiler {
                     try (Module m2 = Module.parseClangString(context, sb.toString(), clazz.getClassName() + ".c", config.getClangTriple())) {
                         for (org.robovm.llvm.Function f1 : m2.getFunctions()) {
                             String name = f1.getName();
-                            org.robovm.llvm.Function f2 = module.getFunctionByName(name);
                             if (Symbols.isBridgeCSymbol(name) || Symbols.isCallbackCSymbol(name) || Symbols.isCallbackInnerCSymbol(name)) {
-                                f2.setLinkage(org.robovm.llvm.binding.Linkage.PrivateLinkage);
+                                org.robovm.llvm.Function f2 = module.getFunctionByName(name);
+                                // TODO: in llvm7 we can't change linkage of definition as it will fail on assertion
+                                // for x86_64 target in getKindForGlobal/TargetLoweringObjectFile.cpp
+                                // with message: Assertion failed: (!GO->isDeclaration() && !GO->hasAvailableExternallyLinkage() && "Can only be used for global definitions")
+                                // f2.setLinkage(org.robovm.llvm.binding.Linkage.PrivateLinkage);
                                 if (Symbols.isCallbackInnerCSymbol(name)) {
                                     // TODO: We should also always inline the bridge functions but for some reason
                                     // that makes the RoboVM tests hang indefinitely.

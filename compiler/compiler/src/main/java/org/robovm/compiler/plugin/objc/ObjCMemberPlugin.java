@@ -65,6 +65,7 @@ import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.tagkit.AnnotationStringElem;
 import soot.tagkit.AnnotationTag;
+import soot.tagkit.LineNumberTag;
 import soot.tagkit.SignatureTag;
 import soot.util.Chain;
 
@@ -329,19 +330,24 @@ public class ObjCMemberPlugin extends AbstractCompilerPlugin {
                 STATIC | PRIVATE | FINAL);
         sootClass.addField(f);
 
-        units.insertBefore(
-                Arrays.<Unit> asList(
-                        j.newAssignStmt(
-                                objCClass,
-                                j.newStaticInvokeExpr(
-                                        org_robovm_objc_ObjCClass_getByType,
-                                        ClassConstant.v(sootClass.getName().replace('.', '/')))),
-                        j.newAssignStmt(
-                                j.newStaticFieldRef(f.makeRef()),
-                                objCClass)
-                ),
-                units.getLast()
-                );
+        List<Unit> code = Arrays.<Unit> asList(
+            j.newAssignStmt(
+                objCClass,
+                j.newStaticInvokeExpr(
+                    org_robovm_objc_ObjCClass_getByType,
+                    ClassConstant.v(sootClass.getName().replace('.', '/')))),
+            j.newAssignStmt(
+                j.newStaticFieldRef(f.makeRef()),
+                objCClass)
+        );
+        // copy line number tag to initialization instructions, otherwise it will produce following warning:
+        // "inlinable function call in a function with debug info must have a !dbg location"
+        LineNumberTag lineNumberTag = (LineNumberTag) units.getLast().getTag("LineNumberTag");
+        if (lineNumberTag != null) {
+            for (Unit u : code)
+                u.addTag(lineNumberTag);
+        }
+        units.insertBefore(code, units.getLast());
     }
 
     private void registerSelectors(SootClass sootClass, Set<String> selectors) {
