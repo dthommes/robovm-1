@@ -190,53 +190,53 @@ static jbyteArray vectorToByteArray(JNIEnv *jenv, SmallVector<char, 0> &OutVecto
     jbyteArray data = jenv->NewByteArray((jsize) OutVector.size());
     if (jenv->ExceptionCheck())
         return NULL;
-    
+
     jenv->SetByteArrayRegion(data, 0, (jsize) OutVector.size(), (const jbyte *) OutVector.data());
     if (jenv->ExceptionCheck())
         return NULL;
-    
+
     return data;
 }
 
 
 static LLVMBool LLVMTargetMachineAssembleToOutputStream(LLVMTargetMachineRef TM, LLVMMemoryBufferRef Mem, raw_pwrite_stream &Out, LLVMBool RelaxAll, LLVMBool NoExecStack, char **ErrorMessage) {
     *ErrorMessage = NULL;
-    
+
 #if !defined(WIN32) && !defined(_WIN32)
     locale_t loc = newlocale(LC_ALL_MASK, "C", 0);
     locale_t oldLoc = uselocale(loc);
 #endif
-    
+
     TargetMachine *TheTargetMachine = unwrap(TM);
     const Target *TheTarget = &(TheTargetMachine->getTarget());
-    
+
     std::string TripleName = TheTargetMachine->getTargetTriple().str();
     std::string MCPU = TheTargetMachine->getTargetCPU().str();
     std::string FeaturesStr = TheTargetMachine->getTargetFeatureString().str();
     Reloc::Model RelocModel = TheTargetMachine->getRelocationModel();
     CodeModel::Model CMModel = TheTargetMachine->getCodeModel();
-    
+
     std::unique_ptr<MemoryBuffer> Buffer(unwrap(Mem));
-    
+
     std::string DiagStr;
     raw_string_ostream DiagStream(DiagStr);
     SourceMgr SrcMgr;
     SrcMgr.setDiagHandler(assembleDiagHandler, &DiagStream);
-    
+
     // Tell SrcMgr about this buffer, which is what the parser will pick up.
     SrcMgr.AddNewSourceBuffer(std::move(Buffer), SMLoc());
-    
+
     // Record the location of the include directories so that the lexer can find
     // it later.
     //  SrcMgr.setIncludeDirs(IncludeDirs);
-    
+
     std::unique_ptr<MCRegisterInfo> MRI(TheTarget->createMCRegInfo(TripleName));
     std::unique_ptr<MCAsmInfo> MAI(TheTarget->createMCAsmInfo(*MRI, TripleName));
     std::unique_ptr<MCObjectFileInfo> MOFI(new MCObjectFileInfo());
     MCContext Ctx(MAI.get(), MRI.get(), MOFI.get(), &SrcMgr);
     bool PIC = RelocModel == Reloc::Model::PIC_;
     MOFI->InitMCObjectFileInfo(Triple(TripleName), PIC, Ctx);
-    
+
     std::unique_ptr<MCInstrInfo> MCII(TheTarget->createMCInstrInfo());
     std::unique_ptr<MCSubtargetInfo> STI(TheTarget->createMCSubtargetInfo(TripleName, MCPU, FeaturesStr));
     std::unique_ptr<MCStreamer> Str;
@@ -248,22 +248,22 @@ static LLVMBool LLVMTargetMachineAssembleToOutputStream(LLVMTargetMachineRef TM,
                                                 std::move(CE), *STI, RelaxAll != 0, /*IncrementalLinkerCompatible*/ false, /*DWARFMustBeAtTheEnd*/ true));
     if (NoExecStack != 0)
         Str->InitSections(true);
-    
+
     std::unique_ptr<MCAsmParser> Parser(createMCAsmParser(SrcMgr, Ctx, *Str, *MAI));
     std::unique_ptr<MCTargetAsmParser> TAP(TheTarget->createMCAsmParser(*STI, *Parser, *MCII, MCOptions));
     if (!TAP) {
         *ErrorMessage = strdup("this target does not support assembly parsing");
         goto done;
     }
-    
+
     Parser->setTargetParser(*TAP.get());
-    
+
     if (Parser->Run(false)) {
         *ErrorMessage = strdup(DiagStream.str().c_str());
         goto done;
     }
     Out.flush();
-    
+
 done:
 #if !defined(WIN32) && !defined(_WIN32)
     uselocale(oldLoc);
@@ -278,11 +278,11 @@ jbyteArray LLVMTargetMachineAssemble(JNIEnv *jenv, LLVMTargetMachineRef TM, LLVM
     SmallVector<char, 0> OutVector;
     std::unique_ptr<raw_svector_ostream> BOS = make_unique<raw_svector_ostream>(OutVector);
     raw_pwrite_stream *Out = BOS.get();
-    
+
     if (false == LLVMTargetMachineAssembleToOutputStream(TM, Mem, *Out, RelaxAll, NoExecStack, ErrorMessage)) {
         return vectorToByteArray(jenv, OutVector);
     }
-    
+
     // failed
     return NULL;
 }
@@ -292,9 +292,9 @@ static LLVMBool LLVMTargetMachineEmit(LLVMTargetMachineRef T, LLVMModuleRef M,
     TargetMachine* TM = unwrap(T);
     Module* Mod = unwrap(M);
     legacy::PassManager CodeGenPasses;
-    
+
     std::string error;
-    
+
     TargetMachine::CodeGenFileType ft;
     switch (codegen) {
         case LLVMAssemblyFile:
@@ -309,16 +309,16 @@ static LLVMBool LLVMTargetMachineEmit(LLVMTargetMachineRef T, LLVMModuleRef M,
         *ErrorMessage = strdup(error.c_str());
         return true;
     }
-    
+
     CodeGenPasses.run(*Mod);
-    
+
     OS.flush();
     return false;
 }
 
 static LLVMBool LLVMTargetMachineEmitToOutputStream(LLVMTargetMachineRef T, LLVMModuleRef M,
                                              raw_pwrite_stream &Out, LLVMCodeGenFileType codegen, char** ErrorMessage) {
-    
+
 #if !defined(WIN32) && !defined(_WIN32)
     locale_t loc = newlocale(LC_ALL_MASK, "C", 0);
     locale_t oldLoc = uselocale(loc);
@@ -330,7 +330,7 @@ static LLVMBool LLVMTargetMachineEmitToOutputStream(LLVMTargetMachineRef T, LLVM
     uselocale(oldLoc);
     freelocale(loc);
 #endif
-    
+
     return Result;
 }
 
@@ -340,11 +340,11 @@ jbyteArray LLVMTargetMachineEmit(JNIEnv *jenv, LLVMTargetMachineRef T, LLVMModul
     SmallVector<char, 0> OutVector;
     std::unique_ptr<raw_svector_ostream> BOS = make_unique<raw_svector_ostream>(OutVector);
     raw_pwrite_stream *Out = BOS.get();
-    
+
     if (false == LLVMTargetMachineEmitToOutputStream(T, M, *Out, codegen, ErrorMessage)) {
         return vectorToByteArray(jenv, OutVector);
     }
-    
+
     // failed
     return NULL;
 }
@@ -355,11 +355,12 @@ void LLVMGetLineInfoForAddressRange(LLVMObjectFileRef O, uint64_t Address, uint6
     *OutSize = lineTable.size();
     *Out = NULL;
     if (lineTable.size() > 0) {
-        *Out = (uint64_t*) calloc(lineTable.size() * 2, sizeof(uint64_t));
+        *Out = (uint64_t*) calloc(lineTable.size() * 3, sizeof(uint64_t));
         for (int i = 0; i < lineTable.size(); i++) {
             std::pair<uint64_t, DILineInfo> p = lineTable[i];
-            (*Out)[i * 2] = p.first;
-            (*Out)[i * 2 + 1] = p.second.Line;
+            (*Out)[i * 3] = p.first;
+            (*Out)[i * 3 + 1] = p.second.Line;
+            (*Out)[i * 3 + 2] = p.second.Column;
         }
     }
 }
@@ -384,25 +385,25 @@ static void LLVMInternalDumpDwarfSubroutineDebugData(DWARFCompileUnit *cu,  DWAR
             const char *name = entry.getName(DINameKind::ShortName);
             if (!name)
                 break;
-            
+
             Optional<DWARFFormValue> value = entry.findRecursively(DW_AT_location);
             if (!value.hasValue())
                 break;
             Optional<ArrayRef<uint8_t>> data = value.getValue().getAsBlock();
             if (!data.hasValue())
                 break;
-            
+
             size_t len = data.getValue().size();
             StringRef strRef((const char *)data.getValue().data(), len);
             DataExtractor extractor(strRef, cu->getContext().isLittleEndian(), 0);
-            
+
             uint32_t offset = 0;
             uint8_t reg = extractor.getU8(&offset);
             int32_t reg_offset = (int32_t)extractor.getSLEB128(&offset);
-            
+
             // flags -- currently only if it is parameter
             uint8_t flags = entry.getTag() == DW_TAG_formal_parameter  ? 1 : 0;
-            
+
             // dump variable data
             dump_u32(os, (uint32_t)strlen(name));
             os << name;
@@ -411,12 +412,12 @@ static void LLVMInternalDumpDwarfSubroutineDebugData(DWARFCompileUnit *cu,  DWAR
             dump_u32(os, reg_offset);
         } while (false);
     }
-    
+
     if (entry.hasChildren()) {
         auto child = entry.getFirstChild();
         LLVMInternalDumpDwarfSubroutineDebugData(cu, child, os);
     }
-    
+
     entry = entry.getSibling();
     if (entry.isValid())
         LLVMInternalDumpDwarfSubroutineDebugData(cu, entry, os);
@@ -425,16 +426,16 @@ static void LLVMInternalDumpDwarfSubroutineDebugData(DWARFCompileUnit *cu,  DWAR
 static void LLVMDumpDwarfDebugDataToOutputStream(LLVMObjectFileRef O, raw_pwrite_stream& os) {
     std::unique_ptr<DWARFContext> ctx = DWARFContext::create(*(unwrap(O)->getBinary()));
     int cuNum = ctx->getNumCompileUnits();
-    
+
     for (int idx = 0; idx < cuNum; idx++) {
         DWARFCompileUnit *cu = ctx->getCompileUnitAtIndex(idx);
-        
+
         DWARFDie entry = cu->getUnitDIE(false);
         if (entry.getTag() != DW_TAG_compile_unit)
             continue;
         if (!entry.hasChildren())
             continue;
-        
+
         entry = entry.getFirstChild();
         while (entry.isValid()) {
             // expect subprogram
@@ -445,24 +446,24 @@ static void LLVMDumpDwarfDebugDataToOutputStream(LLVMObjectFileRef O, raw_pwrite
                     // starting subrotine block
                     dump_u32(os, (uint32_t)strlen(name));
                     os << name;
-                    
+
                     DWARFDie routineEntry = entry.getFirstChild();
                     if (routineEntry.isValid())
                         LLVMInternalDumpDwarfSubroutineDebugData(cu, routineEntry, os);
-                    
+
                     // end of subrotine zero marker
                     dump_u32(os, 0);
                 }
             }
-            
+
             // check next level element
             entry = entry.getSibling();
         }
-        
+
         // end of stream marker
         dump_u32(os, 0);
     }
-    
+
     os.flush();
 }
 
@@ -471,7 +472,7 @@ jbyteArray LLVMDumpDwarfDebugData(JNIEnv *jenv, LLVMObjectFileRef O) {
     SmallVector<char, 0> OutVector;
     std::unique_ptr<raw_svector_ostream> BOS = make_unique<raw_svector_ostream>(OutVector);
     raw_pwrite_stream *Out = BOS.get();
-    
+
     LLVMDumpDwarfDebugDataToOutputStream(O, *Out);
     return vectorToByteArray(jenv, OutVector);
 }
@@ -494,10 +495,10 @@ LLVMBool LLVMLinkModules(LLVMModuleRef Dest, LLVMModuleRef Src, char **OutMessag
     auto oldHandler = LLVMContextGetDiagnosticHandler(wrap(&Ctx));
     void* oldHandlerCtx = LLVMContextGetDiagnosticContext(wrap(&Ctx));
     LLVMContextSetDiagnosticHandler(wrap(&Ctx), linkModulesDiagnosticHandler, &Error);
-    
+
     LLVMBool Result = LLVMLinkModules2(Dest, Src);
     *OutMessage = strdup(Error.c_str());
-    
+
     // restore old handler
     LLVMContextSetDiagnosticHandler(wrap(&Ctx), oldHandler, oldHandlerCtx);
 
