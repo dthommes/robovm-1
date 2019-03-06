@@ -435,7 +435,7 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
             // add llvm.dbg.declare call
             DILocalVariable diLocalVariable = new DILocalVariable(mb, local.getName(), varStartLine, argIdx,
                     classBundle.diFile, diSubprogram,
-                    classBundle.dummyJavaVariableType);
+                    classBundle.getDummyJavaVariableType(mb));
 
             // insert before firstHooksInst, the order of these calls will be mess but it doesn't matter actually
             Call call = new Call(Functions.LLVM_DBG_DECLARE,
