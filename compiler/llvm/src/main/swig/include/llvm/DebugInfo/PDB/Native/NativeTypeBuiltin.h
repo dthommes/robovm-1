@@ -1,4 +1,4 @@
-//===- NativeBuiltinSymbol.h -------------------------------------- C++ -*-===//
+//===- NativeTypeBuiltin.h ---------------------------------------- C++ -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -7,8 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_DEBUGINFO_PDB_NATIVE_NATIVEBUILTINSYMBOL_H
-#define LLVM_DEBUGINFO_PDB_NATIVE_NATIVEBUILTINSYMBOL_H
+#ifndef LLVM_DEBUGINFO_PDB_NATIVE_NATIVETYPEBUILTIN_H
+#define LLVM_DEBUGINFO_PDB_NATIVE_NATIVETYPEBUILTIN_H
 
 #include "llvm/DebugInfo/PDB/Native/NativeRawSymbol.h"
 
@@ -19,15 +19,15 @@ namespace pdb {
 
 class NativeSession;
 
-class NativeBuiltinSymbol : public NativeRawSymbol {
+class NativeTypeBuiltin : public NativeRawSymbol {
 public:
-  NativeBuiltinSymbol(NativeSession &PDBSession, SymIndexId Id,
-                      PDB_BuiltinType T, uint64_t L);
-  ~NativeBuiltinSymbol() override;
+  NativeTypeBuiltin(NativeSession &PDBSession, SymIndexId Id,
+                    codeview::ModifierOptions Mods, PDB_BuiltinType T,
+                    uint64_t L);
+  ~NativeTypeBuiltin() override;
 
-  virtual std::unique_ptr<NativeRawSymbol> clone() const override;
-
-  void dump(raw_ostream &OS, int Indent) const override;
+  void dump(raw_ostream &OS, int Indent, PdbSymbolIdField ShowIdFields,
+            PdbSymbolIdField RecurseIdFields) const override;
 
   PDB_SymType getSymTag() const override;
 
@@ -39,6 +39,7 @@ public:
 
 protected:
   NativeSession &Session;
+  codeview::ModifierOptions Mods;
   PDB_BuiltinType Type;
   uint64_t Length;
 };

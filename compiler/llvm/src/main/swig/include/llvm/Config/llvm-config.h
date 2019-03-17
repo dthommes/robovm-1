@@ -21,7 +21,7 @@
 /* #undef LINK_POLLY_INTO_TOOLS */
 
 /* Target triple LLVM will generate code for by default */
-#define LLVM_DEFAULT_TARGET_TRIPLE "x86_64-apple-darwin17.7.0"
+#define LLVM_DEFAULT_TARGET_TRIPLE "x86_64-apple-darwin18.5.0"
 
 /* Define if threads enabled */
 #define LLVM_ENABLE_THREADS 1
@@ -30,7 +30,7 @@
 #define LLVM_HAS_ATOMICS 1
 
 /* Host triple LLVM will be executed on */
-#define LLVM_HOST_TRIPLE "x86_64-apple-darwin17.7.0"
+#define LLVM_HOST_TRIPLE "x86_64-apple-darwin18.5.0"
 
 /* LLVM architecture name for the native architecture, if available */
 #define LLVM_NATIVE_ARCH X86
@@ -66,16 +66,16 @@
 #define LLVM_USE_PERF 0
 
 /* Major version of the LLVM API */
-#define LLVM_VERSION_MAJOR 7
+#define LLVM_VERSION_MAJOR 8
 
 /* Minor version of the LLVM API */
 #define LLVM_VERSION_MINOR 0
 
 /* Patch version of the LLVM API */
-#define LLVM_VERSION_PATCH 1
+#define LLVM_VERSION_PATCH 0
 
 /* LLVM version string */
-#define LLVM_VERSION_STRING "7.0.1"
+#define LLVM_VERSION_STRING "8.0.0"
 
 /* Whether LLVM records statistics for use with GetStatistics(),
  * PrintStatistics() or PrintStatisticsJSON()
