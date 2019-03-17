@@ -428,7 +428,7 @@ static void LLVMDumpDwarfDebugDataToOutputStream(LLVMObjectFileRef O, raw_pwrite
     int cuNum = ctx->getNumCompileUnits();
 
     for (int idx = 0; idx < cuNum; idx++) {
-        DWARFCompileUnit *cu = ctx->getCompileUnitAtIndex(idx);
+        DWARFCompileUnit *cu = cast<DWARFCompileUnit>(ctx->getUnitAtIndex(idx));
 
         DWARFDie entry = cu->getUnitDIE(false);
         if (entry.getTag() != DW_TAG_compile_unit)
