@@ -1,8 +1,8 @@
 diff --git a/tools/clang/tools/libclang/CMakeLists.txt b/tools/clang/tools/libclang/CMakeLists.txt
-index e539c8308e..5186e80fa6 100644
+index 32333b011a..f17f5e1278 100644
 --- a/tools/clang/tools/libclang/CMakeLists.txt
 +++ b/tools/clang/tools/libclang/CMakeLists.txt
-@@ -74,7 +74,7 @@ if(MSVC)
+@@ -75,7 +75,7 @@ if(MSVC)
  endif()
  
  if( LLVM_ENABLE_PIC )

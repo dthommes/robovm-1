@@ -1,11 +1,11 @@
 diff --git a/lib/CodeGen/AsmPrinter/AsmPrinter.cpp b/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
-index 9bbc77b3056..cebb362d679 100644
+index 7070451e333..1d9ca16260a 100644
 --- a/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
 +++ b/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
-@@ -1539,6 +1539,30 @@ bool AsmPrinter::doFinalization(Module &M) {
+@@ -1592,6 +1592,30 @@ bool AsmPrinter::doFinalization(Module &M) {
          OutStreamer->EmitAddrsigSym(getSymbol(&GV));
    }
- 
+
 +  // RoboVM change: Emit spfpoffset symbols if requested to do so. The symbols are
 +  // created in ARMFrameLowering::emitPrologue and AAarch64FrameLowering::emitPrologue.
 +  if (MMI->getModule()->getNamedValue("robovm.emitSpFpOffsets")) {
@@ -34,10 +34,10 @@ index 9bbc77b3056..cebb362d679 100644
    // after everything else has gone out.
    EmitEndOfAsmFile(M);
 diff --git a/lib/Target/AArch64/AArch64FrameLowering.cpp b/lib/Target/AArch64/AArch64FrameLowering.cpp
-index 6dc5d19862a..73bd2f23b57 100644
+index 57f630a18c8..cd84bdac20c 100644
 --- a/lib/Target/AArch64/AArch64FrameLowering.cpp
 +++ b/lib/Target/AArch64/AArch64FrameLowering.cpp
-@@ -127,6 +127,7 @@
+@@ -130,6 +130,7 @@
  #include "llvm/Support/raw_ostream.h"
  #include "llvm/Target/TargetMachine.h"
  #include "llvm/Target/TargetOptions.h"
@@ -45,7 +45,7 @@ index 6dc5d19862a..73bd2f23b57 100644
  #include <cassert>
  #include <cstdint>
  #include <iterator>
-@@ -830,6 +831,14 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF,
+@@ -1184,6 +1185,14 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF,
      // LR if those are saved).
      emitCalleeSavedFrameMoves(MBB, MBBI);
    }
@@ -58,10 +58,10 @@ index 6dc5d19862a..73bd2f23b57 100644
 +  uint32_t spFpOffset = (MFI.getStackSize() - 16) >> 2;
 +  Offset->setVariableValue(MCConstantExpr::create(spFpOffset, MMI.getContext()));
  }
- 
- void AArch64FrameLowering::emitEpilogue(MachineFunction &MF,
+
+ static void InsertReturnAddressAuth(MachineFunction &MF,
 diff --git a/lib/Target/ARM/ARMFrameLowering.cpp b/lib/Target/ARM/ARMFrameLowering.cpp
-index 56ad7a0f044..de4fd0e0d3b 100644
+index a9d87ced31f..3cb5e94e116 100644
 --- a/lib/Target/ARM/ARMFrameLowering.cpp
 +++ b/lib/Target/ARM/ARMFrameLowering.cpp
 @@ -46,6 +46,7 @@
@@ -80,7 +80,7 @@ index 56ad7a0f044..de4fd0e0d3b 100644
  #include <algorithm>
  #include <cassert>
  #include <cstddef>
-@@ -760,6 +762,18 @@ void ARMFrameLowering::emitPrologue(MachineFunction &MF,
+@@ -761,6 +763,18 @@ void ARMFrameLowering::emitPrologue(MachineFunction &MF,
    // checks for hasVarSizedObjects.
    if (MFI.hasVarSizedObjects())
      AFI->setShouldRestoreSPFromFP(true);
