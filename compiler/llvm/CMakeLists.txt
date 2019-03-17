@@ -107,7 +107,7 @@ endif()
 
 ExternalProject_Add(extclang
   GIT_REPOSITORY ${CLANG_GIT_PATH}
-  GIT_TAG release_70
+  GIT_TAG release_80
   UPDATE_COMMAND ""
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
@@ -129,7 +129,7 @@ endif()
 ExternalProject_Add(extllvm
   DEPENDS extclang
   GIT_REPOSITORY ${LLVM_GIT_PATH}
-  GIT_TAG release_70
+  GIT_TAG release_80
   LIST_SEPARATOR ^^
   CONFIGURE_COMMAND cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                           -DBUILD_SHARED_LIBS=OFF
