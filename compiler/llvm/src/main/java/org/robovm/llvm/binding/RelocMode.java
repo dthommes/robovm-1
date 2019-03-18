@@ -12,7 +12,10 @@ public enum RelocMode {
   RelocDefault,
   RelocStatic,
   RelocPIC,
-  RelocDynamicNoPic;
+  RelocDynamicNoPic,
+  RelocROPI,
+  RelocRWPI,
+  RelocROPI_RWPI;
 
   public final int swigValue() {
     return swigValue;

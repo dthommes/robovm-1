@@ -15,6 +15,7 @@ public enum Opcode {
   IndirectBr(4),
   Invoke(5),
   Unreachable(7),
+  FNeg(66),
   Add(8),
   FAdd(9),
   Sub(10),

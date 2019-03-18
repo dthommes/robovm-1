@@ -11,6 +11,7 @@ package org.robovm.llvm.binding;
 public enum CodeModel {
   CodeModelDefault,
   CodeModelJITDefault,
+  CodeModelTiny,
   CodeModelSmall,
   CodeModelKernel,
   CodeModelMedium,

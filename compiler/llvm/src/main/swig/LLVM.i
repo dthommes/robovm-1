@@ -48,6 +48,8 @@ REF_CLASS(LLVMTargetOptionsRef, TargetOptionsRef)
 REF_CLASS(LLVMAttributeRef, AttributeRef)
 REF_CLASS(LLVMMetadataRef, MetadataRef)
 REF_CLASS(LLVMModuleFlagEntry*, ModuleFlagEntry)
+REF_CLASS(LLVMNamedMDNodeRef, NamedMDNodeRef)
+REF_CLASS(LLVMValueMetadataEntry*, ValueMetadataEntry)
 
 
 //
@@ -191,6 +193,9 @@ REF_PTR(void*, IntOut)
 %ignore LLVMContextSetDiagnosticHandler;
 %ignore LLVMContextSetYieldCallback;
 
+// ignore as seems to be missing
+%ignore LLVMConstInBoundsGEP2;
+%ignore LLVMConstGEP2;
 
 // ignore command line and UIs
 %ignore LLVMParseCommandLineOptions;
