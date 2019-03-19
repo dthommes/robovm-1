@@ -1588,7 +1588,7 @@ public class ClassCompiler {
         if (Modifier.isVolatile(field.getModifiers())) {
             fn.add(new Fence(Ordering.seq_cst));
             if (LongType.v().equals(field.getType())) {
-                fn.add(new Load(result, fieldPtr, false, Ordering.unordered, 8));
+                fn.add(new Load(result, fieldPtr, false, Ordering.monotonic, 8));
             } else {
                 fn.add(new Load(result, fieldPtr));
             }
@@ -1620,7 +1620,7 @@ public class ClassCompiler {
         }
         if (Modifier.isVolatile(field.getModifiers()) || !field.isStatic() && Modifier.isFinal(field.getModifiers())) {
             if (LongType.v().equals(field.getType())) {
-                fn.add(new Store(value, fieldPtr, false, Ordering.unordered, 8));
+                fn.add(new Store(value, fieldPtr, false, Ordering.monotonic, 8));
             } else {
                 fn.add(new Store(value, fieldPtr));
             }
