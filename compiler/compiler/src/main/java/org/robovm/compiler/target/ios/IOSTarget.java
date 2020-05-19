@@ -445,7 +445,7 @@ public class IOSTarget extends AbstractTarget {
             NSDictionary dict = new NSDictionary();
             if (bundleId != null)
                 dict.put("application-identifier", bundleId);
-            dict.put("get-task-allow", getTaskAllow);
+            dict.put("com.apple.security.get-task-allow", getTaskAllow);
             PropertyListParser.saveAsXML(dict, destFile);
             return destFile;
         } catch (IOException e) {
