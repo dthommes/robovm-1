@@ -79,22 +79,22 @@ import java.util.NoSuchElementException;
  */
 public class IOSTarget extends AbstractTarget {
     final List<String> excludedKeys = Arrays.asList(
-            "com.apple.developer.icloud-container-development-container-identifiers",
-            "com.apple.developer.icloud-container-environment",
-            "com.apple.developer.icloud-container-identifiers",
-            "com.apple.developer.icloud-services",
-            "com.apple.developer.restricted-resource-mode",
-            "com.apple.developer.ubiquity-container-identifiers",
-            "com.apple.developer.ubiquity-kvstore-identifier",
-            "inter-app-audio",
-            "com.apple.developer.homekit",
-            "com.apple.developer.healthkit",
-            "com.apple.developer.in-app-payments",
-            "com.apple.developer.associated-domains",
-            "com.apple.security.application-groups",
-            "com.apple.developer.maps",
-            "com.apple.developer.networking.vpn.api",
-            "com.apple.external-accessory.wireless-configuration"
+        "com.apple.developer.icloud-container-development-container-identifiers",
+        "com.apple.developer.icloud-container-environment",
+        "com.apple.developer.icloud-container-identifiers",
+        "com.apple.developer.icloud-services",
+        "com.apple.developer.restricted-resource-mode",
+        "com.apple.developer.ubiquity-container-identifiers",
+        "com.apple.developer.ubiquity-kvstore-identifier",
+        "inter-app-audio",
+        "com.apple.developer.homekit",
+        "com.apple.developer.healthkit",
+        "com.apple.developer.in-app-payments",
+        "com.apple.developer.associated-domains",
+        "com.apple.security.application-groups",
+        "com.apple.developer.maps",
+        "com.apple.developer.networking.vpn.api",
+        "com.apple.external-accessory.wireless-configuration"
     );
 
     public static final String TYPE = "ios";
@@ -179,86 +179,15 @@ public class IOSTarget extends AbstractTarget {
                 getAppDir(), getBundleId(), (IOSSimulatorLaunchParameters) launchParameters);
     }
 
-    private Launcher createIOSDevLauncher(LaunchParameters launchParameters)
-            throws IOException {
-
+    private Launcher createIOSDevLauncher(LaunchParameters launchParameters) throws IOException {
         IOSDeviceLaunchParameters deviceLaunchParameters = (IOSDeviceLaunchParameters) launchParameters;
-        String deviceId = deviceLaunchParameters.getDeviceId();
-        int forwardPort = deviceLaunchParameters.getForwardPort();
-        AppLauncherCallback callback = deviceLaunchParameters.getAppPathCallback();
-        if (deviceId == null) {
-            String[] udids = IDevice.listUdids();
-            if (udids.length == 0) {
-                throw new RuntimeException("No devices connected");
-            }
-            if (udids.length > 1) {
-                config.getLogger().warn("More than 1 device connected (%s). "
-                        + "Using %s.", Arrays.asList(udids), udids[0]);
-            }
-            deviceId = udids[0];
-        }
-        device = new IDevice(deviceId);
-
-        Map<String, String> env = launchParameters.getEnvironment();
-        if (env == null) {
-            env = new HashMap<>();
-        }
-        //Fix for #71, see http://stackoverflow.com/questions/37800790/hide-strange-unwanted-xcode-8-logs
-        env.put("OS_ACTIVITY_DT_MODE", "");
-
-        AppLauncher launcher = new AppLauncher(device, getAppDir()) {
-            protected void log(String s, Object... args) {
-                config.getLogger().info(s, args);
-            }
-        }
-                .closeOutOnExit(true)
-                .args(launchParameters.getArguments().toArray(new String[0]))
-                .env(env)
-                .forward(forwardPort)
-                .appLauncherCallback(callback)
-                .xcodePath(ToolchainUtil.findXcodePath())
-                .uploadProgressCallback(new UploadProgressCallback() {
-                    boolean first = true;
-
-                    public void success() {
-                        config.getLogger().info("[100%%] Upload complete");
-                    }
-
-                    public void progress(File path, int percentComplete) {
-                        if (first) {
-                            config.getLogger().info("[  0%%] Beginning upload...");
-                        }
-                        first = false;
-                        config.getLogger().info("[%3d%%] Uploading %s...", percentComplete, path);
-                    }
-
-                    public void error(String message) {}
-                })
-                .installStatusCallback(new StatusCallback() {
-                    boolean first = true;
-
-                    public void success() {
-                        config.getLogger().info("[100%%] Install complete");
-                    }
-
-                    public void progress(String status, int percentComplete) {
-                        if (first) {
-                            config.getLogger().info("[  0%%] Beginning installation...");
-                        }
-                        first = false;
-                        config.getLogger().info("[%3d%%] %s", percentComplete, status);
-                    }
-
-                    public void error(String message) {}
-                });
-
         return new AppLauncherProcess(config.getLogger(), createLauncherListener(launchParameters),
-                launcher, launchParameters);
+                deviceLaunchParameters, getAppDir());
     }
 
     @Override
     protected void doBuild(File outFile, List<String> ccArgs,
-                           List<File> objectFiles, List<String> libArgs)
+            List<File> objectFiles, List<String> libArgs)
             throws IOException {
 
         // Always link against UIKit or else it will not be initialized properly
@@ -278,7 +207,7 @@ public class IOSTarget extends AbstractTarget {
 
             if (majorVersionNumber < minMajorSupportedVersion) {
                 throw new CompilerException("MinimumOSVersion of " + minVersion + " is not supported. "
-                        + "The minimum version for this platform is " + config.getOs().getMinVersion());
+                    + "The minimum version for this platform is " + config.getOs().getMinVersion());
             }
 
         } catch (NumberFormatException e) {
@@ -997,11 +926,11 @@ public class IOSTarget extends AbstractTarget {
             dict.put(key, value);
         }
     }
-    
+
     protected void customizeInfoPList(NSDictionary dict) {
         if (isSimulatorArch(arch)) {
             dict.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneSimulator")));
-        } else {            
+        } else {
             dict.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneOS")));
             dict.put("DTPlatformVersion", sdk.getPlatformVersion());
             dict.put("DTPlatformBuild", sdk.getPlatformBuild());
