@@ -537,7 +537,7 @@ public abstract class AbstractTarget implements Target {
         if (waSrcDir == null)
             throw new IllegalArgumentException("WatchApp with name " + waName + " not found in app extension paths!");
 
-        File waDestDir = new File(installDir, "Watch/");
+        File waDestDir = new File(installDir, "Watch/" + waName);
         config.getLogger().info("Copying Watch App from %s to %s", waSrcDir, waDestDir);
         FileUtils.copyDirectory(waSrcDir, waDestDir);
 
@@ -565,32 +565,6 @@ public abstract class AbstractTarget implements Target {
                 updateAppExtensionBundleId(extPath, extension, waKitBundleId);
             }
         }
-
-
-        File extensionDir = null;
-        for (File path : config.getAppExtensionPaths()) {
-            File extPath = new File(path, waName);
-            if (extPath.exists() && extPath.isDirectory()) {
-                extensionDir = extPath;
-                break;
-            }
-        }
-
-        if (extensionDir == null)
-            throw new IllegalStateException("WatchApp with name " + waName + " not found!");
-
-        new Resource(extensionDir).walk(new Walker() {
-            @Override
-            public boolean processDir(Resource resource, File dir, File destDir) throws IOException {
-                return true;
-            }
-
-            @Override
-            public void processFile(Resource resource, File file, File destDir) throws IOException {
-                copyFile(resource, file, destDir);
-            }
-        }, waDestDir);
-
     }
 
     private boolean isValidSwiftDir(File swiftDir) {

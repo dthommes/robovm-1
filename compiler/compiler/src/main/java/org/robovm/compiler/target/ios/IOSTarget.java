@@ -860,8 +860,8 @@ public class IOSTarget extends AbstractTarget {
                     File stickersExtSupportStub = new File(xcodePath, "Platforms/iPhoneOS.platform/Library/" +
                             "Application Support/MessagesApplicationExtensionStub/MessagesApplicationExtensionStub");
                     if (!stickersExtSupportStub.exists()) {
-                        throw new FileNotFoundException("Stickers support: bi MessagesApplicationStub or MessagesApplicationExtensionStub found in "
-                                + new File(xcodePath, "Platforms/iPhoneOS.platform/Library/Application Support/").getAbsolutePath());
+                        throw new FileNotFoundException("Stickers support: MessagesApplicationExtensionStub not found in "
+                                + stickersExtSupportStub.getAbsolutePath());
                     }
 
                     File stickersExtSupportDestDir = new File(tmpDir, "MessagesApplicationExtensionSupport");
@@ -871,6 +871,21 @@ public class IOSTarget extends AbstractTarget {
                             StandardCopyOption.COPY_ATTRIBUTES);
                 }
             }
+        }
+
+        if (config.getWatchKitApp() != null) {
+            // copy "WatchKitSupport2/WK: for watch kit app
+            config.getLogger().info("Copying support files for WatchKit app extension");
+            File xcodePath = new File(ToolchainUtil.findXcodePath());
+            File wk = new File(xcodePath, "Platforms/WatchOS.platform/Developer/SDKs/WatchOS.sdk/" +
+                    "Library/Application Support/WatchKit/WK");
+            if (!wk.exists()) {
+                throw new FileNotFoundException("WatchKitSupport support not found in " + wk.getAbsolutePath());
+            }
+
+            File watchKitSupport2 = new File(tmpDir, "WatchKitSupport2");
+            watchKitSupport2.mkdir();
+            Files.copy(wk.toPath(), new File(watchKitSupport2, wk.getName()).toPath(), StandardCopyOption.COPY_ATTRIBUTES);
         }
 
         config.getLogger().info("Zipping %s to %s", tmpDir, ipaFile);
