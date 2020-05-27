@@ -29,9 +29,9 @@ import org.robovm.compiler.config.OS;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.config.Resource.Walker;
 import org.robovm.compiler.config.StripArchivesConfig;
+import org.robovm.compiler.config.WatchKitApp;
 import org.robovm.compiler.plugin.LaunchPlugin;
 import org.robovm.compiler.target.Launchers.CustomizableLauncher;
-import org.robovm.compiler.target.Launchers.Listener;
 import org.robovm.compiler.util.ToolchainUtil;
 import org.simpleframework.xml.Transient;
 
