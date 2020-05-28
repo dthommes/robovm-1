@@ -22,8 +22,9 @@ import org.robovm.compiler.config.OS;
 import org.robovm.compiler.plugin.LaunchPlugin;
 import org.robovm.compiler.plugin.PluginArguments;
 import org.robovm.compiler.target.LaunchParameters;
+import org.robovm.compiler.target.Launchers;
 import org.robovm.compiler.target.ios.IOSTarget;
-import org.robovm.compiler.util.io.ObservableInputStream;
+import org.robovm.compiler.util.io.ObservableOutputStream;
 import org.robovm.junit.protocol.Command;
 import org.robovm.junit.protocol.ResultObject;
 import org.robovm.junit.protocol.ResultType;
@@ -182,7 +183,7 @@ public class TestClient extends LaunchPlugin {
     public void launchFailed(Config config, LaunchParameters parameters) {}
 
     @Override
-    public void afterLaunch(Config config, LaunchParameters parameters, Process process) {}
+    public void afterLaunch(Config config, LaunchParameters parameters, Launchers.Killable process) {}
 
     @Override
     public void cleanup() {}
@@ -284,7 +285,7 @@ public class TestClient extends LaunchPlugin {
      * will be print to stdout. Will continue to wrap the stdout stream until
      * the server process has finished.
      */
-    private static class ServerPortObserver implements ObservableInputStream.Observer {
+    private static class ServerPortObserver implements ObservableOutputStream.Observer {
         private final String tag = SERVER_CLASS_NAME + ": port=";
         private final IntConsumer callback;
         private volatile Integer port = null;
@@ -295,7 +296,7 @@ public class TestClient extends LaunchPlugin {
         }
 
         @Override
-        public void observeRead(byte[] b, int off, int len) {
+        public void observeWrite(byte[] b, int off, int len) {
             if (port == null) {
                 // port is not received yet, keep working
                 String str = new String(b, off, len, StandardCharsets.UTF_8);

@@ -32,6 +32,10 @@
             <artifactId>junit</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.mobidevelop.robovm</groupId>
+            <artifactId>robovm-compiler</artifactId>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>

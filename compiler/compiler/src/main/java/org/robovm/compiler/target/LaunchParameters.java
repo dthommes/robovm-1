@@ -16,7 +16,7 @@
  */
 package org.robovm.compiler.target;
 
-import org.robovm.compiler.util.io.ObservableInputStream;
+import org.robovm.compiler.util.io.ObservableOutputStream;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ public class LaunchParameters {
     private Map<String, String> environment = null;
     private File workingDirectory = new File(".");
     private File appDirectory = null;
-    private ObservableInputStream.Observer stdOutObserver = null;
+    private ObservableOutputStream.Observer stdOutObserver = null;
 
     public List<String> getArguments() {
         return arguments;
@@ -64,11 +64,11 @@ public class LaunchParameters {
         this.appDirectory = appDirectory;
     }
 
-    public ObservableInputStream.Observer getStdOutObserver() {
+    public ObservableOutputStream.Observer getStdOutObserver() {
         return stdOutObserver;
     }
 
-    public void setStdOutObserver(ObservableInputStream.Observer stdOutObserver) {
+    public void setStdOutObserver(ObservableOutputStream.Observer stdOutObserver) {
         this.stdOutObserver = stdOutObserver;
     }
 }
