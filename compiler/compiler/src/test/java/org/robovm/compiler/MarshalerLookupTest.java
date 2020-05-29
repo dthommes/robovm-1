@@ -29,7 +29,7 @@ import org.robovm.compiler.MarshalerLookup.MarshalSite;
 import org.robovm.compiler.MarshalerLookup.Marshaler;
 import org.robovm.compiler.clazz.Clazz;
 import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.Config.Home;
+import org.robovm.compiler.config.Home;
 import org.robovm.compiler.log.Logger;
 import org.robovm.rt.bro.ArrayMarshalers;
 import org.robovm.rt.bro.MarshalerFlags;

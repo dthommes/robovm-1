@@ -30,8 +30,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.robovm.compiler.config.Config.Builder;
-import org.robovm.compiler.config.Config.Home;
-import org.robovm.compiler.config.Config.Lib;
 import org.robovm.compiler.target.ConsoleTarget;
 import org.robovm.compiler.target.ios.IOSTarget;
 import org.zeroturnaround.zip.ZipUtil;
@@ -68,10 +66,10 @@ public class ConfigTest {
         assertEquals(Arrays.asList(new File(wd, "foo1.jar"), new File(tmp, "foo2.jar")), config.getClasspath());
         assertEquals(Arrays.asList("Foundation", "AppKit"), config.getFrameworks());
         assertEquals(Arrays.asList(
-                new Config.Lib("dl", true),
-                new Config.Lib("/tmp/wd/libs/libmy.a", true),
-                new Config.Lib("/tmp/wd/libs/foo.o", true),
-                new Config.Lib("/usr/lib/libbar.a", false)
+                new Lib("dl", true),
+                new Lib("/tmp/wd/libs/libmy.a", true),
+                new Lib("/tmp/wd/libs/foo.o", true),
+                new Lib("/usr/lib/libbar.a", false)
                 ), config.getLibs());
         assertEquals(Arrays.asList(
                 new Resource(new File(wd, "resources")), 
@@ -98,10 +96,10 @@ public class ConfigTest {
         assertEquals(Arrays.asList(new File(wd, "foo1.jar"), new File(tmp, "foo2.jar")), config.getClasspath());
         assertEquals(Arrays.asList("Foundation", "AppKit"), config.getFrameworks());
         assertEquals(Arrays.asList(
-                new Config.Lib("dl", true),
-                new Config.Lib("/tmp/wd/libs/libmy.a", true),
-                new Config.Lib("/tmp/wd/libs/foo.o", true),
-                new Config.Lib("/usr/lib/libbar.a", false)
+                new Lib("dl", true),
+                new Lib("/tmp/wd/libs/libmy.a", true),
+                new Lib("/tmp/wd/libs/foo.o", true),
+                new Lib("/usr/lib/libbar.a", false)
                 ), config.getLibs());
         assertEquals(Arrays.asList(new Resource(new File("/tmp/wd/resources")), 
                 new Resource(new File("/usr/share/resources"))),
@@ -119,10 +117,10 @@ public class ConfigTest {
         builder.addClasspathEntry(new File(tmp, "foo2.jar"));
         builder.addFramework("Foundation");
         builder.addFramework("AppKit");
-        builder.addLib(new Config.Lib("dl", true));
-        builder.addLib(new Config.Lib("libs/libmy.a", true));
-        builder.addLib(new Config.Lib("libs/foo.o", true));
-        builder.addLib(new Config.Lib("/usr/lib/libbar.a", false));
+        builder.addLib(new Lib("dl", true));
+        builder.addLib(new Lib("libs/libmy.a", true));
+        builder.addLib(new Lib("libs/foo.o", true));
+        builder.addLib(new Lib("/usr/lib/libbar.a", false));
         builder.addResource(new Resource(new File("/tmp/wd/resources")));
         builder.addResource(new Resource(new File("/usr/share/resources")));
         builder.addResource(new Resource(new File("/tmp/wd"), null).include("data/**/*"));

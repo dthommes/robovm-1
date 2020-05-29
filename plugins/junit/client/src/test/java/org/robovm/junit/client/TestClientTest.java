@@ -23,7 +23,7 @@ import org.junit.runner.notification.RunListener;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.Config.Home;
+import org.robovm.compiler.config.Home;
 import org.robovm.compiler.log.ConsoleLogger;
 import org.robovm.compiler.target.LaunchParameters;
 import org.robovm.maven.resolver.RoboVMResolver;

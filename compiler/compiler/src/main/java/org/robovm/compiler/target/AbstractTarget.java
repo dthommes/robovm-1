@@ -25,6 +25,7 @@ import org.robovm.compiler.clazz.Path;
 import org.robovm.compiler.config.AppExtension;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.Lib;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.config.Resource.Walker;
@@ -231,7 +232,7 @@ public abstract class AbstractTarget implements Target {
         File swiftLibLocation = null;
         if (!config.getLibs().isEmpty()) {
             objectFiles = new ArrayList<File>(objectFiles);
-            for (Config.Lib lib : config.getLibs()) {
+            for (Lib lib : config.getLibs()) {
                 String p = lib.getValue();
                 if (p.endsWith(".o")) {
                     objectFiles.add(new File(p));
@@ -415,7 +416,7 @@ public abstract class AbstractTarget implements Target {
         // if project links against static swift library it requires
         // dynamic swift libraries to be included. and these are not automatically
         // resolved yet, allow user to specify them in library list
-        for (Config.Lib lib : config.getLibs()) {
+        for (Lib lib : config.getLibs()) {
             String p = lib.getValue();
             if (p.startsWith("libswift") && p.endsWith(".dylib") && !new File(p).exists()) {
                 swiftLibraries.add(p);

@@ -41,6 +41,7 @@ import org.jetbrains.annotations.NotNull;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.Home;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.plugin.PluginArgument;
 import org.robovm.compiler.target.ConsoleTarget;
@@ -176,7 +177,7 @@ public class RoboVmCompileTask implements CompileTask {
             configureClassAndSourcepaths(project, context, builder, frameworkConfig.getModule());
 
             // Set the Home to be used, create the Config and AppCompiler
-            Config.Home home = RoboVmPlugin.getRoboVmHome();
+            Home home = RoboVmPlugin.getRoboVmHome();
             if (home.isDev()) {
                 builder.useDebugLibs(true);
                 builder.dumpIntermediates(true);
@@ -274,7 +275,7 @@ public class RoboVmCompileTask implements CompileTask {
             configureTarget(builder, runConfig);
 
             // Set the Home to be used, create the Config and AppCompiler
-            Config.Home home = RoboVmPlugin.getRoboVmHome();
+            Home home = RoboVmPlugin.getRoboVmHome();
             if (home.isDev()) {
                 builder.useDebugLibs(true);
                 builder.dumpIntermediates(true);

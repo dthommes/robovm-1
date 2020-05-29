@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.robovm.compiler.clazz.Clazz;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.Config.Home;
+import org.robovm.compiler.config.Home;
 import org.robovm.compiler.llvm.StructureType;
 import org.robovm.compiler.log.Logger;
 import org.robovm.compiler.plugin.objc.ObjCBlockPlugin;

@@ -56,6 +56,7 @@ import org.robovm.compiler.clazz.MethodInfo;
 import org.robovm.compiler.clazz.Path;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.Lib;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.hash.HashTableGenerator;
 import org.robovm.compiler.hash.ModifiedUtf8HashFunction;
@@ -217,7 +218,7 @@ public class Linker {
         }
 
         ArrayConstantBuilder staticLibs = new ArrayConstantBuilder(I8_PTR);
-        for (Config.Lib lib : config.getLibs()) {
+        for (Lib lib : config.getLibs()) {
             String p = lib.getValue();
             if (p.endsWith(".a")) {
                 p = new File(p).getName();

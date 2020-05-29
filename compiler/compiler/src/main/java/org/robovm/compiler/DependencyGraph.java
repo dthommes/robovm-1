@@ -27,7 +27,7 @@ import org.robovm.compiler.clazz.InvokeMethodDependency;
 import org.robovm.compiler.clazz.MethodDependency;
 import org.robovm.compiler.clazz.MethodInfo;
 import org.robovm.compiler.clazz.SuperMethodDependency;
-import org.robovm.compiler.config.Config.TreeShakerMode;
+import org.robovm.compiler.config.TreeShakerMode;
 
 /**
  * Used to build a graph of dependencies between classes and methods. By

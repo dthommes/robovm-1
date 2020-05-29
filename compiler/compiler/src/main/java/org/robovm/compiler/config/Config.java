@@ -23,7 +23,6 @@ import org.robovm.compiler.DependencyGraph;
 import org.robovm.compiler.ITable;
 import org.robovm.compiler.MarshalerLookup;
 import org.robovm.compiler.VTable;
-import org.robovm.compiler.Version;
 import org.robovm.compiler.clazz.Clazz;
 import org.robovm.compiler.clazz.Clazzes;
 import org.robovm.compiler.clazz.Path;
@@ -58,7 +57,6 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.Text;
 import org.simpleframework.xml.convert.Converter;
 import org.simpleframework.xml.convert.Registry;
 import org.simpleframework.xml.convert.RegistryStrategy;
@@ -117,14 +115,6 @@ public class Config {
      * very long class names for auto-generated classes. See #955.
      */
     private static final int MAX_FILE_NAME_LENGTH = 255;
-
-    public enum Cacerts {
-        full
-    }
-
-    public enum TreeShakerMode {
-        none, conservative, aggressive
-    }
 
     @Element(required = false)
     private File installDir = null;
@@ -732,7 +722,7 @@ public class Config {
         }
     }
 
-    private static String getImplementationVersion(File jarFile) throws IOException {
+    static String getImplementationVersion(File jarFile) throws IOException {
         return (String) getManifestAttributes(jarFile).get(Attributes.Name.IMPLEMENTATION_VERSION);
     }
 
@@ -926,7 +916,7 @@ public class Config {
         List<File> realBootclasspath = bootclasspath == null ? new ArrayList<>() : bootclasspath;
         if (!isSkipRuntimeLib()) {
             realBootclasspath = new ArrayList<>(bootclasspath);
-            realBootclasspath.add(0, home.rtPath);
+            realBootclasspath.add(0, home.getRtPath());
         }
 
         this.vtableCache = new VTable.Cache();
@@ -977,7 +967,7 @@ public class Config {
         sliceArch = target.getArch();
         dataLayout = new DataLayout(getTriple());
 
-        osArchDepLibDir = new File(new File(home.libVmDir, os.toString()),
+        osArchDepLibDir = new File(new File(home.getLibVmDir(), os.toString()),
                 sliceArch.toString());
 
         if (treeShakerMode != null && treeShakerMode != TreeShakerMode.none 
@@ -1015,175 +1005,6 @@ public class Config {
         mergeConfigsFromClasspath();
 
         return this;
-    }
-
-    public static class Home {
-        private File binDir;
-        private File libVmDir;
-        private File rtPath;
-        private Map<Cacerts, File> cacertsPath;
-        private boolean dev = false;
-
-        public Home(File homeDir) {
-            this(homeDir, true);
-        }
-
-        protected Home(File homeDir, boolean validate) {
-            if (validate) {
-                validate(homeDir);
-            }
-            binDir = new File(homeDir, "bin");
-            libVmDir = new File(homeDir, "lib/vm");
-            rtPath = new File(homeDir, "lib/robovm-rt.jar");
-            cacertsPath = new HashMap<>();
-            cacertsPath.put(Cacerts.full, new File(homeDir, "lib/robovm-cacerts-full.jar"));
-        }
-
-        private Home(File devDir, File binDir, File libVmDir, File rtPath) {
-            this.binDir = binDir;
-            this.libVmDir = libVmDir;
-            this.rtPath = rtPath;
-            cacertsPath = new HashMap<>();
-            cacertsPath.put(Cacerts.full, new File(devDir,
-                    "cacerts/full/target/robovm-cacerts-full-" + Version.getVersion() + ".jar"));
-            this.dev = true;
-        }
-
-        public boolean isDev() {
-            return dev;
-        }
-
-        public File getBinDir() {
-            return binDir;
-        }
-
-        public File getLibVmDir() {
-            return libVmDir;
-        }
-
-        public File getRtPath() {
-            return rtPath;
-        }
-
-        public File getCacertsPath(Cacerts cacerts) {
-            return cacertsPath.get(cacerts);
-        }
-
-        public static Home find() {
-            // Check if ROBOVM_DEV_ROOT has been set. If set it should be
-            // pointing at the root of a complete RoboVM source tree.
-            if (System.getenv("ROBOVM_DEV_ROOT") != null) {
-                File dir = new File(System.getenv("ROBOVM_DEV_ROOT"));
-                return validateDevRootDir(dir);
-            }
-            if (System.getProperty("ROBOVM_DEV_ROOT") != null) {
-                File dir = new File(System.getProperty("ROBOVM_DEV_ROOT"));
-                return validateDevRootDir(dir);
-            }
-
-            if (System.getenv("ROBOVM_HOME") != null) {
-                File dir = new File(System.getenv("ROBOVM_HOME"));
-                return new Home(dir);
-            }
-
-            List<File> candidates = new ArrayList<>();
-            File userHome = new File(System.getProperty("user.home"));
-            candidates.add(new File(userHome, "Applications/robovm"));
-            candidates.add(new File(userHome, ".robovm/home"));
-            candidates.add(new File("/usr/local/lib/robovm"));
-            candidates.add(new File("/opt/robovm"));
-            candidates.add(new File("/usr/lib/robovm"));
-
-            for (File dir : candidates) {
-                if (dir.exists()) {
-                    return new Home(dir);
-                }
-            }
-
-            throw new IllegalArgumentException("ROBOVM_HOME not set and no RoboVM "
-                    + "installation found in " + candidates);
-        }
-
-        public static void validate(File dir) {
-            String error = "Path " + dir + " is not a valid RoboVM install directory: ";
-            // Check for required dirs and match the compiler version with our
-            // version.
-            if (!dir.exists()) {
-                throw new IllegalArgumentException(error + "no such path");
-            }
-
-            if (!dir.isDirectory()) {
-                throw new IllegalArgumentException(error + "not a directory");
-            }
-
-            File libDir = new File(dir, "lib");
-            if (!libDir.exists() || !libDir.isDirectory()) {
-                throw new IllegalArgumentException(error + "lib/ missing or invalid");
-            }
-            File binDir = new File(dir, "bin");
-            if (!binDir.exists() || !binDir.isDirectory()) {
-                throw new IllegalArgumentException(error + "bin/ missing or invalid");
-            }
-            File libVmDir = new File(libDir, "vm");
-            if (!libVmDir.exists() || !libVmDir.isDirectory()) {
-                throw new IllegalArgumentException(error + "lib/vm/ missing or invalid");
-            }
-            File rtJarFile = new File(libDir, "robovm-rt.jar");
-            if (!rtJarFile.exists() || !rtJarFile.isFile()) {
-                throw new IllegalArgumentException(error
-                        + "lib/robovm-rt.jar missing or invalid");
-            }
-
-            // Compare the version of this compiler with the version of the
-            // robovm-rt.jar in the home dir. They have to match.
-            try {
-                String thisVersion = Version.getVersion();
-                String thatVersion = getImplementationVersion(rtJarFile);
-                if (thisVersion == null || !thisVersion.equals(thatVersion)) {
-                    throw new IllegalArgumentException(error + "version mismatch (expected: "
-                            + thisVersion + ", was: " + thatVersion + ")");
-                }
-            } catch (IOException e) {
-                throw new IllegalArgumentException(error
-                        + "failed to get version of rt jar", e);
-            }
-        }
-
-        private static Home validateDevRootDir(File dir) {
-            String error = "Path " + dir + " is not a valid RoboVM source tree: ";
-            // Check for required dirs.
-            if (!dir.exists()) {
-                throw new IllegalArgumentException(error + "no such path");
-            }
-
-            if (!dir.isDirectory()) {
-                throw new IllegalArgumentException(error + "not a directory");
-            }
-
-            File vmBinariesDir = new File(dir, "vm/target/binaries");
-            if (!vmBinariesDir.exists() || !vmBinariesDir.isDirectory()) {
-                throw new IllegalArgumentException(error + "vm/target/binaries/ missing or invalid");
-            }
-            File binDir = new File(dir, "bin");
-            if (!binDir.exists() || !binDir.isDirectory()) {
-                throw new IllegalArgumentException(error + "bin/ missing or invalid");
-            }
-
-            String rtJarName = "robovm-rt-" + Version.getVersion() + ".jar";
-            File rtJar = new File(dir, "rt/target/" + rtJarName);
-            File rtClasses = new File(dir, "rt/target/classes/");
-            File rtSource = rtJar;
-            if (!rtJar.exists() || rtJar.isDirectory()) {
-                if (!rtClasses.exists() || rtClasses.isFile()) {
-                    throw new IllegalArgumentException(error
-                            + "rt/target/" + rtJarName + " missing or invalid");
-                } else {
-                    rtSource = rtClasses;
-                }
-            }
-
-            return new Home(dir, binDir, vmBinariesDir, rtSource);
-        }
     }
 
     /**
@@ -1812,81 +1633,6 @@ public class Config {
 
         public List<Plugin> getPlugins() {
             return config.getPlugins();
-        }
-    }
-
-    public static final class Lib {
-        private final String value;
-        private final boolean force;
-
-        public Lib(String value, boolean force) {
-            this.value = value;
-            this.force = force;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public boolean isForce() {
-            return force;
-        }
-
-        @Override
-        public String toString() {
-            return "Lib [value=" + value + ", force=" + force + "]";
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + (force ? 1231 : 1237);
-            result = prime * result + ((value == null) ? 0 : value.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            Lib other = (Lib) obj;
-            if (force != other.force) {
-                return false;
-            }
-            if (value == null) {
-                return other.value == null;
-            } else return value.equals(other.value);
-        }
-    }
-
-    /**
-     * Container for file entry with platform/arch constraints
-     */
-    public static final class QualifiedFile extends AbstractQualified {
-        @Text File entry;
-
-        protected QualifiedFile() {
-        }
-
-        public QualifiedFile(File file) {
-            entry = file;
-        }
-
-        public File getEntry() {
-            return entry;
-        }
-
-        @Override
-        public String toString() {
-            return entry + " " + super.toString();
         }
     }
 

@@ -31,9 +31,12 @@ import org.robovm.compiler.clazz.MethodInfo;
 import org.robovm.compiler.clazz.Path;
 import org.robovm.compiler.clazz.ZipFilePath;
 import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Cacerts;
 import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.Config.TreeShakerMode;
+import org.robovm.compiler.config.Home;
+import org.robovm.compiler.config.TreeShakerMode;
 import org.robovm.compiler.config.ForceLinkMethodsConfig;
+import org.robovm.compiler.config.Lib;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.config.StripArchivesConfig.StripArchivesBuilder;
@@ -694,7 +697,7 @@ public class AppCompiler {
                 } else if ("-cache".equals(args[i])) {
                     builder.cacheDir(new File(args[++i]));
                 } else if ("-home".equals(args[i])) {
-                    builder.home(new Config.Home(new File(args[++i])));
+                    builder.home(new Home(new File(args[++i])));
                 } else if ("-tmp".equals(args[i])) {
                     builder.tmpDir(new File(args[++i]));
                 } else if ("-threads".equals(args[i])) {
@@ -776,7 +779,7 @@ public class AppCompiler {
                     }
                 } else if ("-libs".equals(args[i])) {
                     for (String p : args[++i].split(":")) {
-                        builder.addLib(new Config.Lib(p, true));
+                        builder.addLib(new Lib(p, true));
                     }
                 } else if ("-exportedsymbols".equals(args[i])) {
                     for (String p : args[++i].split(":")) {
@@ -810,10 +813,10 @@ public class AppCompiler {
                	 stripArchivesBuilder.addExclude(args[++i].split(":"));
                 } else if ("-cacerts".equals(args[i])) {
                     String name = args[++i];
-                    Config.Cacerts cacerts = null;
+                    Cacerts cacerts = null;
                     if (!"none".equals(name)) {
                         try {
-                            cacerts = Config.Cacerts.valueOf(name);
+                            cacerts = Cacerts.valueOf(name);
                         } catch (IllegalArgumentException e) {
                             throw new IllegalArgumentException("Illegal -cacerts value: " + name);
                         }

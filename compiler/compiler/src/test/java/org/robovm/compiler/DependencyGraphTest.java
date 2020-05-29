@@ -30,7 +30,7 @@ import org.robovm.compiler.clazz.Clazz;
 import org.robovm.compiler.clazz.MethodInfo;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.FakeHome;
-import org.robovm.compiler.config.Config.TreeShakerMode;
+import org.robovm.compiler.config.TreeShakerMode;
 import org.robovm.rt.annotation.StronglyLinked;
 import org.robovm.rt.annotation.WeaklyLinked;
 

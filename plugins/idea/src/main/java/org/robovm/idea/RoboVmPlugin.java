@@ -51,6 +51,7 @@ import org.jetbrains.annotations.NotNull;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.Home;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.log.Logger;
 import org.robovm.idea.compilation.RoboVmCompileTask;
@@ -362,7 +363,7 @@ public class RoboVmPlugin {
     public static List<File> getSdkLibraries() {
         List<File> libs = new ArrayList<>();
 
-        Config.Home home = getRoboVmHome();
+        Home home = getRoboVmHome();
         if (home.isDev()) {
             // ROBOVM_DEV_ROOT has been set (rtPath points to $ROBOVM_DEV_ROOT/rt/target/robovm-rt-<version>.jar).
             File rootDir = home.getRtPath().getParentFile().getParentFile().getParentFile();
@@ -403,11 +404,11 @@ public class RoboVmPlugin {
         return libs;
     }
 
-    public static Config.Home getRoboVmHome() {
+    public static Home getRoboVmHome() {
         try {
-            return Config.Home.find();
+            return Home.find();
         } catch (Throwable t) {
-            return new Config.Home(getSdkHome());
+            return new Home(getSdkHome());
         }
     }
 

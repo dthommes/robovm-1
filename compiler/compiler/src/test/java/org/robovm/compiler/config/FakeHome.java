@@ -18,8 +18,6 @@ package org.robovm.compiler.config;
 
 import java.io.File;
 
-import org.robovm.compiler.config.Config.Home;
-
 /**
  * Fake {@link Home} used for testing.
  */
