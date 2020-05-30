@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.robovm.compiler.MarshalerLookup.MarshalSite;
 import org.robovm.compiler.MarshalerLookup.Marshaler;
 import org.robovm.compiler.clazz.Clazz;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Home;
 import org.robovm.compiler.log.Logger;
@@ -66,7 +67,7 @@ public class MarshalerLookupTest {
                 File.pathSeparator + System.getProperty("java.class.path"));
         Scene.v().loadNecessaryClasses();
         
-        Config.Builder configBuilder = new Config.Builder();
+        Builder configBuilder = new Builder();
         for (File p : ClassPathUtils.getBcPaths()) {
             configBuilder.addBootClasspathEntry(p);
         }

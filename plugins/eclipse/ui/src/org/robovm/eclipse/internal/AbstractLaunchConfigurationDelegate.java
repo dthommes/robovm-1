@@ -40,7 +40,7 @@ import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.Config.Builder;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Home;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.plugin.PluginArgument;
@@ -74,7 +74,7 @@ public abstract class AbstractLaunchConfigurationDelegate extends AbstractJavaLa
 
     protected abstract OS getOS(ILaunchConfiguration configuration, String mode) throws CoreException;
 
-    protected abstract Config.Builder configure(Config.Builder configBuilder, ILaunchConfiguration configuration, String mode)
+    protected abstract Builder configure(Builder configBuilder, ILaunchConfiguration configuration, String mode)
             throws IOException, CoreException;
 
     protected void customizeLaunchParameters(Config config, LaunchParameters launchParameters, ILaunchConfiguration configuration,
@@ -125,8 +125,8 @@ public abstract class AbstractLaunchConfigurationDelegate extends AbstractJavaLa
             monitor.worked(1);
 
             monitor.subTask("Creating build configuration");
-            Config.Builder configBuilder;
-            configBuilder = new Config.Builder();
+            Builder configBuilder;
+            configBuilder = new Builder();
             configBuilder.logger(RoboVMPlugin.getConsoleLogger());
 
             File projectRoot = getJavaProject(configuration).getProject().getLocation().toFile();

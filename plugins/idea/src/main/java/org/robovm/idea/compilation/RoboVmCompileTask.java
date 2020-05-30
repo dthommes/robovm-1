@@ -40,6 +40,7 @@ import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Home;
 import org.robovm.compiler.config.OS;
@@ -111,7 +112,7 @@ public class RoboVmCompileTask implements CompileTask {
 
             RoboVmPlugin.logInfo(project, "Creating package in " + ipaConfig.getDestinationDir().getAbsolutePath() + " ...");
 
-            Config.Builder builder = new Config.Builder();
+            Builder builder = new Builder();
             builder.logger(RoboVmPlugin.getLogger(project));
             File moduleBaseDir = RoboVmPlugin.getModuleBaseDir(ipaConfig.getModule());
 
@@ -166,7 +167,7 @@ public class RoboVmCompileTask implements CompileTask {
 
             RoboVmPlugin.logInfo(project, "Creating package in " + frameworkConfig.getDestinationDir().getAbsolutePath() + " ...");
 
-            Config.Builder builder = new Config.Builder();
+            Builder builder = new Builder();
             builder.logger(RoboVmPlugin.getLogger(project));
             File moduleBaseDir = RoboVmPlugin.getModuleBaseDir(frameworkConfig.getModule());
 
@@ -224,7 +225,7 @@ public class RoboVmCompileTask implements CompileTask {
             RoboVmPlugin.focusToolWindow(project);
             progress.setText("Compiling RoboVM app");
 
-            Config.Builder builder = new Config.Builder();
+            Builder builder = new Builder();
             builder.logger(RoboVmPlugin.getLogger(project));
 
             // get the module we are about to compile
@@ -356,11 +357,11 @@ public class RoboVmCompileTask implements CompileTask {
         }
     }
 
-    private static void configureClassAndSourcepaths(Project project, CompileContext context, Config.Builder builder, Module module) {
+    private static void configureClassAndSourcepaths(Project project, CompileContext context, Builder builder, Module module) {
         configureClassAndSourcepaths(project, context, null, builder, module);
     }
 
-    private static void configureClassAndSourcepaths(Project project, CompileContext context, RoboVmRunConfiguration runConfig, Config.Builder builder, Module module) {
+    private static void configureClassAndSourcepaths(Project project, CompileContext context, RoboVmRunConfiguration runConfig, Builder builder, Module module) {
         // gather the boot and user classpaths. RoboVM RT libs may be
         // specified in a Maven/Gradle build file, in which case they'll
         // turn up as order entries. We filter them out here.
@@ -418,7 +419,7 @@ public class RoboVmCompileTask implements CompileTask {
         }
     }
 
-    private static void configureDebugging(Config.Builder builder, RoboVmRunConfiguration runConfig, Module module) {
+    private static void configureDebugging(Builder builder, RoboVmRunConfiguration runConfig, Module module) {
         // setup debug configuration if necessary
         if (runConfig.isDebug()) {
             Set<String> sourcesPaths = new HashSet<>();
@@ -452,7 +453,7 @@ public class RoboVmCompileTask implements CompileTask {
         }
     }
 
-    private static void configureTarget(Config.Builder builder, RoboVmRunConfiguration runConfig) {
+    private static void configureTarget(Builder builder, RoboVmRunConfiguration runConfig) {
         if (runConfig.getTargetType() == RoboVmRunConfiguration.TargetType.Device) {
             // configure device build
             builder.targetType(IOSTarget.TYPE);
@@ -467,7 +468,7 @@ public class RoboVmCompileTask implements CompileTask {
         }
     }
 
-    public static Config.Builder loadConfig(Project project, Config.Builder configBuilder, File projectRoot, boolean isTest) {
+    public static Builder loadConfig(Project project, Builder configBuilder, File projectRoot, boolean isTest) {
         try {
             configBuilder.readProjectProperties(projectRoot, isTest);
             configBuilder.readProjectConfig(projectRoot, isTest);
@@ -519,7 +520,7 @@ public class RoboVmCompileTask implements CompileTask {
      * @param args          run arguments
      * @param configBuilder builder or null to filter the args list
      */
-    public static void applyPluginArguments(List<String> args, @NotNull Config.Builder configBuilder) {
+    public static void applyPluginArguments(List<String> args, @NotNull Builder configBuilder) {
         Map<String, PluginArgument> pluginArguments = configBuilder.fetchPluginArguments();
         Iterator<String> iter = args.iterator();
         while (iter.hasNext()) {

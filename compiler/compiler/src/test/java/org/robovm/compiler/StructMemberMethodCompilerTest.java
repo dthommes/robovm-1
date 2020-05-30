@@ -5,6 +5,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.robovm.compiler.clazz.Clazz;
 import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Home;
 import org.robovm.compiler.llvm.StructureType;
@@ -44,7 +45,7 @@ public class StructMemberMethodCompilerTest {
                 File.pathSeparator + System.getProperty("java.class.path"));
         Scene.v().loadNecessaryClasses();
         
-        Config.Builder configBuilder = new Config.Builder();
+        Builder configBuilder = new Builder();
         for (File p : ClassPathUtils.getBcPaths()) {
             configBuilder.addBootClasspathEntry(p);
         }

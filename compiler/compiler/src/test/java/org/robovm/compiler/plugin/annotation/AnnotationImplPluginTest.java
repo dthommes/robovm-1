@@ -36,7 +36,7 @@ import org.robovm.compiler.ModuleBuilder;
 import org.robovm.compiler.clazz.Clazz;
 import org.robovm.compiler.clazz.Dependency;
 import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.Config.Builder;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.FakeHome;
 import org.robovm.rt.bro.annotation.Bridge;
 

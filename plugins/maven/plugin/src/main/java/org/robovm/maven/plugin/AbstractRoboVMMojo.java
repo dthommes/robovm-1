@@ -41,6 +41,7 @@ import org.codehaus.plexus.util.xml.Xpp3DomWriter;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Home;
 import org.robovm.compiler.config.OS;
@@ -171,7 +172,7 @@ public abstract class AbstractRoboVMMojo extends AbstractMojo {
 
     private Logger roboVMLogger;
 
-    protected Config.Builder configure(Config.Builder builder) throws MojoExecutionException {
+    protected Builder configure(Builder builder) throws MojoExecutionException {
         builder.logger(getRoboVMLogger());
 
         // load config base file if it exists (and properties)
@@ -341,8 +342,8 @@ public abstract class AbstractRoboVMMojo extends AbstractMojo {
 
         getLog().info("Building RoboVM app for: " + os + " (" + arch + ")");
 
-        Config.Builder builder;
-        builder = new Config.Builder();
+        Builder builder;
+        builder = new Builder();
 
         configure(builder).os(os).arch(arch).targetType(targetType);
 

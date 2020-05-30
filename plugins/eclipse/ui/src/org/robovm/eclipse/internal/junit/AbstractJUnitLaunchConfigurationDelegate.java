@@ -39,7 +39,7 @@ import org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate;
 import org.eclipse.jdt.launching.IVMInstall;
 import org.eclipse.jdt.launching.IVMRunner;
 import org.eclipse.jdt.launching.VMRunnerConfiguration;
-import org.robovm.compiler.config.Config.Builder;
+import org.robovm.compiler.config.Builder;
 import org.robovm.eclipse.RoboVMPlugin;
 import org.robovm.eclipse.internal.AbstractLaunchConfigurationDelegate;
 

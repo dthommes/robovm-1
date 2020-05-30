@@ -80,6 +80,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Home;
 import org.robovm.compiler.config.OS;
@@ -357,7 +358,7 @@ public class RoboVMPlugin extends AbstractUIPlugin implements IStartup {
     public static Set<File> getRoboVMProjectResourcePaths(IProject project) {
         try {
             File projectRoot = project.getLocation().toFile();
-            Config.Builder configBuilder = new Config.Builder();
+            Builder configBuilder = new Builder();
             configBuilder.home(RoboVMPlugin.getRoboVMHome());
             // Fake a classpath to make Config happy
             configBuilder.addClasspathEntry(Files.createTempDirectory("empty").toFile());
@@ -385,7 +386,7 @@ public class RoboVMPlugin extends AbstractUIPlugin implements IStartup {
     public static File getRoboVMProjectInfoPlist(IProject project) {
         try {
             File projectRoot = project.getLocation().toFile();
-            Config.Builder configBuilder = new Config.Builder();
+            Builder configBuilder = new Builder();
             configBuilder.home(RoboVMPlugin.getRoboVMHome());
             // Fake a classpath to make Config happy
             configBuilder.addClasspathEntry(Files.createTempDirectory("empty").toFile());
@@ -498,8 +499,8 @@ public class RoboVMPlugin extends AbstractUIPlugin implements IStartup {
         return OS.valueOf(s);
     }
 
-    public static Config.Builder loadConfig(Config.Builder configBuilder,
-            File projectRoot, boolean isTest) {
+    public static Builder loadConfig(Builder configBuilder,
+                                     File projectRoot, boolean isTest) {
 
         try {
             configBuilder.readProjectProperties(projectRoot, isTest);

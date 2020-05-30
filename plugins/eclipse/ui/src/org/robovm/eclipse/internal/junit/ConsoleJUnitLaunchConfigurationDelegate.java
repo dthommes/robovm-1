@@ -21,7 +21,7 @@ import java.io.IOException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.robovm.compiler.config.Arch;
-import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.target.ConsoleTarget;
 import org.robovm.eclipse.RoboVMPlugin;
@@ -44,8 +44,8 @@ public class ConsoleJUnitLaunchConfigurationDelegate extends AbstractJUnitLaunch
     }
 
     @Override
-    protected Config.Builder configure(Config.Builder configBuilder,
-            ILaunchConfiguration configuration, String mode) throws IOException, CoreException {
+    protected Builder configure(Builder configBuilder,
+                                ILaunchConfiguration configuration, String mode) throws IOException, CoreException {
         
         configBuilder = super.configure(configBuilder, configuration, mode);
         configBuilder.targetType(ConsoleTarget.TYPE);

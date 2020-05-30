@@ -28,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.robovm.compiler.clazz.Clazz;
 import org.robovm.compiler.clazz.MethodInfo;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.FakeHome;
 import org.robovm.compiler.config.TreeShakerMode;
@@ -62,7 +63,7 @@ public class DependencyGraphTest {
 
     @Before
     public void setup() throws Exception {
-        Config.Builder builder = new Config.Builder()
+        Builder builder = new Builder()
                 .home(new FakeHome())
                 .skipRuntimeLib(true)
                 .skipLinking(true);

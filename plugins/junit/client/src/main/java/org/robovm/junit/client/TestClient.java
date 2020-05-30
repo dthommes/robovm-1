@@ -17,6 +17,7 @@
 package org.robovm.junit.client;
 
 import org.junit.runner.notification.RunListener;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.plugin.LaunchPlugin;
@@ -218,7 +219,7 @@ public class TestClient extends LaunchPlugin {
         });
     }
 
-    public Config.Builder configure(Config.Builder configBuilder, boolean isIOS) {
+    public Builder configure(Builder configBuilder, boolean isIOS) {
         if (configBuilder == null) {
             throw new IllegalArgumentException("RoboVM configuration cannot be null");
         }

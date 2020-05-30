@@ -15,19 +15,16 @@
  */
 package org.robovm.maven.plugin;
 
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.robovm.compiler.AppCompiler;
+import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Builder;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.robovm.compiler.AppCompiler;
-import org.robovm.compiler.config.Arch;
-import org.robovm.compiler.config.Config;
 
 /**
  * Abstract mojo which either archives or installs.
@@ -51,7 +48,7 @@ public abstract class AbstractRoboVMBuildMojo extends AbstractRoboVMMojo {
 
         try {
 
-            Config.Builder builder = configure(new Config.Builder())
+            Builder builder = configure(new Builder())
                     .skipInstall(false);
 
             if (getArchs() != null) {

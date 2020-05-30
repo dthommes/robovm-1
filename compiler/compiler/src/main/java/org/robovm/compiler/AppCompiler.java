@@ -31,6 +31,7 @@ import org.robovm.compiler.clazz.MethodInfo;
 import org.robovm.compiler.clazz.Path;
 import org.robovm.compiler.clazz.ZipFilePath;
 import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Cacerts;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Home;
@@ -651,7 +652,7 @@ public class AppCompiler {
     }
 
     private String configToXml(Config config) throws Exception {
-        Serializer serializer = Config.Builder.createSerializer(config, config.getTmpDir());
+        Serializer serializer = Builder.createSerializer(config, config.getTmpDir());
         StringWriter writer = new StringWriter();
         serializer.write(this.config, writer);
         String xml = writer.toString();
@@ -665,7 +666,7 @@ public class AppCompiler {
     public static void main(String[] args) throws IOException {
 
         AppCompiler compiler = null;
-        Config.Builder builder = null;
+        Builder builder = null;
 
         boolean verbose = false;
         boolean run = false;
@@ -675,7 +676,7 @@ public class AppCompiler {
         String dumpConfigFile = null;
         List<String> runArgs = new ArrayList<String>();
         try {
-            builder = new Config.Builder();
+            builder = new Builder();
             Map<String, PluginArgument> pluginArguments = builder.fetchPluginArguments();
 
             int i = 0;

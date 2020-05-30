@@ -31,6 +31,7 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.TaskAction;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Home;
 import org.robovm.compiler.config.OS;
@@ -88,8 +89,8 @@ abstract public class AbstractRoboVMTask extends DefaultTask {
     public AppCompiler build(OS os, Arch arch, String targetType) {
         getLogger().info("Building RoboVM app for: " + os + " (" + arch + ")");
 
-        Config.Builder builder;
-        builder = new Config.Builder();
+        Builder builder;
+        builder = new Builder();
 
         configure(builder).os(os).arch(arch).targetType(targetType);
 
@@ -108,7 +109,7 @@ abstract public class AbstractRoboVMTask extends DefaultTask {
         }
     }
 
-    protected Config.Builder configure(Config.Builder builder) {
+    protected Builder configure(Builder builder) {
         builder.logger(getRoboVMLogger());
 
         if (extension.getPropertiesFile() != null) {

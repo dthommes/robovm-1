@@ -20,6 +20,7 @@ import org.robovm.compiler.Functions;
 import org.robovm.compiler.ModuleBuilder;
 import org.robovm.compiler.Symbols;
 import org.robovm.compiler.clazz.Clazz;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.llvm.Alloca;
@@ -101,7 +102,7 @@ public class DebugInformationPlugin extends AbstractCompilerPlugin {
 	}
 
     @Override
-    public void beforeConfig(Config.Builder builder, Config config) {
+    public void beforeConfig(Builder builder, Config config) {
         if (config.isDebug()) {
             // debugger depends on amount of symbols.
             // as strip removes all local symbols all dependencies need to be converted

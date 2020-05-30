@@ -25,7 +25,7 @@ import org.robovm.compiler.Linker;
 import org.robovm.compiler.ModuleBuilder;
 import org.robovm.compiler.clazz.Clazz;
 import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.Config.Builder;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.llvm.Function;
 
 import org.robovm.llvm.ObjectFile;

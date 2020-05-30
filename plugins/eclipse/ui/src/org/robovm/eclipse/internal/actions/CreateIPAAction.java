@@ -43,6 +43,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.target.ios.ProvisioningProfile;
@@ -96,7 +97,7 @@ public class CreateIPAAction implements IObjectActionDelegate {
                     }
 
                     File projectRoot = project.getLocation().toFile();
-                    Config.Builder configBuilder = new Config.Builder();
+                    Builder configBuilder = new Builder();
                     configBuilder.logger(RoboVMPlugin.getConsoleLogger());
                     RoboVMPlugin.loadConfig(configBuilder, projectRoot, false);
                     configBuilder.os(OS.ios);

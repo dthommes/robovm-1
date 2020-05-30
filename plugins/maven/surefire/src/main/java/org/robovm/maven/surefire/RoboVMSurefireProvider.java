@@ -39,6 +39,7 @@ import org.junit.runner.notification.RunNotifier;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Home;
 import org.robovm.compiler.config.OS;
@@ -240,8 +241,8 @@ public class RoboVMSurefireProvider extends AbstractProvider {
         }
     }
 
-    private Config.Builder createConfig(final ConsoleLogger consoleLogger) throws IOException {
-        Config.Builder configBuilder = new Config.Builder();
+    private Builder createConfig(final ConsoleLogger consoleLogger) throws IOException {
+        Builder configBuilder = new Builder();
 
         final Logger logger = new Logger() {
             public void debug(String format, Object... args) {

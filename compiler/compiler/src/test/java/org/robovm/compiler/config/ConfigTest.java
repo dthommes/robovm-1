@@ -29,7 +29,6 @@ import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.robovm.compiler.config.Config.Builder;
 import org.robovm.compiler.target.ConsoleTarget;
 import org.robovm.compiler.target.ios.IOSTarget;
 import org.zeroturnaround.zip.ZipUtil;
@@ -60,7 +59,7 @@ public class ConfigTest {
     
     @Test
     public void testReadConsole() throws Exception {
-        Config.Builder builder = new Config.Builder();
+        Builder builder = new Builder();
         builder.read(new InputStreamReader(getClass().getResourceAsStream("ConfigTest.console.xml"), "utf-8"), wd);
         Config config = builder.config;
         assertEquals(Arrays.asList(new File(wd, "foo1.jar"), new File(tmp, "foo2.jar")), config.getClasspath());
@@ -90,7 +89,7 @@ public class ConfigTest {
     
     @Test
     public void testReadOldConsole() throws Exception {
-        Config.Builder builder = new Config.Builder();
+        Builder builder = new Builder();
         builder.read(new InputStreamReader(getClass().getResourceAsStream("ConfigTest.old.console.xml"), "utf-8"), wd);
         Config config = builder.config;
         assertEquals(Arrays.asList(new File(wd, "foo1.jar"), new File(tmp, "foo2.jar")), config.getClasspath());
@@ -112,7 +111,7 @@ public class ConfigTest {
     
     @Test
     public void testWriteConsole() throws Exception {
-        Config.Builder builder = new Config.Builder();
+        Builder builder = new Builder();
         builder.addClasspathEntry(new File("foo1.jar"));
         builder.addClasspathEntry(new File(tmp, "foo2.jar"));
         builder.addFramework("Foundation");
@@ -141,7 +140,7 @@ public class ConfigTest {
 
     @Test
     public void testReadIOS() throws Exception {
-        Config.Builder builder = new Config.Builder();
+        Builder builder = new Builder();
         builder.read(new InputStreamReader(getClass().getResourceAsStream("ConfigTest.ios.xml"), "utf-8"), wd);
         Config config = builder.config;
         assertEquals("6.1", config.getIosSdkVersion());
@@ -151,7 +150,7 @@ public class ConfigTest {
     
     @Test
     public void testWriteIOS() throws Exception {
-        Config.Builder builder = new Config.Builder();
+        Builder builder = new Builder();
         builder.iosSdkVersion("6.1");
         builder.iosInfoPList(new File("Info.plist"));
         builder.iosEntitlementsPList(new File("entitlements.plist"));        
@@ -169,13 +168,13 @@ public class ConfigTest {
                 File root = new File(p, "META-INF/robovm/" + os2 + "/" + arch2);
                 root.mkdirs();
                 if (!new File(root, "robovm.xml").exists()) {
-                    new Config.Builder().write(new File(root, "robovm.xml"));
+                    new Builder().write(new File(root, "robovm.xml"));
                 }
             }
         }
 
         File root = new File(p, "META-INF/robovm/" + os + "/" + arch);
-        new Config.Builder()
+        new Builder()
             .addExportedSymbol(id.toUpperCase() + "*")
             .addForceLinkClass("com." + id.toLowerCase() + ".**")
             .addFrameworkPath(new File(root, id.toLowerCase() + "/bar"))
@@ -224,7 +223,7 @@ public class ConfigTest {
                   createMergeConfig(tmpDir, "p3", "Baaz", OS.macosx, Arch.x86, false);
         File p3 = createMergeConfig(tmpDir, "p3", "Raaz", OS.macosx, Arch.x86_64, true);
         
-        Config.Builder builder = new Config.Builder();
+        Builder builder = new Builder();
         builder.cacheDir(cacheDir);
         builder.os(OS.macosx);
         builder.arch(Arch.x86);
@@ -299,7 +298,7 @@ public class ConfigTest {
         File tmpDir = createTempDir();
         File cacheDir = new File(tmpDir, "cache");
         
-        Config.Builder builder = new Config.Builder();
+        Builder builder = new Builder();
         builder.tmpDir(tmpDir);
         builder.cacheDir(cacheDir);
         builder.os(OS.macosx);

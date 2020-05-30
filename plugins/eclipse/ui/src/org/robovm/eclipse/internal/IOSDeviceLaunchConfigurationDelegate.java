@@ -21,7 +21,7 @@ import java.io.IOException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.robovm.compiler.config.Arch;
-import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.target.ios.IOSTarget;
 import org.robovm.compiler.target.ios.ProvisioningProfile;
@@ -63,8 +63,8 @@ public class IOSDeviceLaunchConfigurationDelegate extends AbstractLaunchConfigur
     }
     
     @Override
-    protected Config.Builder configure(Config.Builder configBuilder,
-            ILaunchConfiguration configuration, String mode) throws IOException, CoreException {
+    protected Builder configure(Builder configBuilder,
+                                ILaunchConfiguration configuration, String mode) throws IOException, CoreException {
         
         configBuilder.targetType(IOSTarget.TYPE);
         String signingId = configuration.getAttribute(ATTR_IOS_DEVICE_SIGNING_ID, (String) null);

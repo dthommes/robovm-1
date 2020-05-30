@@ -30,6 +30,7 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderEnumerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.ibxcode.IBXcodeProject;
 import org.robovm.idea.RoboVmPlugin;
@@ -43,7 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class RoboVmIbXcodeProjectTask {
     private static final AtomicBoolean busy = new AtomicBoolean(false);
     private final Module module;
-    private Config.Builder builder;
+    private Builder builder;
     private Config config;
 
     public RoboVmIbXcodeProjectTask(Module module) {
@@ -238,7 +239,7 @@ public class RoboVmIbXcodeProjectTask {
     }
 
 
-    static class IBConfigBuilder extends Config.Builder {
+    static class IBConfigBuilder extends Builder {
         IBConfigBuilder() {
         }
 

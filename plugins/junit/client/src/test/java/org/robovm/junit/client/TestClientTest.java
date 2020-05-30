@@ -22,6 +22,7 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.Version;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Home;
 import org.robovm.compiler.log.ConsoleLogger;
@@ -81,11 +82,11 @@ public class TestClientTest {
         assertEquals("0 failed tests expected", 0, listener.failed.size());
     }
 
-    private Config.Builder createConfig() throws IOException {
+    private Builder createConfig() throws IOException {
         RoboVMResolver roboVMResolver = new RoboVMResolver();
         Home home = new Home(roboVMResolver.resolveAndUnpackRoboVMDistArtifact(Version.getVersion()));
 
-        Config.Builder config = new Config.Builder();
+        Builder config = new Builder();
 
         config.home(home);
 

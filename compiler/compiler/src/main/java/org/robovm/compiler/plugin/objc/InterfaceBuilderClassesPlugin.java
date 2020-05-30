@@ -52,7 +52,7 @@ import org.objectweb.asm.Opcodes;
 import org.robovm.compiler.Linker;
 import org.robovm.compiler.clazz.Clazz;
 import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.Config.Builder;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.config.Resource.Walker;
 import org.robovm.compiler.log.Logger;

@@ -19,8 +19,8 @@ package org.robovm.eclipse.internal.ib;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Home;
 import org.robovm.compiler.log.Logger;
@@ -102,7 +102,7 @@ public class IBIntegratorProxy {
     public void shutDown() {
     }
     
-    static class IBConfigBuilder extends Config.Builder {
+    static class IBConfigBuilder extends Builder {
         IBConfigBuilder() throws IOException {
         }
 

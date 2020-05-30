@@ -50,6 +50,7 @@ import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Builder;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.Home;
 import org.robovm.compiler.config.Resource;
@@ -540,7 +541,7 @@ public class RoboVmPlugin {
     public static Set<File> getModuleResourcePaths(Module module) {
         try {
             File moduleBaseDir = getModuleBaseDir(module);
-            Config.Builder configBuilder = new Config.Builder();
+            Builder configBuilder = new Builder();
             configBuilder.home(RoboVmPlugin.getRoboVmHome());
             configBuilder.addClasspathEntry(new File(".")); // Fake a classpath to make Config happy
             configBuilder.skipLinking(true);
