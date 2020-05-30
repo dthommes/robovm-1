@@ -42,7 +42,7 @@ import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.Config.Home;
+import org.robovm.compiler.config.Home;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.log.Logger;
 import org.robovm.compiler.target.ios.ProvisioningProfile;
@@ -266,7 +266,7 @@ public abstract class AbstractRoboVMMojo extends AbstractMojo {
         } catch (Throwable ignored) {
         }
         if (home == null || !home.isDev()) {
-            home = new Config.Home(unpackRoboVMDist());
+            home = new Home(unpackRoboVMDist());
         }
         builder.home(home)
                 .tmpDir(tmpDir)

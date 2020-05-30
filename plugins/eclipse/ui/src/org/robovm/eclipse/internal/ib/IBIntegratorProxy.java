@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.Config.Home;
+import org.robovm.compiler.config.Home;
 import org.robovm.compiler.log.Logger;
 import org.robovm.ibxcode.IBXcodeProject;
 

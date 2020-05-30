@@ -81,6 +81,7 @@ import org.osgi.framework.BundleContext;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.Home;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.log.Logger;
@@ -126,7 +127,7 @@ public class RoboVMPlugin extends AbstractUIPlugin implements IStartup {
 
     private static RoboVMPlugin plugin;
     private static IPreferenceStore pluginPreferencesStore;
-    private static Config.Home roboVMHome = null;
+    private static Home roboVMHome = null;
 
     private boolean showConsoleOnWrite = true;
     private MessageConsole console;
@@ -265,10 +266,10 @@ public class RoboVMPlugin extends AbstractUIPlugin implements IStartup {
         return new File(new File(getMetadataDir(), "build"), projectName);
     }
 
-    public static synchronized Config.Home getRoboVMHome() throws IOException {
+    public static synchronized Home getRoboVMHome() throws IOException {
         if (roboVMHome == null) {
             if (System.getenv("ROBOVM_DEV_ROOT") != null) {
-                roboVMHome = Config.Home.find();
+                roboVMHome = Home.find();
             } else {
                 String version = Version.getVersion();
                 File homeDir = new File(getMetadataDir(), "robovm-" + version);
@@ -291,7 +292,7 @@ public class RoboVMPlugin extends AbstractUIPlugin implements IStartup {
                     FileUtils.copyURLToFile(distUrl, distFile);
                     extractTarGz(distFile, distFile.getParentFile());
                 }
-                roboVMHome = new Config.Home(homeDir);
+                roboVMHome = new Home(homeDir);
             }
         }
         return roboVMHome;

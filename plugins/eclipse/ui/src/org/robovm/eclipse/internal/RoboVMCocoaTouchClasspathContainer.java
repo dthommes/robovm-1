@@ -29,6 +29,7 @@ import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.Home;
 import org.robovm.eclipse.RoboVMPlugin;
 
 /**
@@ -42,7 +43,7 @@ public class RoboVMCocoaTouchClasspathContainer implements IClasspathContainer {
     
     public IClasspathEntry[] getClasspathEntries() {
     	try {
-	        Config.Home home = RoboVMPlugin.getRoboVMHome();
+	        Home home = RoboVMPlugin.getRoboVMHome();
 	        File f = home.getRtPath();
 	        List<IClasspathEntry> entries = new ArrayList<IClasspathEntry>();
 	        if (!home.isDev()) {

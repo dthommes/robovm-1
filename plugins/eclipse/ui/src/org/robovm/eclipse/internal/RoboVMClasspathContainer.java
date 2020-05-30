@@ -26,7 +26,7 @@ import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
-import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.Home;
 import org.robovm.eclipse.RoboVMPlugin;
 
 /**
@@ -40,7 +40,7 @@ public class RoboVMClasspathContainer implements IClasspathContainer {
     
     public IClasspathEntry[] getClasspathEntries() {
     	try {
-	        Config.Home home = RoboVMPlugin.getRoboVMHome();
+	        Home home = RoboVMPlugin.getRoboVMHome();
 	        File f = home.getRtPath();
 	        IPath sourceAttachment = null;
 	        if (!home.isDev()) {
