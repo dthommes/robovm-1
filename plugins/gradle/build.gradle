@@ -4,16 +4,13 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.7.1'
-        classpath "com.github.jengelman.gradle.plugins:shadow:1.2.3"
+        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+        classpath "com.github.jengelman.gradle.plugins:shadow:5.2.0"
     }
 }
 
 apply plugin: 'java'
-apply plugin: 'groovy'
-apply plugin: 'maven'
-apply plugin: 'nexus'
-apply plugin: 'eclipse'
+apply plugin: 'com.bmuschko.nexus'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'com.mobidevelop.robovm'
@@ -84,12 +81,6 @@ modifyPom {
         }
     }
 }
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.10.1'
-}
-
-// apply from: 'local.gradle'
 
 jar {
     enabled = false
