@@ -17,8 +17,7 @@ Not supported any more due removed `-extdir` in Java9+
    - /Applications/IntelliJ IDEA CE.app/Contents/plugins/maven/lib/maven.jar
    - /Applications/IntelliJ IDEA CE.app/Contents/plugins/gradle/lib/gradle-common.jar
    - /Applications/IntelliJ IDEA CE.app/Contents/plugins/gradle/lib/gradle-api-?.?.?-sp1.jar
-   - (pre 2019.3) /Applications/IntelliJ IDEA CE.app/Contents/plugins/gradle/lib/gradle-java.jar
-   - (after 2019.3) /Applications/IntelliJ IDEA CE.app/Contents/plugins/gradle-java/lib/gradle-java.jar!/
+   - /Applications/IntelliJ IDEA CE.app/Contents/plugins/gradle-java/lib/gradle-java.jar!/
 * Open the project by selecting it's POM
 * Open File -> Project Structure, Click on the Project menu entry, and select the IDEA sdk under Project SDK
 * Click OK

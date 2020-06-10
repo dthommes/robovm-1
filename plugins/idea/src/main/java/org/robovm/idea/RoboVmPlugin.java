@@ -105,7 +105,7 @@ public class RoboVmPlugin {
     /**
      * Formatter for the time stamp printed by the logger
      */
-    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS ");
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS ");
 
     public static OS getOs() {
         return os;

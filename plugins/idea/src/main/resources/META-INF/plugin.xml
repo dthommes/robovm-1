@@ -1,8 +1,8 @@
-<idea-plugin version="2" url="https://github.com/robovm/robovm-idea">
+<idea-plugin url="https://github.com/robovm/robovm-idea">
     <id>com.mobidevelop.robovm.intellij</id>
-    <name>RoboVM Intellij IDEA Plugin</name>
+    <name>RoboVM - MobiVM Port</name>
     <version>${project.version}</version>
-    <vendor email="robovm@mobidevelop.com" url="http://github.com/mobidevelop/robovm">mobidevelop</vendor>
+    <vendor email="robovm@mobidevelop.com" url="https://github.com/mobidevelop/robovm">mobidevelop</vendor>
 
     <depends optional="true" config-file="">org.jetbrains.idea.maven</depends>
     <depends>org.jetbrains.plugins.gradle</depends>
@@ -11,12 +11,19 @@
 
     <description><![CDATA[
      <p>
-     RoboVM support for IntelliJ
+     Port of last open-source release of RoboVM by MobiVM
+     RoboVM is an ahead-of-time compiler for Java bytecode, targeting Linux, Mac OS X and iOS.
      </p>     
     ]]></description>
 
     <change-notes><![CDATA[
-
+     <p>
+     v2.3.10 highlights
+     * iOS13.5 bindings
+     * bitcode support
+     * lot of bug fixes and improvements
+     Complete change log on project <a href="https://github.com/MobiVM/robovm/wiki/Changelog">wiki</a>
+     </p>
     ]]>
     </change-notes>
 
@@ -42,11 +49,11 @@
         </component>
     </application-components>
 
-    <project-components>
-        <component>
-            <implementation-class>org.robovm.idea.components.RoboVmProjectComponent</implementation-class>
-        </component>
-    </project-components>
+<!--    <project-components>-->
+<!--        <component>-->
+<!--            <implementation-class>org.robovm.idea.components.RoboVmProjectComponent</implementation-class>-->
+<!--        </component>-->
+<!--    </project-components>-->
 
     <module-components>
         <component>
@@ -55,7 +62,7 @@
     </module-components>
 
     <actions>
-        <group id="org.robovm.idea.Menu" text="RoboVM" description="RoboVM Menu">
+        <group id="org.robovm.idea.Menu" text="RoboVM" description="RoboVM menu">
             <add-to-group group-id="MainMenu" anchor="after" relative-to-action="ToolsMenu"/>
 
             <action id="org.robovm.idea.create-ipa" class="org.robovm.idea.actions.CreateIpaAction" text="Create IPA"
@@ -73,7 +80,7 @@
                     description="Deletes as files in ~/.robovm/cache folder"/>
             <separator/>
 
-            <group id="org.robovm.idea.as-fixes-new" text="AS New" description="new Project/Module workaround for Android Studio" popup="true">
+            <group id="org.robovm.idea.as-fixes-new" text="AS New" description="New project/module workaround for Android studio" popup="true">
                 <action id="org.robovm.idea.as-fixes-new-project" class="org.robovm.idea.actions.ASNewProjectAction" text="Project..."/>
                 <action id="org.robovm.idea.as-fixes-new-module" class="org.robovm.idea.actions.ASNewModuleAction" text="Module..."/>
             </group>
