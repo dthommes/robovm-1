@@ -214,7 +214,8 @@ public class Config {
 
     private Home home = null;
     private File tmpDir;
-    private File cacheDir = new File(System.getProperty("user.home"), ".robovm/cache");
+    // FIXME: during Libcore testing will be using stand-along folder for cache
+    private File cacheDir = new File(System.getProperty("user.home"), ".robovmx/cache/" + Version.getVersion());
     private File ccBinPath = null;
 
     private boolean clean = false;
