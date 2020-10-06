@@ -1,27 +1,27 @@
 <idea-plugin url="https://github.com/robovm/robovm-idea">
     <id>com.mobidevelop.robovm.intellij</id>
     <version>${project.version}</version>
-    <vendor email="robovm@mobidevelop.com" url="https://github.com/mobidevelop/robovm">mobidevelop</vendor>
+    <vendor email="demyan.kimitsa@gmail.com" url="https://github.com/dkimitsa/robovm-libcore10-smoketest">RoboVM-x (experimental)</vendor>
 
     <depends optional="true" config-file="">org.jetbrains.idea.maven</depends>
     <depends>org.jetbrains.plugins.gradle</depends>
     <depends>com.intellij.modules.java</depends>
     <idea-version since-build="193.1"/>
 
-    <name>MobiVM</name>
+    <name>RoboVM - Libcore 10</name>
     <description>
         <![CDATA[
             <p>
-              MobiVM is a fork of the last open-source release of RoboVM — an ahead-of-time compiler for Java bytecode, targeting Linux, Mac OS X and iOS.
+               WARNING: for testing only!
+               Unofficial RoboVM build for testing Libcore 10 Runtime.
+               Please report issues to following <a href="https://github.com/dkimitsa/robovm-libcore10-smoketest/issues">tracker</a>.
             </p>
         ]]>
     </description>
     <change-notes>
         <![CDATA[
-            <b>2.3.10</b>
-            <li> iOS 13 API support </li>
-            <li> iOS 14 device support </li>
-            <li> fixes and improvements </li>
+            <b>10.0.11</b>
+            <li> First build with Libcore 10 POC </li>
         ]]>
     </change-notes>
 
